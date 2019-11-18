@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Game.Program</StartupObject>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Drexel.Collections.Sets" Version="1.0.0" />
+    <PackageReference Include="Terminal.Gui" Version="0.24.0" />
+  </ItemGroup>
+
+</Project>

@@ -67,14 +67,7 @@ namespace Game.Enigma
             get => this.initialPosition;
             set
             {
-                if (value < 0 || value > 25)
-                {
-                    throw new ArgumentException(
-                        "Initial position must be between 0 and 25.",
-                        nameof(value));
-                }
-
-                this.initialPosition = value;
+                this.initialPosition = value % 26;
             }
         }
 
@@ -83,14 +76,7 @@ namespace Game.Enigma
             get => this.ringPosition;
             set
             {
-                if (value < 0 || value > 25)
-                {
-                    throw new ArgumentException(
-                        "Ring position must be between 0 and 25.",
-                        nameof(value));
-                }
-
-                this.ringPosition = value;
+                this.ringPosition = value % 26;
             }
         }
     }

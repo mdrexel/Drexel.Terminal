@@ -16,7 +16,7 @@ namespace Game
         private const int SC_SIZE = 0xF000;
 
         private const int Width = 120;
-        private const int Height = 28;
+        private const int Height = 30;
         private const int ChoicesWidth = 30;
 
         public Program()
@@ -26,7 +26,9 @@ namespace Game
         public static void Main(string[] args)
         {
             Console.WindowWidth = Width;
-            Console.WindowHeight = Height + 2;
+            Console.WindowHeight = Height;
+            Console.BufferWidth = Width;
+            Console.BufferHeight = Height;
 
             IntPtr handle = GetConsoleWindow();
             IntPtr sysMenu = GetSystemMenu(handle, false);
@@ -47,10 +49,17 @@ namespace Game
             EnigmaM3 enigma = new EnigmaM3(RotorModel.I, RotorModel.II, RotorModel.III, ReflectorModel.UkwB);
 
             Console.Write("Start typing: ");
+            bool needSpace = false;
             while (true)
             {
                 ConsoleKeyInfo key = Console.ReadKey(true);
-                Console.Write(enigma.PerformTranslate(key.KeyChar));
+                if (needSpace)
+                {
+                    Console.Write(' ');
+                }
+
+                char result = enigma.PerformTranslate(key.KeyChar, out needSpace);
+                Console.Write(result);
             }
         }
 

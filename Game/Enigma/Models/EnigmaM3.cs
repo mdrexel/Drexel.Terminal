@@ -13,6 +13,8 @@ namespace Game.Enigma.Models
     {
         private readonly IReadOnlyList<Rotor> rotors;
 
+        private long charactersTranslated;
+
         public EnigmaM3(
             RotorModel rotor1,
             RotorModel rotor2,
@@ -28,6 +30,7 @@ namespace Game.Enigma.Models
             this.Plugboard = new Plugboard();
 
             this.rotors = new Rotor[] { this.Rotor1, this.Rotor2, this.Rotor3 };
+            this.charactersTranslated = 0;
         }
 
         public EntryRotor EntryRotor { get; }
@@ -42,7 +45,7 @@ namespace Game.Enigma.Models
 
         public Plugboard Plugboard { get; }
 
-        public char PerformTranslate(char content)
+        public char PerformTranslate(char content, out bool shouldBeFollowedBySpace)
         {
             // Collect slots, rotors, positions and rings for current translation
             int[] positions = new int[]
@@ -108,11 +111,13 @@ namespace Game.Enigma.Models
             else if (value == ' ')
             {
                 // Preserve spaces, we'll strip them later
+                shouldBeFollowedBySpace = false;
                 return ' ';
             }
             else
             {
                 // This is a foreign character
+                shouldBeFollowedBySpace = (++this.charactersTranslated % 5) == 0;
                 return '*';
             }
 
@@ -199,10 +204,11 @@ namespace Game.Enigma.Models
             this.Rotor3.InitialPosition = positions[2];
 
             // Translate char index back to code point and return it
+            shouldBeFollowedBySpace = (++this.charactersTranslated % 5) == 0;
             return (char)(value + 97);
         }
 
-        public string PerformTranslate(string content)
+        public string PerformTranslate(string content, out bool shouldBeFollowedBySpace)
         {
             // Collect slots, rotors, positions and rings for current translation
             IReadOnlyList<Rotor> rotors = new Rotor[]
@@ -374,7 +380,31 @@ namespace Game.Enigma.Models
             this.Rotor2.InitialPosition = positions[1];
             this.Rotor3.InitialPosition = positions[2];
 
-            return new string(result);
+            StringBuilder builder = new StringBuilder();
+            int counter = 0;
+            int written = 0;
+            long real = 0;
+            while (counter < result.Length)
+            {
+                char value = result[counter];
+                if (value != ' ')
+                {
+                    builder.Append(result[counter]);
+                    real++;
+                }
+
+                if (++written == 5)
+                {
+                    written = 0;
+                    builder.Append(' ');
+                }
+
+                counter++;
+            }
+
+            this.charactersTranslated += real;
+            shouldBeFollowedBySpace = (real % 5) == 0;
+            return builder.ToString();
         }
     }
 }

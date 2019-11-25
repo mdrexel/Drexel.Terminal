@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using Game.Enigma;
 using Game.Enigma.Models;
+using Game.Output;
 
 namespace Game
 {
     public class Program
     {
-        private const int MF_BYCOMMAND = 0x00000000;
-        private const int SC_CLOSE = 0xF060;
-        private const int SC_MAXIMIZE = 0xF030;
-        private const int SC_SIZE = 0xF000;
-
-        private const int Width = 120;
+                private const int Width = 120;
         private const int Height = 30;
         private const int ChoicesWidth = 30;
 
@@ -25,23 +21,10 @@ namespace Game
 
         public static void Main(string[] args)
         {
-            Console.WindowWidth = Width;
-            Console.WindowHeight = Height;
-            Console.BufferWidth = Width;
-            Console.BufferHeight = Height;
 
-            IntPtr handle = GetConsoleWindow();
-            IntPtr sysMenu = GetSystemMenu(handle, false);
-
-            if (handle != IntPtr.Zero)
-            {
-                DeleteMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND);
-                DeleteMenu(sysMenu, SC_MAXIMIZE, MF_BYCOMMAND);
-                DeleteMenu(sysMenu, SC_SIZE, MF_BYCOMMAND);
-            }
 
             Program program = new Program();
-            program.Run();
+            program.Spooky();
         }
 
         public void Run()
@@ -53,6 +36,11 @@ namespace Game
             while (true)
             {
                 ConsoleKeyInfo key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Spacebar)
+                {
+                    continue;
+                }
+
                 if (needSpace)
                 {
                     Console.Write(' ');
@@ -63,13 +51,34 @@ namespace Game
             }
         }
 
-        [DllImport("user32.dll")]
-        private static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
+        public void Spooky()
+        {
+            Random random = new Random();
+            using (Sink sink = new Sink("Game", Height, Width))
+            {
+                const int width = 5;
+                const int height = 3;
+                CharInfo[,] info = new CharInfo[width, height];
+                for (int x = 0; x < width; x++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        info[x, y] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
+                    }
+                }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+                sink.WriteRegion(
+                    info,
+                    6,
+                    6);
+                sink.Write(
+                    "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",
+                    new CharColors(ConsoleColor.Green, ConsoleColor.Black),
+                    new Coord(30, 10),
+                    50);
+            }
 
-        [DllImport("kernel32.dll", ExactSpelling = true)]
-        private static extern IntPtr GetConsoleWindow();
+            Console.ReadKey();
+        }
     }
 }

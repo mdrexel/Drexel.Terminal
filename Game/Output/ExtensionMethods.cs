@@ -4,12 +4,47 @@ namespace Game.Output
 {
     internal static class ExtensionMethods
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteRegion(
             this ISink sink,
-            CharInfo[,]? buffer,
+            CharInfo[,] buffer,
             Coord topLeft)
         {
             sink.WriteRegion(buffer, topLeft.X, topLeft.Y);
+        }
+
+        public static CharInfo[,] ToCharInfo(this string value, CharColors colors)
+        {
+            CharInfo[,] result = new CharInfo[1, value.Length];
+            for (int counter = 0; counter < value.Length; counter++)
+            {
+                result[0, counter] = new CharInfo(value[counter], colors);
+            }
+
+            return result;
+        }
+
+        public static CharInfo[,] ToCharInfo(
+            this string value,
+            CharColors colors,
+            short maximumWidth,
+            short maximumHeight)
+        {
+            CharInfo[,] result = new CharInfo[maximumHeight, maximumWidth];
+            for (int y = 0; y < maximumWidth; y++)
+            {
+                for (int x = 0; x < maximumWidth; x++)
+                {
+                    if (x + y > value.Length)
+                    {
+                        goto leave;
+                    }
+
+                    result[y, x] = new CharInfo(value[x + y], colors);
+                }
+            }
+
+            leave: return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

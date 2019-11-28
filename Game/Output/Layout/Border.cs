@@ -5,6 +5,7 @@ namespace Game.Output.Layout
     public sealed class Border : IDrawable
     {
         private readonly Region outerRegion;
+        private readonly CharInfo[,]? namePlatePattern;
         private readonly CharInfo[,]? topLeftPattern;
         private readonly CharInfo[,]? topRightPattern;
         private readonly CharInfo[,]? bottomLeftPattern;
@@ -14,6 +15,7 @@ namespace Game.Output.Layout
         private readonly CharInfo[,]? rightStrokePattern;
         private readonly CharInfo[,]? bottomStrokePattern;
 
+        private Text namePlate;
         private Rectangle topLeft;
         private Rectangle topRight;
         private Rectangle bottomLeft;
@@ -25,6 +27,7 @@ namespace Game.Output.Layout
 
         internal Border(
             Region outerRegion,
+            CharInfo[,]? namePlate = null,
             CharInfo[,]? topLeft = null,
             CharInfo[,]? topRight = null,
             CharInfo[,]? bottomLeft = null,
@@ -37,6 +40,7 @@ namespace Game.Output.Layout
             this.outerRegion = outerRegion;
             this.InnerRegion = outerRegion;
 
+            this.namePlatePattern = namePlate;
             this.topLeftPattern = topLeft;
             this.topRightPattern = topRight;
             this.bottomLeftPattern = bottomLeft;
@@ -66,6 +70,8 @@ namespace Game.Output.Layout
 
             this.bottomRight.Draw(sink);
             this.bottomStroke.Draw(sink);
+
+            this.namePlate.Draw(sink);
         }
 
         private void Recalculate()
@@ -73,7 +79,8 @@ namespace Game.Output.Layout
             short largestTopOffset = Largest(
                 this.topLeftPattern?.GetHeight(),
                 this.topRightPattern?.GetHeight(),
-                this.topStrokePattern?.GetHeight());
+                this.topStrokePattern?.GetHeight(),
+                this.namePlatePattern?.GetHeight());
             short largestLeftOffset = Largest(
                 this.topLeftPattern?.GetWidth(),
                 this.topRightPattern?.GetWidth(),
@@ -163,6 +170,15 @@ namespace Game.Output.Layout
                         RepeatHorizontally(
                             this.bottomStrokePattern,
                             (short)(this.outerRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width)));
+
+            this.namePlate =
+                this.namePlatePattern == null
+                    ? Text.Empty
+                    : new Text(
+                        new Coord(
+                            (short)(this.outerRegion.TopLeft.X + this.topLeft.Region.Width + 1),
+                            this.outerRegion.TopLeft.Y),
+                        this.namePlatePattern);
         }
 
         private static short Largest(params short?[] values)

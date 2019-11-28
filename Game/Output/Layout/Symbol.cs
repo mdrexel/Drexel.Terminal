@@ -9,6 +9,7 @@ namespace Game.Output.Layout
     public abstract class Symbol
     {
         public Symbol(
+            string name,
             Region region,
             BorderBuilder borderBuilder)
         {

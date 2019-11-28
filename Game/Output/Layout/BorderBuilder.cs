@@ -2,6 +2,7 @@
 {
     public sealed class BorderBuilder
     {
+        private readonly CharInfo[,]? namePlate;
         private readonly CharInfo[,]? topLeft;
         private readonly CharInfo[,]? topRight;
         private readonly CharInfo[,]? bottomLeft;
@@ -12,6 +13,7 @@
         private readonly CharInfo[,]? bottomStroke;
 
         public BorderBuilder(
+            CharInfo[,]? namePlate = null,
             CharInfo[,]? topLeft = null,
             CharInfo[,]? topRight = null,
             CharInfo[,]? bottomLeft = null,
@@ -21,6 +23,7 @@
             CharInfo[,]? rightStroke = null,
             CharInfo[,]? bottomStroke = null)
         {
+            this.namePlate = namePlate;
             this.topLeft = topLeft;
             this.topRight = topRight;
             this.bottomLeft = bottomLeft;
@@ -35,6 +38,7 @@
         {
             return new Border(
                 outerRegion,
+                this.namePlate,
                 this.topLeft,
                 this.topRight,
                 this.bottomLeft,

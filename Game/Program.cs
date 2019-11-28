@@ -70,6 +70,7 @@ namespace Game
                 ////    0);
 
                 BorderBuilder builder = new BorderBuilder(
+                    namePlate: "Hello World".ToCharInfo(CharColors.Standard),
                     topLeft: new CharInfo[3, 3]
                     {
                         { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') },
@@ -122,7 +123,8 @@ namespace Game
                     "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",
                     new CharColors(ConsoleColor.Green, ConsoleColor.Black),
                     new Coord(30, 10),
-                    50);
+                    1000,
+                    DelayMode.PerWord);
             }
 
             Console.ReadKey();

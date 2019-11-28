@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Game.Output
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly ref struct CharColors
+    public readonly struct CharColors
     {
         private static readonly IReadOnlyList<ConsoleColor> Colors = Enum
             .GetValues(typeof(ConsoleColor))
@@ -24,6 +24,8 @@ namespace Game.Output
         {
             return color.attributes;
         }
+
+        public static CharColors Standard { get; } = new CharColors(ConsoleColor.White, ConsoleColor.Black);
 
         public static CharColors GetRandom(Random random)
         {

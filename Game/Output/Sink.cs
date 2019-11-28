@@ -164,17 +164,46 @@ namespace Game.Output
 
         public void Write(
             string content,
-            CharColors color,
+            CharColors colors,
             Coord origin,
-            int millisecondsDelay)
+            int millisecondsDelay,
+            DelayMode delayMode)
         {
             SetConsoleCursorPosition(this.handle, origin);
-            foreach (char @char in content)
+            switch (delayMode)
             {
-                this.Write(
-                    @char,
-                    color,
-                    millisecondsDelay);
+                case DelayMode.AtEnd:
+                    foreach (char @char in content)
+                    {
+                        this.Write(@char, colors);
+                    }
+
+                    Thread.Sleep(millisecondsDelay);
+                    break;
+                case DelayMode.PerCharacter:
+                    foreach (char @char in content)
+                    {
+                        this.Write(
+                            @char,
+                            colors,
+                            millisecondsDelay);
+                    }
+
+                    break;
+                case DelayMode.PerWord:
+                    string[] split = content.Split(' ');
+                    for (int counter = 0; counter < split.Length; counter++)
+                    {
+                        this.Write(split[counter], colors);
+
+                        if (counter < split.Length - 1)
+                        {
+                            this.Write(' ', colors);
+                            Thread.Sleep(millisecondsDelay);
+                        }
+                    }
+
+                    break;
             }
         }
 
@@ -188,11 +217,11 @@ namespace Game.Output
 
         public void Write(
             char @char,
-            CharColors attributes,
+            CharColors colors,
             int millisecondsDelay)
         {
             Thread.Sleep(millisecondsDelay);
-            this.Write(@char, attributes);
+            this.Write(@char, colors);
         }
 
         public void Write(char @char, CharColors colors)

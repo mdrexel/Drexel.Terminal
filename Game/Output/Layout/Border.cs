@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Game.Output.Primitives;
-
-namespace Game.Output.Layout
+﻿namespace Game.Output.Layout
 {
     public sealed class Border : IDrawable
     {
@@ -19,7 +12,7 @@ namespace Game.Output.Layout
         private readonly CharInfo[,]? rightStroke;
         private readonly CharInfo[,]? bottomStroke;
 
-        public Border(
+        internal Border(
             Region outerRegion,
             CharInfo[,]? topLeft = null,
             CharInfo[,]? topRight = null,
@@ -45,14 +38,48 @@ namespace Game.Output.Layout
             this.Recalculate();
         }
 
-        private void Recalculate()
-        {
-        }
-
-        public Region InnerRegion { get; }
+        public Region InnerRegion { get; private set; }
 
         public void Draw(ISink sink)
         {
+        }
+
+        private void Recalculate()
+        {
+            short largestTopOffset = Largest(
+                this.topLeft?.GetHeight(),
+                this.topRight?.GetHeight(),
+                this.topStroke?.GetHeight());
+            short largestLeftOffset = Largest(
+                this.topLeft?.GetWidth(),
+                this.topRight?.GetWidth(),
+                this.leftStroke?.GetWidth());
+            short largestBottomOffset = Largest(
+                this.bottomLeft?.GetHeight(),
+                this.bottomRight?.GetHeight(),
+                this.bottomStroke?.GetHeight());
+            short largestRightOffset = Largest(
+                this.topRight?.GetWidth(),
+                this.bottomRight?.GetWidth(),
+                this.rightStroke?.GetWidth());
+
+            this.InnerRegion = new Region(
+                this.outerRegion.TopLeft + new Coord(largestLeftOffset, largestTopOffset),
+                this.outerRegion.BottomRight - new Coord(largestRightOffset, largestBottomOffset));
+        }
+
+        private static short Largest(params short?[] values)
+        {
+            short largest = 0;
+            foreach (short? value in values)
+            {
+                if (value.HasValue && value > largest)
+                {
+                    largest = value.Value;
+                }
+            }
+
+            return largest;
         }
     }
 }

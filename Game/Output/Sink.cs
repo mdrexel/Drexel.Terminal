@@ -223,10 +223,8 @@ namespace Game.Output
             short left,
             short top)
         {
-            short columns = (short)buffer.GetLength(0);
-            short rows = (short)buffer.GetLength(1);
-
-            SmallRect rect = new SmallRect(left, top, (short)(left + columns), (short)(top + rows));
+            Coord size = buffer.ToCoord();
+            SmallRect rect = new SmallRect(left, top, (short)(left + size.X), (short)(top + size.Y));
             unsafe
             {
                 fixed (CharInfo* pinned = buffer)
@@ -235,7 +233,7 @@ namespace Game.Output
                     WriteConsoleOutputW(
                         this.handle,
                         pointer,
-                        new Coord(columns, rows),
+                        new Coord(size.X, size.Y),
                         new Coord(0, 0),
                         in rect);
                 }

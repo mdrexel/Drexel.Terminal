@@ -21,8 +21,6 @@ namespace Game
 
         public static void Main(string[] args)
         {
-
-
             Program program = new Program();
             program.Spooky();
         }
@@ -58,12 +56,12 @@ namespace Game
             {
                 ////for (int counter = 0; counter < 1000; counter++)
                 {
-                    CharInfo[,] info = new CharInfo[Width, Height];
+                    CharInfo[,] info = new CharInfo[Height, Width];
                     for (int x = 0; x < Width; x++)
                     {
                         for (int y = 0; y < Height; y++)
                         {
-                            info[x, y] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
+                            info[y, x] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
                         }
                     }
 
@@ -82,6 +80,14 @@ namespace Game
             }
 
             Console.ReadKey();
+        }
+
+        public void Stupid()
+        {
+            Coord coord = new int[3, 5] { { 0, 1, 2, 3, 4 }, { 5, 6, 7, 8, 9 }, { 10, 11, 12, 13, 14 } }.ToCoord();
+
+            Console.WriteLine(coord);
+            Console.ReadLine();
         }
     }
 }

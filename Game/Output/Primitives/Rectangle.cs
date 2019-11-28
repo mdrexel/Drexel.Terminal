@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Game.Output.Layout;
 
 namespace Game.Output.Primitives
 {
@@ -10,14 +6,19 @@ namespace Game.Output.Primitives
     {
         private readonly CharInfo[,] pattern;
 
-        public Rectangle(CharInfo[,] pattern)
+        public Rectangle(Coord topLeft, CharInfo[,] pattern)
         {
             this.pattern = pattern;
+            this.Region = new Region(topLeft, topLeft + new Coord(pattern.GetWidth(), pattern.GetHeight()));
         }
+
+        public static Rectangle Empty { get; } = new Rectangle(new Coord(0, 0), new CharInfo[0, 0]);
+
+        public IMoveOnlyRegion Region { get; }
 
         public void Draw(ISink sink)
         {
-            throw new NotImplementedException();
+            sink.WriteRegion(this.pattern, this.Region.TopLeft);
         }
     }
 }

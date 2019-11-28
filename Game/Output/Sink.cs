@@ -258,5 +258,26 @@ namespace Game.Output
                     new Coord(0, (short)(Console.CursorTop + 1)));
             }
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private readonly ref struct SmallRect
+        {
+            public readonly short Left;
+            public readonly short Top;
+            public readonly short Right;
+            public readonly short Bottom;
+
+            public SmallRect(
+                short left,
+                short top,
+                short right,
+                short bottom)
+            {
+                this.Left = left;
+                this.Top = top;
+                this.Right = right;
+                this.Bottom = bottom;
+            }
+        }
     }
 }

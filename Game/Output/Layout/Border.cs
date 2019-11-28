@@ -1,16 +1,27 @@
-﻿namespace Game.Output.Layout
+﻿using Game.Output.Primitives;
+
+namespace Game.Output.Layout
 {
     public sealed class Border : IDrawable
     {
         private readonly Region outerRegion;
-        private readonly CharInfo[,]? topLeft;
-        private readonly CharInfo[,]? topRight;
-        private readonly CharInfo[,]? bottomLeft;
-        private readonly CharInfo[,]? bottomRight;
-        private readonly CharInfo[,]? leftStroke;
-        private readonly CharInfo[,]? topStroke;
-        private readonly CharInfo[,]? rightStroke;
-        private readonly CharInfo[,]? bottomStroke;
+        private readonly CharInfo[,]? topLeftPattern;
+        private readonly CharInfo[,]? topRightPattern;
+        private readonly CharInfo[,]? bottomLeftPattern;
+        private readonly CharInfo[,]? bottomRightPattern;
+        private readonly CharInfo[,]? leftStrokePattern;
+        private readonly CharInfo[,]? topStrokePattern;
+        private readonly CharInfo[,]? rightStrokePattern;
+        private readonly CharInfo[,]? bottomStrokePattern;
+
+        private Rectangle topLeft;
+        private Rectangle topRight;
+        private Rectangle bottomLeft;
+        private Rectangle bottomRight;
+        private Rectangle leftStroke;
+        private Rectangle topStroke;
+        private Rectangle rightStroke;
+        private Rectangle bottomStroke;
 
         internal Border(
             Region outerRegion,
@@ -26,14 +37,14 @@
             this.outerRegion = outerRegion;
             this.InnerRegion = outerRegion;
 
-            this.topLeft = topLeft;
-            this.topRight = topRight;
-            this.bottomLeft = bottomLeft;
-            this.bottomRight = bottomRight;
-            this.leftStroke = leftStroke;
-            this.topStroke = topStroke;
-            this.rightStroke = rightStroke;
-            this.bottomStroke = bottomStroke;
+            this.topLeftPattern = topLeft;
+            this.topRightPattern = topRight;
+            this.bottomLeftPattern = bottomLeft;
+            this.bottomRightPattern = bottomRight;
+            this.leftStrokePattern = leftStroke;
+            this.topStrokePattern = topStroke;
+            this.rightStrokePattern = rightStroke;
+            this.bottomStrokePattern = bottomStroke;
 
             this.outerRegion.OnChanged += (obj, e) => this.Recalculate();
 
@@ -44,61 +55,89 @@
 
         public void Draw(ISink sink)
         {
-            if (this.topLeft != null)
-            {
-                sink.WriteRegion(
-                    this.topLeft,
-                    this.outerRegion.TopLeft.X,
-                    this.outerRegion.TopLeft.Y);
-            }
+            this.topLeft.Draw(sink);
+            this.topStroke.Draw(sink);
 
-            if (this.topRight != null)
-            {
-                sink.WriteRegion(
-                    this.topRight,
-                    (short)(this.outerRegion.BottomRight.X - this.topRight.GetWidth()),
-                    this.outerRegion.TopLeft.Y);
-            }
+            this.topRight.Draw(sink);
+            this.leftStroke.Draw(sink);
 
-            if (this.bottomLeft != null)
-            {
-                sink.WriteRegion(
-                    this.bottomLeft,
-                    this.outerRegion.TopLeft.X,
-                    (short)(this.outerRegion.BottomRight.Y - this.bottomLeft.GetHeight()));
-            }
+            this.bottomLeft.Draw(sink);
+            this.rightStroke.Draw(sink);
 
-            if (this.bottomRight != null)
-            {
-                sink.WriteRegion(
-                    this.bottomRight,
-                    (short)(this.outerRegion.BottomRight.X - this.bottomRight.GetWidth()),
-                    (short)(this.outerRegion.BottomRight.Y - this.bottomRight.GetHeight()));
-            }
+            this.bottomRight.Draw(sink);
+            this.bottomStroke.Draw(sink);
+            ////if (this.topStrokePattern != null)
+            ////{
+            ////    sink.WriteRegion(
+            ////        RepeatHorizontally(this.topStrokePattern, this.InnerRegion.Width),
+            ////        (short)(this.outerRegion.TopLeft.X + this.topLeftPattern.GetWidth(0)),
+            ////        this.outerRegion.TopLeft.Y);
+            ////}
+
+            ////if (this.leftStrokePattern != null)
+            ////{
+            ////    sink.WriteRegion(
+            ////        RepeatVertically(this.leftStrokePattern, this.))
+            ////}
         }
 
         private void Recalculate()
         {
             short largestTopOffset = Largest(
-                this.topLeft?.GetHeight(),
-                this.topRight?.GetHeight(),
-                this.topStroke?.GetHeight());
+                this.topLeftPattern?.GetHeight(),
+                this.topRightPattern?.GetHeight(),
+                this.topStrokePattern?.GetHeight());
             short largestLeftOffset = Largest(
-                this.topLeft?.GetWidth(),
-                this.topRight?.GetWidth(),
-                this.leftStroke?.GetWidth());
+                this.topLeftPattern?.GetWidth(),
+                this.topRightPattern?.GetWidth(),
+                this.leftStrokePattern?.GetWidth());
             short largestBottomOffset = Largest(
-                this.bottomLeft?.GetHeight(),
-                this.bottomRight?.GetHeight(),
-                this.bottomStroke?.GetHeight());
+                this.bottomLeftPattern?.GetHeight(),
+                this.bottomRightPattern?.GetHeight(),
+                this.bottomStrokePattern?.GetHeight());
             short largestRightOffset = Largest(
-                this.topRight?.GetWidth(),
-                this.bottomRight?.GetWidth(),
-                this.rightStroke?.GetWidth());
+                this.topRightPattern?.GetWidth(),
+                this.bottomRightPattern?.GetWidth(),
+                this.rightStrokePattern?.GetWidth());
 
             this.InnerRegion = new Region(
                 this.outerRegion.TopLeft + new Coord(largestLeftOffset, largestTopOffset),
                 this.outerRegion.BottomRight - new Coord(largestRightOffset, largestBottomOffset));
+
+            this.topLeft =
+                this.topLeftPattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(this.outerRegion.TopLeft, this.topLeftPattern);
+            this.topRight =
+                this.topRightPattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            (short)(this.outerRegion.BottomRight.X - this.topRightPattern.GetWidth()),
+                            this.outerRegion.TopLeft.Y),
+                        this.topRightPattern);
+            this.bottomLeft =
+                this.bottomLeftPattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            this.outerRegion.TopLeft.X,
+                            (short)(this.outerRegion.BottomRight.Y - this.bottomLeftPattern.GetHeight())),
+                        this.bottomLeftPattern);
+            this.bottomRight =
+                this.bottomRightPattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            (short)(this.outerRegion.BottomRight.X - this.bottomRightPattern.GetWidth()),
+                            (short)(this.outerRegion.BottomRight.Y - this.bottomRightPattern.GetHeight())),
+                        this.bottomRightPattern);
+
+            // TODO: calculate
+            this.topStroke = Rectangle.Empty;
+            this.leftStroke = Rectangle.Empty;
+            this.rightStroke = Rectangle.Empty;
+            this.bottomStroke = Rectangle.Empty;
         }
 
         private static short Largest(params short?[] values)
@@ -113,6 +152,40 @@
             }
 
             return largest;
+        }
+
+        private static CharInfo[,] RepeatHorizontally(CharInfo[,] pattern, short width)
+        {
+            short originalWidth = pattern.GetWidth();
+
+            short height = pattern.GetHeight();
+            CharInfo[,] result = new CharInfo[height, width];
+            for (short y = 0; y < height; y++)
+            {
+                for (short x = 0; x < width; x++)
+                {
+                    result[y, x] = pattern[y, x % originalWidth];
+                }
+            }
+
+            return result;
+        }
+
+        private static CharInfo[,] RepeatVertically(CharInfo[,] pattern, short height)
+        {
+            short originalHeight = pattern.GetHeight();
+
+            short width = pattern.GetWidth();
+            CharInfo[,] result = new CharInfo[height, width];
+            for (short y = 0; y < height; y++)
+            {
+                for (short x = 0; x < width; x++)
+                {
+                    result[y, x] = pattern[y % originalHeight, x];
+                }
+            }
+
+            return result;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Game.Output.Layout
 {
-    public sealed class Region : IReadOnlyRegion
+    public sealed class Region : IMoveOnlyRegion
     {
         private Coord topLeft;
         private Coord bottomRight;

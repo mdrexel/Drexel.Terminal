@@ -9,22 +9,7 @@ namespace Game.Output
             CharInfo[,]? buffer,
             Coord topLeft)
         {
-            if (!(buffer is null))
-            {
-                sink.WriteRegion(buffer, topLeft.X, topLeft.Y);
-            }
-        }
-
-        public static void WriteRegion(
-            this ISink sink,
-            CharInfo[,]? buffer,
-            short left,
-            short top)
-        {
-            if (!(buffer is null))
-            {
-                sink.WriteRegion(buffer, left, top);
-            }
+            sink.WriteRegion(buffer, topLeft.X, topLeft.Y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -42,6 +27,28 @@ namespace Game.Output
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short GetHeight<T>(this T[,] array)
         {
+            return (short)array.GetLength(0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short GetWidth<T>(this T[,]? array, short @default)
+        {
+            if (array is null)
+            {
+                return default;
+            }
+
+            return (short)array.GetLength(1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short GetHeight<T>(this T[,]? array, short @default)
+        {
+            if (array is null)
+            {
+                return default;
+            }
+
             return (short)array.GetLength(0);
         }
     }

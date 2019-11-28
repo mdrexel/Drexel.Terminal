@@ -76,10 +76,10 @@ namespace Game
                         { new CharInfo('|'), new CharInfo('*'), new CharInfo('|') },
                         { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') }
                     },
-                    topRight: new CharInfo[2, 2]
+                    topRight: new CharInfo[2, 4]
                     {
-                        { new CharInfo('*'), new CharInfo('*') },
-                        { new CharInfo('*'), new CharInfo('*') },
+                        { new CharInfo('|'), new CharInfo('-'), new CharInfo('-'), new CharInfo('|') },
+                        { new CharInfo('|'), new CharInfo('='), new CharInfo('='), new CharInfo('|') },
                     },
                     bottomLeft: new CharInfo[1, 1]
                     {

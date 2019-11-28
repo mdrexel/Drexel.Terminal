@@ -91,6 +91,28 @@ namespace Game
                         { new CharInfo('*'), new CharInfo('*') },
                         { new CharInfo('*'), new CharInfo('*') },
                         { new CharInfo('*'), new CharInfo('*') },
+                    },
+                    leftStroke: new CharInfo[1, 2]
+                    {
+                        { new CharInfo('>'), new CharInfo('<') },
+                    },
+                    topStroke: new CharInfo[2, 2]
+                    {
+                        { new CharInfo('~'), new CharInfo('~') },
+                        { new CharInfo('~'), new CharInfo('~') }
+                    },
+                    rightStroke: new CharInfo[4, 1]
+                    {
+                        { new CharInfo('1') },
+                        { new CharInfo('2') },
+                        { new CharInfo('3') },
+                        { new CharInfo('4') }
+                    },
+                    bottomStroke: new CharInfo[3, 3]
+                    {
+                        { new CharInfo('1'), new CharInfo('2'), new CharInfo('3') },
+                        { new CharInfo('4'), new CharInfo('5'), new CharInfo('6') },
+                        { new CharInfo('7'), new CharInfo('8'), new CharInfo('9') },
                     });
 
                 Border border = builder.Build(new Region(new Coord(0, 0), new Coord(15, 15)));

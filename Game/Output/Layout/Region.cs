@@ -2,7 +2,7 @@
 
 namespace Game.Output.Layout
 {
-    public sealed class Region : IMoveOnlyRegion
+    public sealed class Region : IMoveOnlyRegion, IEquatable<Region>
     {
         private Coord topLeft;
         private Coord bottomRight;
@@ -27,7 +27,11 @@ namespace Game.Output.Layout
 
                 Region oldRegion = this.Clone();
                 this.topLeft = value;
-                this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+
+                if (this != oldRegion)
+                {
+                    this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+                }
             }
         }
 
@@ -45,7 +49,11 @@ namespace Game.Output.Layout
 
                 Region oldRegion = this.Clone();
                 this.bottomRight = value;
-                this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+
+                if (this != oldRegion)
+                {
+                    this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+                }
             }
         }
 
@@ -75,7 +83,11 @@ namespace Game.Output.Layout
                 Region oldRegion = this.Clone();
                 this.topLeft = newTopLeft;
                 this.bottomRight = newBottomRight;
-                this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+
+                if (this != oldRegion)
+                {
+                    this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+                }
             }
         }
 
@@ -105,13 +117,32 @@ namespace Game.Output.Layout
                 Region oldRegion = this.Clone();
                 this.topLeft = newTopLeft;
                 this.bottomRight = newBottomRight;
-                this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+
+                if (this != oldRegion)
+                {
+                    this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+                }
             }
         }
 
         public event EventHandler<RegionChangeEventArgs>? OnChangeRequested;
 
         public event EventHandler<RegionChangedEventArgs>? OnChanged;
+
+        public static bool operator ==(Region left, Region right)
+        {
+            if (left is null)
+            {
+                return right is null;
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Region left, Region right)
+        {
+            return !(left == right);
+        }
 
         public bool Overlaps(Region other)
         {
@@ -121,22 +152,37 @@ namespace Game.Output.Layout
                 && this.bottomRight.Y > other.topLeft.Y;
         }
 
-        public void Translate(Coord vector)
+        public override bool Equals(object obj)
         {
-            Coord newTopLeft = this.topLeft + vector;
-            Coord newBottomRight = this.bottomRight + vector;
-
-            RegionChangeEventArgs args = new RegionChangeEventArgs(this, newTopLeft, newBottomRight);
-            this.OnChangeRequested?.Invoke(this, args);
-            if (args.Cancel)
+            if (obj is Region other)
             {
-                return;
+                return this.Equals(other);
             }
 
-            Region oldRegion = this.Clone();
-            this.topLeft = newTopLeft;
-            this.bottomRight = newBottomRight;
-            this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+            return false;
+        }
+
+        public bool Equals(Region other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            return this.topLeft == other.topLeft
+                && this.bottomRight == other.bottomRight;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 54413;
+            unchecked
+            {
+                hash = (hash * 31) + this.topLeft.GetHashCode();
+                hash = (hash * 31) + this.bottomRight.GetHashCode();
+            }
+
+            return hash;
         }
 
         private Region Clone()

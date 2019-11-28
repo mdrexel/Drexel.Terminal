@@ -66,19 +66,6 @@ namespace Game.Output.Layout
 
             this.bottomRight.Draw(sink);
             this.bottomStroke.Draw(sink);
-            ////if (this.topStrokePattern != null)
-            ////{
-            ////    sink.WriteRegion(
-            ////        RepeatHorizontally(this.topStrokePattern, this.InnerRegion.Width),
-            ////        (short)(this.outerRegion.TopLeft.X + this.topLeftPattern.GetWidth(0)),
-            ////        this.outerRegion.TopLeft.Y);
-            ////}
-
-            ////if (this.leftStrokePattern != null)
-            ////{
-            ////    sink.WriteRegion(
-            ////        RepeatVertically(this.leftStrokePattern, this.))
-            ////}
         }
 
         private void Recalculate()
@@ -133,11 +120,49 @@ namespace Game.Output.Layout
                             (short)(this.outerRegion.BottomRight.Y - this.bottomRightPattern.GetHeight())),
                         this.bottomRightPattern);
 
-            // TODO: calculate
-            this.topStroke = Rectangle.Empty;
-            this.leftStroke = Rectangle.Empty;
-            this.rightStroke = Rectangle.Empty;
-            this.bottomStroke = Rectangle.Empty;
+            this.topStroke =
+                this.topStrokePattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            (short)(this.outerRegion.TopLeft.X + this.topLeft.Region.Width),
+                            this.outerRegion.TopLeft.Y),
+                        RepeatHorizontally(
+                            this.topStrokePattern,
+                            (short)(this.outerRegion.Width - this.topLeft.Region.Width - this.topRight.Region.Width)));
+
+            this.leftStroke =
+                this.leftStrokePattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            this.outerRegion.TopLeft.X,
+                            (short)(this.outerRegion.TopLeft.Y + this.topLeft.Region.Height)),
+                        RepeatVertically(
+                            this.leftStrokePattern,
+                            (short)(this.outerRegion.Height - this.topLeft.Region.Height - this.bottomLeft.Region.Height)));
+
+            this.rightStroke =
+                this.rightStrokePattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            (short)(this.outerRegion.BottomRight.X - this.rightStrokePattern.GetWidth()),
+                            (short)(this.outerRegion.TopLeft.Y + this.topRight.Region.Height)),
+                        RepeatVertically(
+                            this.rightStrokePattern,
+                            (short)(this.outerRegion.Height - this.topRight.Region.Height - this.bottomRight.Region.Height)));
+
+            this.bottomStroke =
+                this.bottomStrokePattern == null
+                    ? Rectangle.Empty
+                    : new Rectangle(
+                        new Coord(
+                            (short)(this.outerRegion.TopLeft.X + this.bottomLeft.Region.Width),
+                            (short)(this.outerRegion.BottomRight.Y - bottomStrokePattern.GetHeight())),
+                        RepeatHorizontally(
+                            this.bottomStrokePattern,
+                            (short)(this.outerRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width)));
         }
 
         private static short Largest(params short?[] values)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -138,7 +139,7 @@ namespace Game.Output
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool WriteConsoleOutputCharacter(
             SafeFileHandle hConsoleOutput,
-            char[] lpCharacter,
+            IntPtr lpCharacter,////char[] lpCharacter,
             int nLength,
             Coord dwWriteCoord,
             out int lpNumberOfCharsWritten);
@@ -146,7 +147,7 @@ namespace Game.Output
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool WriteConsoleOutputAttribute(
             SafeFileHandle hConsoleOutput,
-            CharAttributes[] lpAttribute,
+            IntPtr lpAttribute,////CharAttributes[] lpAttribute,
             int nLength,
             Coord dwWriteCoord,
             out int lpNumberOfCharsWritten);
@@ -197,27 +198,24 @@ namespace Game.Output
         public void Write(char @char, CharColors colors)
         {
             Coord coord = new Coord((short)Console.CursorLeft, (short)Console.CursorTop);
-            WriteConsoleOutputAttribute(
-                this.handle,
-                new[] { (CharAttributes)colors },
-                1,
-                coord,
-                out _);
-            WriteConsoleOutputCharacter(
-                this.handle,
-                new char[] { @char },
-                1,
-                coord,
-                out _);
-
-            if (!SetConsoleCursorPosition(
-                this.handle,
-                new Coord((short)(Console.CursorLeft + 1), (short)Console.CursorTop)))
+            unsafe
             {
-                SetConsoleCursorPosition(
+                CharAttributes attributes = colors;
+                WriteConsoleOutputAttribute(
                     this.handle,
-                    new Coord(0, (short)(Console.CursorTop + 1)));
+                    new IntPtr(&attributes),////new[] { (CharAttributes)colors },
+                    1,
+                    coord,
+                    out _);
+                WriteConsoleOutputCharacter(
+                    this.handle,
+                    new IntPtr(&@char),////new char[] { @char },
+                    1,
+                    coord,
+                    out _);
             }
+
+            this.AdvanceCursor();
         }
 
         public void WriteRegion(
@@ -248,6 +246,19 @@ namespace Game.Output
         {
             Sink.Active = false;
             this.handle.Dispose();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void AdvanceCursor()
+        {
+            if (!SetConsoleCursorPosition(
+                this.handle,
+                new Coord((short)(Console.CursorLeft + 1), (short)Console.CursorTop)))
+            {
+                SetConsoleCursorPosition(
+                    this.handle,
+                    new Coord(0, (short)(Console.CursorTop + 1)));
+            }
         }
     }
 }

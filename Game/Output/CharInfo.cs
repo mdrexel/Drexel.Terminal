@@ -14,6 +14,6 @@ namespace Game.Output
             this.Attributes = attributes;
         }
 
-        public static int Size { get; } = Marshal.SizeOf<CharInfo>();
+        public static int Size { get; } = Marshal.SizeOf(typeof(CharInfo));
     }
 }

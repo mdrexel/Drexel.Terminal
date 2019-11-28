@@ -11,7 +11,7 @@ namespace Game
 {
     public class Program
     {
-                private const int Width = 120;
+        private const int Width = 120;
         private const int Height = 30;
         private const int ChoicesWidth = 30;
 
@@ -29,7 +29,7 @@ namespace Game
 
         public void Run()
         {
-            EnigmaM3 enigma = new EnigmaM3(RotorModel.I, RotorModel.II, RotorModel.III, ReflectorModel.UkwB);
+            EnigmaM3 enigma = new EnigmaM3(RotorModel.VI, RotorModel.II, RotorModel.VIII, ReflectorModel.UkwB);
 
             Console.Write("Start typing: ");
             bool needSpace = false;
@@ -56,21 +56,24 @@ namespace Game
             Random random = new Random();
             using (Sink sink = new Sink("Game", Height, Width))
             {
-                const int width = 5;
-                const int height = 3;
-                CharInfo[,] info = new CharInfo[width, height];
-                for (int x = 0; x < width; x++)
+                ////for (int counter = 0; counter < 1000; counter++)
                 {
-                    for (int y = 0; y < height; y++)
+                    CharInfo[,] info = new CharInfo[Width, Height];
+                    for (int x = 0; x < Width; x++)
                     {
-                        info[x, y] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
+                        for (int y = 0; y < Height; y++)
+                        {
+                            info[x, y] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
+                        }
                     }
+
+                    sink.WriteRegion(
+                        info,
+                        0,
+                        0);
                 }
 
-                sink.WriteRegion(
-                    info,
-                    6,
-                    6);
+
                 sink.Write(
                     "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",
                     new CharColors(ConsoleColor.Green, ConsoleColor.Black),

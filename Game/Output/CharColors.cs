@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Game.Output
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct CharColors
+    public readonly ref struct CharColors
     {
         private static readonly IReadOnlyList<ConsoleColor> Colors = Enum
             .GetValues(typeof(ConsoleColor))

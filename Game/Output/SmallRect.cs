@@ -3,7 +3,7 @@
 namespace Game.Output
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct SmallRect
+    public readonly ref struct SmallRect
     {
         public readonly short Left;
         public readonly short Top;

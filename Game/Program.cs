@@ -6,6 +6,7 @@ using System.Text;
 using Game.Enigma;
 using Game.Enigma.Models;
 using Game.Output;
+using Game.Output.Layout;
 
 namespace Game
 {
@@ -54,23 +55,46 @@ namespace Game
             Random random = new Random();
             using (Sink sink = new Sink("Game", Height, Width))
             {
-                ////for (int counter = 0; counter < 1000; counter++)
-                {
-                    CharInfo[,] info = new CharInfo[Height, Width];
-                    for (int x = 0; x < Width; x++)
+                ////CharInfo[,] info = new CharInfo[Height, Width];
+                ////for (int x = 0; x < Width; x++)
+                ////{
+                ////    for (int y = 0; y < Height; y++)
+                ////    {
+                ////        info[y, x] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
+                ////    }
+                ////}
+
+                ////sink.WriteRegion(
+                ////    info,
+                ////    0,
+                ////    0);
+
+                BorderBuilder builder = new BorderBuilder(
+                    topLeft: new CharInfo[3, 3]
                     {
-                        for (int y = 0; y < Height; y++)
-                        {
-                            info[y, x] = new CharInfo(new CharUnion(), CharColors.GetRandom(random));
-                        }
-                    }
+                        { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') },
+                        { new CharInfo('|'), new CharInfo('*'), new CharInfo('|') },
+                        { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') }
+                    },
+                    topRight: new CharInfo[2, 2]
+                    {
+                        { new CharInfo('*'), new CharInfo('*') },
+                        { new CharInfo('*'), new CharInfo('*') },
+                    },
+                    bottomLeft: new CharInfo[1, 1]
+                    {
+                        { new CharInfo('*') },
+                    },
+                    bottomRight: new CharInfo[4, 2]
+                    {
+                        { new CharInfo('*'), new CharInfo('*') },
+                        { new CharInfo('*'), new CharInfo('*') },
+                        { new CharInfo('*'), new CharInfo('*') },
+                        { new CharInfo('*'), new CharInfo('*') },
+                    });
 
-                    sink.WriteRegion(
-                        info,
-                        0,
-                        0);
-                }
-
+                Border border = builder.Build(new Region(new Coord(0, 0), new Coord(15, 15)));
+                border.Draw(sink);
 
                 sink.Write(
                     "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",

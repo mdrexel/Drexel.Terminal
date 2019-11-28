@@ -11,7 +11,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Game.Output
 {
-    public sealed class Sink : IDisposable
+    public sealed class Sink : IDisposable, ISink
     {
         private const int MF_BYCOMMAND = 0x00000000;
         private const int SC_CLOSE = 0xF060;

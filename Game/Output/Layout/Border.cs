@@ -24,6 +24,8 @@
             CharInfo[,]? bottomStroke = null)
         {
             this.outerRegion = outerRegion;
+            this.InnerRegion = outerRegion;
+
             this.topLeft = topLeft;
             this.topRight = topRight;
             this.bottomLeft = bottomLeft;
@@ -42,6 +44,37 @@
 
         public void Draw(ISink sink)
         {
+            if (this.topLeft != null)
+            {
+                sink.WriteRegion(
+                    this.topLeft,
+                    this.outerRegion.TopLeft.X,
+                    this.outerRegion.TopLeft.Y);
+            }
+
+            if (this.topRight != null)
+            {
+                sink.WriteRegion(
+                    this.topRight,
+                    (short)(this.outerRegion.BottomRight.X - this.topRight.GetWidth()),
+                    this.outerRegion.TopLeft.Y);
+            }
+
+            if (this.bottomLeft != null)
+            {
+                sink.WriteRegion(
+                    this.bottomLeft,
+                    this.outerRegion.TopLeft.X,
+                    (short)(this.outerRegion.BottomRight.Y - this.bottomLeft.GetHeight()));
+            }
+
+            if (this.bottomRight != null)
+            {
+                sink.WriteRegion(
+                    this.bottomRight,
+                    (short)(this.outerRegion.BottomRight.X - this.bottomRight.GetWidth()),
+                    (short)(this.outerRegion.BottomRight.Y - this.bottomRight.GetHeight()));
+            }
         }
 
         private void Recalculate()

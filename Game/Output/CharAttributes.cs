@@ -6,6 +6,11 @@ namespace Game.Output
     public enum CharAttributes : ushort
     {
         /// <summary>
+        /// No attributes.
+        /// </summary>
+        NONE = 0x0,
+
+        /// <summary>
         /// Text color contains blue.
         /// </summary>
         FOREGROUND_BLUE = 0x0001,

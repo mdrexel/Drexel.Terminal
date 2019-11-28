@@ -22,5 +22,10 @@ namespace Game.Output
             this.AsciiChar = asciiChar;
             this.UnicodeChar = default;
         }
+
+        public static implicit operator CharUnion(char @char)
+        {
+            return new CharUnion(@char);
+        }
     }
 }

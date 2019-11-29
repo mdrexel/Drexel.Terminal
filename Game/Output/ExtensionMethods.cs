@@ -39,13 +39,12 @@ namespace Game.Output
             short? maximumWidth = null,
             short? maximumHeight = null)
         {
-            string[][] values = value
-                .Split(NewLines, StringSplitOptions.None)
-                .Select(x => x.Split(' '))
-                .ToArray();
+            string[] lines = value.Split(NewLines, StringSplitOptions.None);
+            short maxX = maximumWidth.HasValue ? maximumWidth.Value : (short)lines.Max(x => x.Length);
 
-            short maxX = maximumWidth.HasValue ? maximumWidth.Value : (short)values.Max(x => x.Max(y => y.Length));
+            string[][] values = lines.Select(x => x.Split(' ')).ToArray();
             short maxY = maximumHeight.HasValue ? maximumHeight.Value : (short)values.Length;
+
             CharInfo[,] result = new CharInfo[maxY, maxX];
             
             int yOffset = 0;

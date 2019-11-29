@@ -224,21 +224,20 @@ namespace Game.Output
             this.Write(@char, colors);
         }
 
-        public void Write(char @char, CharColors colors)
+        public void Write(CharInfo charInfo)
         {
             Coord coord = new Coord((short)Console.CursorLeft, (short)Console.CursorTop);
             unsafe
             {
-                CharAttributes attributes = colors;
                 WriteConsoleOutputAttribute(
                     this.handle,
-                    new IntPtr(&attributes),////new[] { (CharAttributes)colors },
+                    new IntPtr(&(charInfo.Attributes)),
                     1,
                     coord,
                     out _);
                 WriteConsoleOutputCharacter(
                     this.handle,
-                    new IntPtr(&@char),////new char[] { @char },
+                    new IntPtr(&(charInfo.Char)),
                     1,
                     coord,
                     out _);
@@ -247,13 +246,16 @@ namespace Game.Output
             this.AdvanceCursor();
         }
 
+        public void Write(char @char, CharColors colors) =>
+            this.Write(new CharInfo(@char, colors));
+
         public void WriteRegion(
             CharInfo[,] buffer,
-            short left,
-            short top)
+            Coord topLeft)
         {
             Coord size = buffer.ToCoord();
-            SmallRect rect = new SmallRect(left, top, (short)(left + size.X), (short)(top + size.Y));
+            Coord offset = topLeft + size;
+            SmallRect rect = new SmallRect(topLeft.X, topLeft.Y, offset.X, offset.Y);
             unsafe
             {
                 fixed (CharInfo* pinned = buffer)

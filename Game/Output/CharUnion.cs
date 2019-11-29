@@ -27,5 +27,10 @@ namespace Game.Output
         {
             return new CharUnion(@char);
         }
+
+        public override string ToString()
+        {
+            return new string(this.UnicodeChar, 1);
+        }
     }
 }

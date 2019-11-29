@@ -185,6 +185,28 @@ namespace Game.Output.Layout
             return hash;
         }
 
+        public void Translate(Coord offset)
+        {
+            Coord newTopLeft = this.topLeft + offset;
+            Coord newBottomRight = this.bottomRight + offset;
+
+            RegionChangeEventArgs args = new RegionChangeEventArgs(this, newTopLeft, newBottomRight);
+            this.OnChangeRequested?.Invoke(this, args);
+            if (args.Cancel)
+            {
+                return;
+            }
+
+            Region oldRegion = this.Clone();
+            this.topLeft = newTopLeft;
+            this.bottomRight = newBottomRight;
+
+            if (this != oldRegion)
+            {
+                this.OnChanged?.Invoke(this, new RegionChangedEventArgs(oldRegion, this));
+            }
+        }
+
         private Region Clone()
         {
             return new Region(this.topLeft, this.bottomRight);

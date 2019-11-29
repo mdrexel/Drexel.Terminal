@@ -18,6 +18,6 @@ namespace Game.Output.Layout
 
         public Region Region { get; }
 
-        protected Region InnerRegion { get; }
+        protected IReadOnlyRegion InnerRegion { get; }
     }
 }

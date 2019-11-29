@@ -23,5 +23,10 @@ namespace Game.Output
             this.Char = @char;
             this.Attributes = attributes;
         }
+
+        public override string ToString()
+        {
+            return $"{this.Char.ToString()}";
+        }
     }
 }

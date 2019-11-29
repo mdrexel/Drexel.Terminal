@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Threading;
 using Game.Output.Layout;
 
 namespace Game.Output.Primitives
@@ -8,39 +8,30 @@ namespace Game.Output.Primitives
         private readonly IReadOnlyRegion constrainedTo;
 
         private CharInfo[,] buffer;
+        private int[,]? delaysInMilliseconds;
 
         public Text(
             Coord topLeft,
-            CharInfo[,] content)
+            CharInfo[,] content,
+            int[,]? delaysInMilliseconds = null)
         {
             this.buffer = content;
             this.constrainedTo = new Region(topLeft, topLeft + content.ToCoord());
+            this.delaysInMilliseconds = delaysInMilliseconds;
         }
 
         public Text(
             string content,
             CharColors colors,
-            IReadOnlyRegion constrainedTo)
+            IReadOnlyRegion constrainedTo,
+            int[,]? delaysInMilliseconds = null)
         {
             this.constrainedTo = constrainedTo;
+            this.delaysInMilliseconds = delaysInMilliseconds;
 
             void InnerCalculate()
             {
-                if (content.Length <= constrainedTo.Width)
-                {
-                    CharInfo[,] working = new CharInfo[1, content.Length];
-                    for (int counter = 0; counter < content.Length; counter++)
-                    {
-                        this.buffer[1, counter] = new CharInfo(content[counter], colors);
-                    }
-
-                    buffer = working;
-                }
-                else
-                {
-                    throw new NotImplementedException(
-                        "Haven't implemented line break magicks");
-                }
+                this.buffer = content.ToCharInfo(colors, constrainedTo.Width, constrainedTo.Height);
             }
 
             constrainedTo.OnChanged += (obj, e) => InnerCalculate();
@@ -52,10 +43,24 @@ namespace Game.Output.Primitives
 
         public void Draw(ISink sink)
         {
-            sink.WriteRegion(
-                this.buffer,
-                this.constrainedTo.TopLeft.X,
-                this.constrainedTo.TopLeft.Y);
+            if (this.delaysInMilliseconds is null)
+            {
+                sink.WriteRegion(this.buffer, this.constrainedTo.TopLeft);
+            }
+            else
+            {
+                for (int yPos = 0; yPos < this.buffer.GetHeight(); yPos++)
+                {
+                    for (int xPos = 0; xPos < this.buffer.GetWidth(); xPos++)
+                    {
+                        CharInfo info = this.buffer[yPos, xPos];
+                        int delay = this.delaysInMilliseconds[yPos, xPos];
+
+                        sink.Write(info);
+                        Thread.Sleep(delay);
+                    }
+                }
+            }
         }
     }
 }

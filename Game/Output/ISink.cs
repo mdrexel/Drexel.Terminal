@@ -2,9 +2,8 @@
 {
     public interface ISink
     {
-        void WriteRegion(
-            CharInfo[,] buffer,
-            short left,
-            short top);
+        void Write(CharInfo charInfo);
+
+        void WriteRegion(CharInfo[,] buffer, Coord topLeft);
     }
 }

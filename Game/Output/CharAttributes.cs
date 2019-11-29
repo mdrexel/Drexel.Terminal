@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Game.Output
 {
     [Flags]
+    [DebuggerDisplay("{this.ToString(),nq}")]
     public enum CharAttributes : ushort
     {
         /// <summary>

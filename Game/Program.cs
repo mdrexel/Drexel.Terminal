@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Game.Enigma;
 using Game.Enigma.Models;
 using Game.Output;
 using Game.Output.Layout;
+using Game.Output.Primitives;
 
 namespace Game
 {
@@ -70,64 +72,35 @@ namespace Game
                 ////    0);
 
                 BorderBuilder builder = new BorderBuilder(
-                    namePlate: "Hello World".ToCharInfo(CharColors.Standard),
-                    topLeft: new CharInfo[3, 3]
-                    {
-                        { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') },
-                        { new CharInfo('|'), new CharInfo('*'), new CharInfo('|') },
-                        { new CharInfo('+'), new CharInfo('-'), new CharInfo('+') }
-                    },
-                    topRight: new CharInfo[2, 4]
-                    {
-                        { new CharInfo('|'), new CharInfo('-'), new CharInfo('-'), new CharInfo('|') },
-                        { new CharInfo('|'), new CharInfo('='), new CharInfo('='), new CharInfo('|') },
-                    },
-                    bottomLeft: new CharInfo[1, 1]
-                    {
-                        { new CharInfo('*') },
-                    },
-                    bottomRight: new CharInfo[4, 2]
-                    {
-                        { new CharInfo('*'), new CharInfo('*') },
-                        { new CharInfo('*'), new CharInfo('*') },
-                        { new CharInfo('*'), new CharInfo('*') },
-                        { new CharInfo('*'), new CharInfo('*') },
-                    },
-                    leftStroke: new CharInfo[1, 2]
-                    {
-                        { new CharInfo('>'), new CharInfo('<') },
-                    },
-                    topStroke: new CharInfo[2, 2]
-                    {
-                        { new CharInfo('~'), new CharInfo('~') },
-                        { new CharInfo('~'), new CharInfo('~') }
-                    },
-                    rightStroke: new CharInfo[4, 1]
-                    {
-                        { new CharInfo('1') },
-                        { new CharInfo('2') },
-                        { new CharInfo('3') },
-                        { new CharInfo('4') }
-                    },
-                    bottomStroke: new CharInfo[3, 3]
-                    {
-                        { new CharInfo('1'), new CharInfo('2'), new CharInfo('3') },
-                        { new CharInfo('4'), new CharInfo('5'), new CharInfo('6') },
-                        { new CharInfo('7'), new CharInfo('8'), new CharInfo('9') },
-                    });
+                    namePlate: "═══════════\r\nHello World".ToCharInfo(CharColors.Standard),
+                    topLeft: "╔═╦\r\n║ ║\r\n╠═╬".ToCharInfo(CharColors.Standard),
+                    topRight: "╦═╗\r\n║ ║\r\n╬═╣".ToCharInfo(CharColors.Standard),
+                    bottomLeft: "╠═╬\r\n╚═╩".ToCharInfo(CharColors.Standard),
+                    bottomRight: "╬═╣\r\n╩═╝".ToCharInfo(CharColors.Standard),
+                    leftStroke: "║ ║".ToCharInfo(CharColors.Standard),
+                    topStroke: "═\r\n\r\n═".ToCharInfo(CharColors.Standard),
+                    rightStroke: "║ ║".ToCharInfo(CharColors.Standard),
+                    bottomStroke: "═\r\n═".ToCharInfo(CharColors.Standard));
 
-                Border border = builder.Build(new Region(new Coord(0, 0), new Coord(15, 15)));
+                Region region = new Region(new Coord(0, 0), new Coord(50, 15));
+                Border border = builder.Build(region);
                 border.Draw(sink);
 
-                sink.Write(
-                    "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",
-                    new CharColors(ConsoleColor.Green, ConsoleColor.Black),
-                    new Coord(30, 10),
-                    1000,
-                    DelayMode.PerWord);
-            }
+                Text foo = new Text(
+                    "Foo bar baz bazinga bazongo bingo bango bongo I don't want to leave the Congo oh no no no no no",
+                    new CharColors(ConsoleColor.Cyan, ConsoleColor.Black),
+                    border.InnerRegion);
+                foo.Draw(sink);
 
-            Console.ReadKey();
+                ////sink.Write(
+                ////    "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",
+                ////    new CharColors(ConsoleColor.Green, ConsoleColor.Black),
+                ////    new Coord(30, 10),
+                ////    1000,
+                ////    DelayMode.PerWord);
+
+                Console.ReadKey();
+            }
         }
 
         public void Stupid()

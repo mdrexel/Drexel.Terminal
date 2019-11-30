@@ -183,10 +183,7 @@ namespace Game.Output
                 case DelayMode.PerCharacter:
                     foreach (char @char in content)
                     {
-                        this.Write(
-                            @char,
-                            colors,
-                            millisecondsDelay);
+                        this.Write(new CharDelay(new CharInfo(@char, colors), millisecondsDelay));
                     }
 
                     break;
@@ -215,34 +212,26 @@ namespace Game.Output
             }
         }
 
-        public void Write(
-            char @char,
-            CharColors colors,
-            int millisecondsDelay)
+        
+        public void Write(CharDelay charDelay, Coord destination)
         {
-            Thread.Sleep(millisecondsDelay);
-            this.Write(@char, colors);
+            this.WriteInternal(charDelay.CharInfo, destination);
+            Thread.Sleep(charDelay.DelayInMilliseconds);
+        }
+
+        public void Write(CharInfo charInfo, Coord destination)
+        {
+            this.WriteInternal(charInfo, destination);
+        }
+
+        public void Write(CharDelay charDelay)
+        {
+            this.Write(charDelay.CharInfo);
         }
 
         public void Write(CharInfo charInfo)
         {
-            Coord coord = new Coord((short)Console.CursorLeft, (short)Console.CursorTop);
-            unsafe
-            {
-                WriteConsoleOutputAttribute(
-                    this.handle,
-                    new IntPtr(&(charInfo.Attributes)),
-                    1,
-                    coord,
-                    out _);
-                WriteConsoleOutputCharacter(
-                    this.handle,
-                    new IntPtr(&(charInfo.Char)),
-                    1,
-                    coord,
-                    out _);
-            }
-
+            this.WriteInternal(charInfo, new Coord((short)Console.CursorLeft, (short)Console.CursorTop));
             this.AdvanceCursor();
         }
 
@@ -271,6 +260,20 @@ namespace Game.Output
             }
         }
 
+        public void WriteRegion(
+            CharDelay[,] buffer,
+            Coord topLeft)
+        {
+            this.SetCursorPosition(topLeft);
+            for (int y = 0; y < buffer.GetHeight(); y++)
+            {
+                for (int x = 0; x < buffer.GetWidth(); x++)
+                {
+                    this.Write(buffer[y, x]);
+                }
+            }
+        }
+
         public void Dispose()
         {
             Sink.Active = false;
@@ -287,6 +290,30 @@ namespace Game.Output
                 SetConsoleCursorPosition(
                     this.handle,
                     new Coord(0, (short)(Console.CursorTop + 1)));
+            }
+        }
+
+        private void SetCursorPosition(Coord destination)
+        {
+            SetConsoleCursorPosition(this.handle, destination);
+        }
+
+        private void WriteInternal(CharInfo charInfo, Coord destination)
+        {
+            unsafe
+            {
+                WriteConsoleOutputAttribute(
+                    this.handle,
+                    new IntPtr(&(charInfo.Attributes)),
+                    1,
+                    destination,
+                    out _);
+                WriteConsoleOutputCharacter(
+                    this.handle,
+                    new IntPtr(&(charInfo.Char)),
+                    1,
+                    destination,
+                    out _);
             }
         }
 

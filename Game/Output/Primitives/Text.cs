@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Game.Output.Layout;
+﻿using Game.Output.Layout;
 
 namespace Game.Output.Primitives
 {
@@ -7,31 +6,32 @@ namespace Game.Output.Primitives
     {
         private readonly IReadOnlyRegion constrainedTo;
 
-        private CharInfo[,] buffer;
-        private int[,]? delaysInMilliseconds;
+        private CharDelay[,]? delayedContent;
+        private CharInfo[,]? undelayedContent;
 
-        public Text(
-            Coord topLeft,
-            CharInfo[,] content,
-            int[,]? delaysInMilliseconds = null)
+        public Text(Coord topLeft, CharDelay[,] content)
         {
-            this.buffer = content;
+            this.delayedContent = content;
             this.constrainedTo = new Region(topLeft, topLeft + content.ToCoord());
-            this.delaysInMilliseconds = delaysInMilliseconds;
+        }
+
+        public Text(Coord topLeft, CharInfo[,] content)
+        {
+            this.undelayedContent = content;
+            this.constrainedTo = new Region(topLeft, topLeft + content.ToCoord());
         }
 
         public Text(
             string content,
             CharColors colors,
             IReadOnlyRegion constrainedTo,
-            int[,]? delaysInMilliseconds = null)
+            CharColors? backgroundFill = null)
         {
             this.constrainedTo = constrainedTo;
-            this.delaysInMilliseconds = delaysInMilliseconds;
 
             void InnerCalculate()
             {
-                this.buffer = content.ToCharInfo(colors, constrainedTo.Width, constrainedTo.Height);
+                this.undelayedContent = content.ToCharInfo(colors, constrainedTo, backgroundFill);
             }
 
             constrainedTo.OnChanged += (obj, e) => InnerCalculate();
@@ -39,25 +39,23 @@ namespace Game.Output.Primitives
             InnerCalculate();
         }
 
-        public static Text Empty { get; } = new Text(new Coord(0, 0), new CharInfo[0, 0]);
+        public static Text Empty { get; } = new Text(new Coord(0, 0), new CharDelay[0, 0]);
 
         public void Draw(ISink sink)
         {
-            if (this.delaysInMilliseconds is null)
+            if (this.delayedContent is null)
             {
-                sink.WriteRegion(this.buffer, this.constrainedTo.TopLeft);
+                sink.WriteRegion(this.undelayedContent, this.constrainedTo.TopLeft);
             }
             else
             {
-                for (int yPos = 0; yPos < this.buffer.GetHeight(); yPos++)
+                for (short yPos = 0; yPos < this.delayedContent.GetHeight(); yPos++)
                 {
-                    for (int xPos = 0; xPos < this.buffer.GetWidth(); xPos++)
+                    for (short xPos = 0; xPos < this.delayedContent.GetWidth(); xPos++)
                     {
-                        CharInfo info = this.buffer[yPos, xPos];
-                        int delay = this.delaysInMilliseconds[yPos, xPos];
-
-                        sink.Write(info);
-                        Thread.Sleep(delay);
+                        sink.Write(
+                            this.delayedContent[yPos, xPos],
+                            this.constrainedTo.TopLeft + new Coord(xPos, yPos));
                     }
                 }
             }

@@ -15,7 +15,7 @@ namespace Game.Output.Layout
         private readonly CharInfo[,]? rightStrokePattern;
         private readonly CharInfo[,]? bottomStrokePattern;
 
-        private Text namePlate;
+        private Rectangle namePlate;
         private Rectangle topLeft;
         private Rectangle topRight;
         private Rectangle bottomLeft;
@@ -55,7 +55,7 @@ namespace Game.Output.Layout
             this.Recalculate();
         }
 
-        public Region InnerRegion { get; private set; }
+        public IReadOnlyRegion InnerRegion { get; private set; }
 
         public void Draw(ISink sink)
         {
@@ -173,8 +173,8 @@ namespace Game.Output.Layout
 
             this.namePlate =
                 this.namePlatePattern == null
-                    ? Text.Empty
-                    : new Text(
+                    ? Rectangle.Empty
+                    : new Rectangle(
                         new Coord(
                             (short)(this.outerRegion.TopLeft.X + this.topLeft.Region.Width + 1),
                             this.outerRegion.TopLeft.Y),

@@ -13,20 +13,32 @@ namespace Game.Output
             this string value,
             CharColors colors,
             IReadOnlyRegion region,
-            CharColors? backgroundFill = null) =>
+            out bool leadingOverflow,
+            out bool trailingOverflow,
+            CharColors? backgroundFill = null,
+            ushort preceedingLinesSkipped = 0) =>
             value.ToCharInfo(
                 colors,
+                out leadingOverflow,
+                out trailingOverflow,
                 backgroundFill,
+                preceedingLinesSkipped,
                 region.Width,
                 region.Height);
 
         public static CharInfo[,] ToCharInfo(
             this string value,
             CharColors colors,
+            out bool leadingOverflow,
+            out bool trailingOverflow,
             CharColors? backgroundFill = null,
+            ushort preceedingLinesSkipped = 0,
             short? maximumWidth = null,
             short? maximumHeight = null)
         {
+            leadingOverflow = preceedingLinesSkipped > 0;
+            trailingOverflow = false;
+
             string[] lines = value.Split(NewLines, StringSplitOptions.None);
             short maxX = maximumWidth.HasValue ? maximumWidth.Value : (short)lines.Max(x => x.Length);
 
@@ -46,7 +58,8 @@ namespace Game.Output
                 }
             }
 
-            int yOffset = 0;
+            short yOffset = 0;
+            CharInfo spaceInfo = new CharInfo(' ', colors);
             foreach (string[] line in values)
             {
                 if (yOffset >= maxY)
@@ -54,7 +67,7 @@ namespace Game.Output
                     goto leave;
                 }
 
-                int xOffset = 0;
+                short xOffset = 0;
                 for (int wordIndex = 0; wordIndex < line.Length; wordIndex++)
                 {
                     string word = line[wordIndex];
@@ -65,7 +78,7 @@ namespace Game.Output
                         yOffset++;
                         xOffset = 0;
 
-                        if (yOffset >= maxY)
+                        if (preceedingLinesSkipped < yOffset && yOffset >= maxY)
                         {
                             goto leave;
                         }
@@ -75,33 +88,42 @@ namespace Game.Output
                         || (xOffset + word.Length + line[wordIndex + 1].Length > maxX);
 
                     // Write the word.
-                    foreach (char @char in word)
+                    if (preceedingLinesSkipped < yOffset)
                     {
-                        result[yOffset, xOffset++] = new CharInfo(@char, colors);
+                        foreach (char @char in word)
+                        {
+                            result[yOffset, xOffset++] = new CharInfo(@char, colors);
+                        }
                     }
 
                     // If we're supposed to include a space, include it.
                     if (!noSpace)
                     {
-                        if (xOffset >= maxX)
+                        if (maxX < xOffset)
                         {
                             xOffset = 0;
                             yOffset++;
 
-                            if (yOffset >= maxY)
+                            if (preceedingLinesSkipped < yOffset && maxY < yOffset )
                             {
                                 goto leave;
                             }
                         }
 
-                        result[yOffset, xOffset++] = new CharInfo(' ', colors);
+                        if (preceedingLinesSkipped < yOffset)
+                        {
+                            result[yOffset, xOffset++] = spaceInfo;
+                        }
                     }
                 }
 
                 yOffset++;
             }
 
-            leave: return result;
+            goto exit;
+
+            leave: trailingOverflow = true;
+            exit: return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -73,15 +73,15 @@ namespace Game
 
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
                 BorderBuilder builder = new BorderBuilder(
-                    namePlate: "═══════════\r\nHello World".ToCharInfo(borderColors),
-                    topLeft: "╔═╦\r\n║ ║\r\n╠═╬".ToCharInfo(borderColors),
-                    topRight: "╦═╗\r\n║ ║\r\n╬═╣".ToCharInfo(borderColors),
-                    bottomLeft: "╠═╬\r\n╚═╩".ToCharInfo(borderColors),
-                    bottomRight: "╬═╣\r\n╩═╝".ToCharInfo(borderColors),
-                    leftStroke: "║ ║".ToCharInfo(borderColors),
-                    topStroke: "═\r\n\r\n═".ToCharInfo(borderColors),
-                    rightStroke: "║ ║".ToCharInfo(borderColors),
-                    bottomStroke: "═\r\n═".ToCharInfo(borderColors));
+                    namePlate: "═══════════\r\nHello World".ToCharInfo(borderColors, out _, out _),
+                    topLeft: "╔═╦\r\n║ ║\r\n╠═╬".ToCharInfo(borderColors, out _, out _),
+                    topRight: "╦═╗\r\n║ ║\r\n╬═╣".ToCharInfo(borderColors, out _, out _),
+                    bottomLeft: "╠═╬\r\n╚═╩".ToCharInfo(borderColors, out _, out _),
+                    bottomRight: "╬═╣\r\n╩═╝".ToCharInfo(borderColors, out _, out _),
+                    leftStroke: "║ ║".ToCharInfo(borderColors, out _, out _),
+                    topStroke: "═\r\n\r\n═".ToCharInfo(borderColors, out _, out _),
+                    rightStroke: "║ ║".ToCharInfo(borderColors, out _, out _),
+                    bottomStroke: "═\r\n═".ToCharInfo(borderColors, out _, out _));
 
                 Region region = new Region(new Coord(0, 0), new Coord(50, 15));
                 Border border = builder.Build(region);
@@ -93,14 +93,15 @@ namespace Game
                     border.InnerRegion);
                 foo.Draw(sink);
 
-                Region otherRegion = new Region(new Coord(55, 5), new Coord(110, 28));
+                Region otherRegion = new Region(new Coord(25, 5), new Coord(115, 28));
                 Border otherBorder = builder.Build(otherRegion);
                 otherBorder.Draw(sink);
 
                 Text bar = new Text(
                     LoremIpsum,
-                    new CharColors(ConsoleColor.Magenta, ConsoleColor.DarkYellow),
+                    new CharColors(ConsoleColor.Magenta, ConsoleColor.Black),
                     otherBorder.InnerRegion);
+                bar.PreceedingLinesSkipped = 1;
                 bar.Draw(sink);
 
                 ////sink.Write(

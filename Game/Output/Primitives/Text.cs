@@ -4,22 +4,15 @@ namespace Game.Output.Primitives
 {
     public sealed class Text : IDrawable
     {
+        private readonly string content;
         private readonly IReadOnlyRegion constrainedTo;
+        private readonly CharColors colors;
+        private readonly CharColors? backgroundFill;
 
-        private CharDelay[,]? delayedContent;
-        private CharInfo[,]? undelayedContent;
-
-        public Text(Coord topLeft, CharDelay[,] content)
-        {
-            this.delayedContent = content;
-            this.constrainedTo = new Region(topLeft, topLeft + content.ToCoord());
-        }
-
-        public Text(Coord topLeft, CharInfo[,] content)
-        {
-            this.undelayedContent = content;
-            this.constrainedTo = new Region(topLeft, topLeft + content.ToCoord());
-        }
+        private Rectangle rectangle;
+        private bool leadingOverflow;
+        private bool trailingOverflow;
+        private ushort preceedingLinesSkipped;
 
         public Text(
             string content,
@@ -27,38 +20,48 @@ namespace Game.Output.Primitives
             IReadOnlyRegion constrainedTo,
             CharColors? backgroundFill = null)
         {
+            this.content = content;
+            this.colors = colors;
+            this.backgroundFill = backgroundFill;
             this.constrainedTo = constrainedTo;
+            this.preceedingLinesSkipped = 0;
 
-            void InnerCalculate()
-            {
-                this.undelayedContent = content.ToCharInfo(colors, constrainedTo, backgroundFill);
-            }
+            constrainedTo.OnChanged += (obj, e) => this.Calculate();
 
-            constrainedTo.OnChanged += (obj, e) => InnerCalculate();
-
-            InnerCalculate();
+            this.Calculate();
         }
 
-        public static Text Empty { get; } = new Text(new Coord(0, 0), new CharDelay[0, 0]);
+        public ushort PreceedingLinesSkipped
+        {
+            get => this.preceedingLinesSkipped;
+            set
+            {
+                this.preceedingLinesSkipped = value;
+                this.Calculate();
+            }
+        }
+
+        public bool LeadingOverflow => this.leadingOverflow;
+
+        public bool TrailingOverflow => this.trailingOverflow;
 
         public void Draw(ISink sink)
         {
-            if (this.delayedContent is null)
-            {
-                sink.WriteRegion(this.undelayedContent, this.constrainedTo.TopLeft);
-            }
-            else
-            {
-                for (short yPos = 0; yPos < this.delayedContent.GetHeight(); yPos++)
-                {
-                    for (short xPos = 0; xPos < this.delayedContent.GetWidth(); xPos++)
-                    {
-                        sink.Write(
-                            this.delayedContent[yPos, xPos],
-                            this.constrainedTo.TopLeft + new Coord(xPos, yPos));
-                    }
-                }
-            }
+            this.rectangle.Draw(sink);
+        }
+
+        private void Calculate()
+        {
+            this.rectangle =
+                new Rectangle(
+                    this.constrainedTo.TopLeft,
+                    this.content.ToCharInfo(
+                        this.colors,
+                        this.constrainedTo,
+                        out this.leadingOverflow,
+                        out this.trailingOverflow,
+                        this.backgroundFill,
+                        this.preceedingLinesSkipped));
         }
     }
 }

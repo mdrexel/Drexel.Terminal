@@ -12,8 +12,6 @@ namespace Game.Output.Layout
 
         short Height { get; }
 
-        event EventHandler<RegionChangeEventArgs>? OnChangeRequested;
-
         event EventHandler<RegionChangedEventArgs>? OnChanged;
     }
 }

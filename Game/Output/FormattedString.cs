@@ -148,6 +148,11 @@ namespace Game.Output
 
         public bool ContainsDelays { get; }
 
+        public static implicit operator FormattedString(string value)
+        {
+            return new FormattedString(value, CharColors.Standard);
+        }
+
         ////<span fg="Blue" bg="Red" fg=Green>
         private static Range ParseSpan(
             string token,

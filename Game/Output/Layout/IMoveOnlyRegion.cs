@@ -1,7 +1,13 @@
-﻿namespace Game.Output.Layout
+﻿using System;
+
+namespace Game.Output.Layout
 {
     public interface IMoveOnlyRegion : IReadOnlyRegion
     {
-        new Coord TopLeft { get; set; }
+        void Translate(Coord offset);
+
+        void MoveTo(Coord newTopLeft);
+
+        event EventHandler<RegionChangeEventArgs>? OnChangeRequested;
     }
 }

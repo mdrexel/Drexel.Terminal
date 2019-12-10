@@ -4,6 +4,8 @@ namespace Game.Output.Layout
 {
     public sealed class Region : IMoveOnlyRegion, IEquatable<Region>
     {
+        private static readonly Coord NoOpVector = new Coord(0, 0);
+
         private Coord topLeft;
         private Coord bottomRight;
 
@@ -13,76 +15,79 @@ namespace Game.Output.Layout
             this.bottomRight = bottomRight;
         }
 
+        public Region(IReadOnlyRegion region)
+        {
+            this.topLeft = region.TopLeft;
+            this.bottomRight = region.BottomRight;
+
+            region.OnChanged +=
+                (obj, e) =>
+                {
+                    RegionChangeType changeType;
+                    if (e.CurrentRegion.TopLeft == this.topLeft)
+                    {
+                        if (e.CurrentRegion.BottomRight == this.bottomRight)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            changeType = RegionChangeType.Resize;
+                        }
+                    }
+                    else
+                    {
+                        Coord newSize = new Coord(e.CurrentRegion.Width, e.CurrentRegion.Height);
+                        Coord currentSize = new Coord(this.Width, this.Height);
+
+                        Coord delta = currentSize - newSize;
+                        if (delta.X == 0 && delta.Y == 0)
+                        {
+                            changeType = RegionChangeType.Move;
+                        }
+                        else
+                        {
+                            changeType = RegionChangeType.MoveAndResize;
+                        }
+                    }
+
+                    RegionChangeEventArgs args = new RegionChangeEventArgs(
+                        this,
+                        e.CurrentRegion.TopLeft,
+                        e.CurrentRegion.BottomRight,
+                        changeType);
+                    this.OnChangeRequested?.Invoke(obj, args);
+                    if (args.Cancel)
+                    {
+                        return;
+                    }
+
+                    Region oldRegion = this.Clone();
+                    this.topLeft = e.CurrentRegion.TopLeft;
+                    this.bottomRight = e.CurrentRegion.BottomRight;
+
+                    if (this != oldRegion)
+                    {
+                        this.OnChanged?.Invoke(
+                            this,
+                            new RegionChangedEventArgs(
+                                oldRegion,
+                                this,
+                                changeType));
+                    }
+                };
+        }
+
         public Coord TopLeft
         {
             get => this.topLeft;
-            set
-            {
-                if (value == this.topLeft)
-                {
-                    return;
-                }
-
-                RegionChangeEventArgs args = new RegionChangeEventArgs(
-                    this,
-                    value,
-                    this.bottomRight,
-                    RegionChangeType.MoveAndResize);
-                this.OnChangeRequested?.Invoke(this, args);
-                if (args.Cancel)
-                {
-                    return;
-                }
-
-                Region oldRegion = this.Clone();
-                this.topLeft = value;
-
-                if (this != oldRegion)
-                {
-                    this.OnChanged?.Invoke(
-                        this,
-                        new RegionChangedEventArgs(
-                            oldRegion,
-                            this,
-                            RegionChangeType.MoveAndResize));
-                }
-            }
+            set => this.SetCorners(value, this.bottomRight);
         }
 
         public Coord BottomRight
         {
             get => this.bottomRight;
-            set
-            {
-                if (this.bottomRight == value)
-                {
-                    return;
-                }
-
-                RegionChangeEventArgs args = new RegionChangeEventArgs(
-                    this,
-                    this.topLeft,
-                    value,
-                    RegionChangeType.Resize);
-                this.OnChangeRequested?.Invoke(this, args);
-                if (args.Cancel)
-                {
-                    return;
-                }
-
-                Region oldRegion = this.Clone();
-                this.bottomRight = value;
-
-                if (this != oldRegion)
-                {
-                    this.OnChanged?.Invoke(
-                        this,
-                        new RegionChangedEventArgs(
-                            oldRegion,
-                            this,
-                            RegionChangeType.Resize));
-                }
-            }
+            set => this.SetCorners(this.topLeft, value);
         }
 
         public short Width
@@ -267,8 +272,46 @@ namespace Game.Output.Layout
             return hash;
         }
 
+        public void MoveTo(Coord newTopLeft)
+        {
+            if (this.topLeft == newTopLeft)
+            {
+                return;
+            }
+
+            Coord delta = this.topLeft - newTopLeft;
+            Coord newBottomRight = this.bottomRight - delta;
+
+            RegionChangeEventArgs args = new RegionChangeEventArgs(
+                this,
+                newTopLeft,
+                newBottomRight,
+                RegionChangeType.Move);
+            this.OnChangeRequested?.Invoke(this, args);
+            if (args.Cancel)
+            {
+                return;
+            }
+
+            Region oldRegion = this.Clone();
+            this.topLeft = newTopLeft;
+            this.bottomRight = newBottomRight;
+            this.OnChanged?.Invoke(
+                this,
+                new RegionChangedEventArgs(
+                    oldRegion,
+                    this,
+                    RegionChangeType.Move));
+
+        }
+
         public void Translate(Coord offset)
         {
+            if (offset == NoOpVector)
+            {
+                return;
+            }
+
             Coord newTopLeft = this.topLeft + offset;
             Coord newBottomRight = this.bottomRight + offset;
 
@@ -286,16 +329,78 @@ namespace Game.Output.Layout
             Region oldRegion = this.Clone();
             this.topLeft = newTopLeft;
             this.bottomRight = newBottomRight;
-
-            if (this != oldRegion)
-            {
-                this.OnChanged?.Invoke(
+            this.OnChanged?.Invoke(
+                this,
+                new RegionChangedEventArgs(
+                    oldRegion,
                     this,
-                    new RegionChangedEventArgs(
-                        oldRegion,
-                        this,
-                        RegionChangeType.Move));
+                    RegionChangeType.Move));
+        }
+
+        public void SetCorners(Coord newTopLeft, Coord newBottomRight)
+        {
+            short realNewTop = newTopLeft.Y;
+            short realNewLeft = newTopLeft.X;
+            short realNewBottom = newBottomRight.Y;
+            short realNewRight = newBottomRight.X;
+            if (newBottomRight.X < newTopLeft.X)
+            {
+                realNewLeft = newBottomRight.X;
+                realNewRight = newTopLeft.X;
             }
+
+            if (newBottomRight.Y < newTopLeft.Y)
+            {
+                realNewTop = newBottomRight.Y;
+                realNewBottom = newTopLeft.Y;
+            }
+
+            newTopLeft = new Coord(realNewLeft, realNewTop);
+            newBottomRight = new Coord(realNewRight, realNewBottom);
+
+            if (this.topLeft == newTopLeft && this.bottomRight == newBottomRight)
+            {
+                return;
+            }
+
+            RegionChangeType changeType;
+            if (this.topLeft == newTopLeft)
+            {
+                changeType = RegionChangeType.Resize;
+            }
+            else
+            {
+                Coord size = newTopLeft - newBottomRight;
+                if (size.X == this.Width && size.Y == this.Height)
+                {
+                    changeType = RegionChangeType.Move;
+                }
+                else
+                {
+                    changeType = RegionChangeType.MoveAndResize;
+                }
+            }
+
+            RegionChangeEventArgs args = new RegionChangeEventArgs(
+                this,
+                newTopLeft,
+                newBottomRight,
+                changeType);
+            this.OnChangeRequested?.Invoke(this, args);
+            if (args.Cancel)
+            {
+                return;
+            }
+
+            Region oldRegion = this.Clone();
+            this.topLeft = newTopLeft;
+            this.bottomRight = newBottomRight;
+            this.OnChanged?.Invoke(
+                this,
+                new RegionChangedEventArgs(
+                    oldRegion,
+                    this,
+                    changeType));
         }
 
         private Region Clone()

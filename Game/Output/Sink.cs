@@ -264,12 +264,15 @@ namespace Game.Output
             CharDelay[,] buffer,
             Coord topLeft)
         {
-            this.SetCursorPosition(topLeft);
-            for (int y = 0; y < buffer.GetHeight(); y++)
+            for (short y = 0; y < buffer.GetHeight(); y++)
             {
-                for (int x = 0; x < buffer.GetWidth(); x++)
+                for (short x = 0; x < buffer.GetWidth(); x++)
                 {
-                    this.Write(buffer[y, x]);
+                    CharDelay @char = buffer[y, x];
+                    this.WriteInternal(
+                        @char.CharInfo,
+                        topLeft + new Coord(x, y));
+                    Thread.Sleep(@char.DelayInMilliseconds);
                 }
             }
         }

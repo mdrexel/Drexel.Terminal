@@ -88,8 +88,9 @@ namespace Game
                 border.Draw(sink);
 
                 Text foo = new Text(
-                    "Foo bar baz bazinga bazongo bingo bango bongo I don't want to leave the Congo oh no no no no no",
-                    new CharColors(ConsoleColor.Green, ConsoleColor.Black),
+                    new FormattedString(
+                        "Foo bar baz bazinga bazongo bingo bango bongo I don't want to leave the Congo oh no no no no no",
+                        new CharColors(ConsoleColor.Green, ConsoleColor.Black)),
                     border.InnerRegion);
                 foo.Draw(sink);
 
@@ -98,8 +99,9 @@ namespace Game
                 otherBorder.Draw(sink);
 
                 Text bar = new Text(
-                    LoremIpsum,
-                    new CharColors(ConsoleColor.Magenta, ConsoleColor.Black),
+                    new FormattedString(
+                        LoremIpsum,
+                        new CharColors(ConsoleColor.Magenta, ConsoleColor.Black)),
                     otherBorder.InnerRegion);
                 bar.PreceedingLinesSkipped = 1;
                 bar.Draw(sink);

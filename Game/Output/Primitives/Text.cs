@@ -16,6 +16,14 @@ namespace Game.Output.Primitives
 
         public Text(
             FormattedString content,
+            IReadOnlyRegion constrainedTo,
+            CharColors? backgroundFill = null)
+            : this(content, new Region(constrainedTo), backgroundFill)
+        {
+        }
+
+        public Text(
+            FormattedString content,
             Region region,
             CharColors? backgroundFill = null)
         {
@@ -23,12 +31,10 @@ namespace Game.Output.Primitives
             this.Region = region;
             this.backgroundFill = backgroundFill;
 
-            this.preceedingLinesSkipped = 0;
-
             region.OnChanged +=
                 (obj, e) =>
                 {
-                    // Only need to recalculate contents 
+                    // Only need to recalculate contents on resize
                     if (e.ChangeType == RegionChangeType.Resize || e.ChangeType == RegionChangeType.MoveAndResize)
                     {
                         this.Recalculate();
@@ -68,7 +74,8 @@ namespace Game.Output.Primitives
         {
             this.TotalLines = 0;
             this.preceedingLinesSkipped = 0;
-            this.rectangle = new Rectangle()
+            this.rectangle = new Rectangle(new Coord(0, 0), new CharDelay[0, 0]);
+            throw new NotImplementedException("TODO need to do line breaks n such");
         }
     }
 }

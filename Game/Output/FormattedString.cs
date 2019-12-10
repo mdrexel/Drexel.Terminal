@@ -41,7 +41,7 @@ namespace Game.Output
                     goto exit;
                 }
 
-                int lengthOfNextSpan = endOfNextSpan - startOfNextSpan;
+                int lengthOfNextSpan = endOfNextSpan - startOfNextSpan + 1;
 
                 // 3. Find the next </span>
                 //    b. If not found, goto exit
@@ -54,7 +54,7 @@ namespace Game.Output
                 }
 
                 // 4. Copy the '<span ...>'
-                string copy = value.Substring(startOfNextSpan, endOfNextSpan - startOfNextSpan);
+                string copy = value.Substring(startOfNextSpan, lengthOfNextSpan);
 
                 // 5. Remove the '</span>'
                 value = value.Remove(closeOfNextSpan, closeOfNextSpanLength);
@@ -130,6 +130,10 @@ namespace Game.Output
                                 defaultColors,
                                 defaultDelay));
 
+                        current = current.Next;
+                    }
+                    else
+                    {
                         current = current.Next;
                     }
                 }

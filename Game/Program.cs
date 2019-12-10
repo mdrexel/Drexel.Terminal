@@ -73,7 +73,7 @@ namespace Game
 
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
                 BorderBuilder builder = new BorderBuilder(
-                    namePlate: new FormattedString("═══════════\r\nHello World", borderColors),
+                    namePlate: new FormattedString("═══════════\r\n<span fg=Red>Hello World</span>", borderColors),
                     topLeft: new FormattedString("╔═╦\r\n║ ║\r\n╠═╬", borderColors),
                     topRight: new FormattedString("╦═╗\r\n║ ║\r\n╬═╣", borderColors),
                     bottomLeft: new FormattedString("╠═╬\r\n╚═╩", borderColors),
@@ -87,6 +87,7 @@ namespace Game
                 Border border = builder.Build(region);
                 border.Draw(sink);
 
+                /*
                 Text foo = new Text(
                     new FormattedString(
                         "Foo bar baz bazinga bazongo bingo bango bongo I don't want to leave the Congo oh no no no no no",
@@ -105,6 +106,7 @@ namespace Game
                     otherBorder.InnerRegion);
                 bar.PreceedingLinesSkipped = 1;
                 bar.Draw(sink);
+                */
 
                 ////sink.Write(
                 ////    "Hello, this is a test of a very long string which is being written with a delay inserted between printing of each character. I want to see if it will properly scroll, or if I'm going to need to do spooky math myself to make it work.",

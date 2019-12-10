@@ -5,42 +5,42 @@ namespace Game.Output.Layout
     public sealed class Border : IDrawable
     {
         private readonly Region outerRegion;
-        private readonly CharInfo[,]? namePlatePattern;
-        private readonly CharInfo[,]? topLeftPattern;
-        private readonly CharInfo[,]? topRightPattern;
-        private readonly CharInfo[,]? bottomLeftPattern;
-        private readonly CharInfo[,]? bottomRightPattern;
-        private readonly CharInfo[,]? leftStrokePattern;
-        private readonly CharInfo[,]? topStrokePattern;
-        private readonly CharInfo[,]? rightStrokePattern;
-        private readonly CharInfo[,]? bottomStrokePattern;
+        private readonly Label? namePlatePattern;
+        private readonly Label? topLeftPattern;
+        private readonly Label? topRightPattern;
+        private readonly Label? bottomLeftPattern;
+        private readonly Label? bottomRightPattern;
+        private readonly Label? leftStrokePattern;
+        private readonly Label? topStrokePattern;
+        private readonly Label? rightStrokePattern;
+        private readonly Label? bottomStrokePattern;
 
-        private Rectangle namePlate;
-        private Rectangle topLeft;
-        private Rectangle topRight;
-        private Rectangle bottomLeft;
-        private Rectangle bottomRight;
-        private Rectangle leftStroke;
-        private Rectangle topStroke;
-        private Rectangle rightStroke;
-        private Rectangle bottomStroke;
+        private IDrawable namePlate;
+        private IDrawable topLeft;
+        private IDrawable topRight;
+        private IDrawable bottomLeft;
+        private IDrawable bottomRight;
+        private IDrawable leftStroke;
+        private IDrawable topStroke;
+        private IDrawable rightStroke;
+        private IDrawable bottomStroke;
 
         internal Border(
             Region outerRegion,
-            CharInfo[,]? namePlate = null,
-            CharInfo[,]? topLeft = null,
-            CharInfo[,]? topRight = null,
-            CharInfo[,]? bottomLeft = null,
-            CharInfo[,]? bottomRight = null,
-            CharInfo[,]? leftStroke = null,
-            CharInfo[,]? topStroke = null,
-            CharInfo[,]? rightStroke = null,
-            CharInfo[,]? bottomStroke = null)
+            FormattedString? namePlate = null,
+            FormattedString? topLeft = null,
+            FormattedString? topRight = null,
+            FormattedString? bottomLeft = null,
+            FormattedString? bottomRight = null,
+            FormattedString? leftStroke = null,
+            FormattedString? topStroke = null,
+            FormattedString? rightStroke = null,
+            FormattedString? bottomStroke = null)
         {
             this.outerRegion = outerRegion;
             this.InnerRegion = outerRegion;
 
-            this.namePlatePattern = namePlate;
+            this.namePlatePattern = new Label(namePlate);
             this.topLeftPattern = topLeft;
             this.topRightPattern = topRight;
             this.bottomLeftPattern = bottomLeft;
@@ -77,22 +77,22 @@ namespace Game.Output.Layout
         private void Recalculate()
         {
             short largestTopOffset = Largest(
-                this.topLeftPattern?.GetHeight(),
-                this.topRightPattern?.GetHeight(),
-                this.topStrokePattern?.GetHeight(),
-                this.namePlatePattern?.GetHeight());
+                this.topLeftPattern?.Region.Height,
+                this.topRightPattern?.Region.Height,
+                this.topStrokePattern?.Region.Height,
+                this.namePlatePattern?.Region.Height);
             short largestLeftOffset = Largest(
-                this.topLeftPattern?.GetWidth(),
-                this.topRightPattern?.GetWidth(),
-                this.leftStrokePattern?.GetWidth());
+                this.topLeftPattern?.Region.Width,
+                this.topRightPattern?.Region.Width,
+                this.leftStrokePattern?.Region.Width);
             short largestBottomOffset = Largest(
-                this.bottomLeftPattern?.GetHeight(),
-                this.bottomRightPattern?.GetHeight(),
-                this.bottomStrokePattern?.GetHeight());
+                this.bottomLeftPattern?.Region.Height,
+                this.bottomRightPattern?.Region.Height,
+                this.bottomStrokePattern?.Region.Height);
             short largestRightOffset = Largest(
-                this.topRightPattern?.GetWidth(),
-                this.bottomRightPattern?.GetWidth(),
-                this.rightStrokePattern?.GetWidth());
+                this.topRightPattern?.Region.Width,
+                this.bottomRightPattern?.Region.Width,
+                this.rightStrokePattern?.Region.Width);
 
             this.InnerRegion = new Region(
                 this.outerRegion.TopLeft + new Coord(largestLeftOffset, largestTopOffset),
@@ -100,32 +100,32 @@ namespace Game.Output.Layout
 
             this.topLeft =
                 this.topLeftPattern == null
-                    ? Rectangle.Empty
-                    : new Rectangle(this.outerRegion.TopLeft, this.topLeftPattern);
+                    ? Text.Empty
+                    : this.topLeftPattern;
             this.topRight =
                 this.topRightPattern == null
-                    ? Rectangle.Empty
+                    ? Text.Empty
                     : new Rectangle(
                         new Coord(
-                            (short)(this.outerRegion.BottomRight.X - this.topRightPattern.GetWidth()),
+                            (short)(this.outerRegion.BottomRight.X - this.topRightPattern.Contents.GetWidth()),
                             this.outerRegion.TopLeft.Y),
-                        this.topRightPattern);
+                        this.topRightPattern.Contents);
             this.bottomLeft =
                 this.bottomLeftPattern == null
                     ? Rectangle.Empty
                     : new Rectangle(
                         new Coord(
                             this.outerRegion.TopLeft.X,
-                            (short)(this.outerRegion.BottomRight.Y - this.bottomLeftPattern.GetHeight())),
-                        this.bottomLeftPattern);
+                            (short)(this.outerRegion.BottomRight.Y - this.bottomLeftPattern.Contents.GetHeight())),
+                        this.bottomLeftPattern.Contents);
             this.bottomRight =
                 this.bottomRightPattern == null
                     ? Rectangle.Empty
                     : new Rectangle(
                         new Coord(
-                            (short)(this.outerRegion.BottomRight.X - this.bottomRightPattern.GetWidth()),
-                            (short)(this.outerRegion.BottomRight.Y - this.bottomRightPattern.GetHeight())),
-                        this.bottomRightPattern);
+                            (short)(this.outerRegion.BottomRight.X - this.bottomRightPattern.Contents.GetWidth()),
+                            (short)(this.outerRegion.BottomRight.Y - this.bottomRightPattern.Contents.GetHeight())),
+                        this.bottomRightPattern.Contents);
 
             this.topStroke =
                 this.topStrokePattern == null
@@ -135,7 +135,7 @@ namespace Game.Output.Layout
                             (short)(this.outerRegion.TopLeft.X + this.topLeft.Region.Width),
                             this.outerRegion.TopLeft.Y),
                         RepeatHorizontally(
-                            this.topStrokePattern,
+                            this.topStrokePattern.Contents,
                             (short)(this.outerRegion.Width - this.topLeft.Region.Width - this.topRight.Region.Width)));
 
             this.leftStroke =
@@ -146,7 +146,7 @@ namespace Game.Output.Layout
                             this.outerRegion.TopLeft.X,
                             (short)(this.outerRegion.TopLeft.Y + this.topLeft.Region.Height)),
                         RepeatVertically(
-                            this.leftStrokePattern,
+                            this.leftStrokePattern.Contents,
                             (short)(this.outerRegion.Height - this.topLeft.Region.Height - this.bottomLeft.Region.Height)));
 
             this.rightStroke =
@@ -154,10 +154,10 @@ namespace Game.Output.Layout
                     ? Rectangle.Empty
                     : new Rectangle(
                         new Coord(
-                            (short)(this.outerRegion.BottomRight.X - this.rightStrokePattern.GetWidth()),
+                            (short)(this.outerRegion.BottomRight.X - this.rightStrokePattern.Contents.GetWidth()),
                             (short)(this.outerRegion.TopLeft.Y + this.topRight.Region.Height)),
                         RepeatVertically(
-                            this.rightStrokePattern,
+                            this.rightStrokePattern.Contents,
                             (short)(this.outerRegion.Height - this.topRight.Region.Height - this.bottomRight.Region.Height)));
 
             this.bottomStroke =
@@ -166,9 +166,9 @@ namespace Game.Output.Layout
                     : new Rectangle(
                         new Coord(
                             (short)(this.outerRegion.TopLeft.X + this.bottomLeft.Region.Width),
-                            (short)(this.outerRegion.BottomRight.Y - bottomStrokePattern.GetHeight())),
+                            (short)(this.outerRegion.BottomRight.Y - bottomStrokePattern.Contents.GetHeight())),
                         RepeatHorizontally(
-                            this.bottomStrokePattern,
+                            this.bottomStrokePattern.Contents,
                             (short)(this.outerRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width)));
 
             this.namePlate =
@@ -178,7 +178,7 @@ namespace Game.Output.Layout
                         new Coord(
                             (short)(this.outerRegion.TopLeft.X + this.topLeft.Region.Width + 1),
                             this.outerRegion.TopLeft.Y),
-                        this.namePlatePattern);
+                        this.namePlatePattern.Contents);
         }
 
         private static short Largest(params short?[] values)

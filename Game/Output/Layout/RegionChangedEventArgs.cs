@@ -4,14 +4,20 @@ namespace Game.Output.Layout
 {
     public sealed class RegionChangedEventArgs : EventArgs
     {
-        public RegionChangedEventArgs(IReadOnlyRegion oldRegion, IReadOnlyRegion newRegion)
+        public RegionChangedEventArgs(
+            IReadOnlyRegion previousRegion,
+            IReadOnlyRegion currentRegion,
+            RegionChangeType changeType)
         {
-            this.OldRegion = oldRegion;
-            this.NewRegion = newRegion;
+            this.PreviousRegion = previousRegion;
+            this.CurrentRegion = currentRegion;
+            this.ChangeType = changeType;
         }
 
-        public IReadOnlyRegion OldRegion { get; }
+        public IReadOnlyRegion PreviousRegion { get; }
 
-        public IReadOnlyRegion NewRegion { get; }
+        public IReadOnlyRegion CurrentRegion { get; }
+
+        public RegionChangeType ChangeType { get; }
     }
 }

@@ -7,11 +7,13 @@ namespace Game.Output.Layout
         public RegionChangeEventArgs(
             IReadOnlyRegion region,
             Coord requestedTopLeft,
-            Coord requestedBottomRight)
+            Coord requestedBottomRight,
+            RegionChangeType changeType)
         {
             this.Region = region;
             this.RequestedTopLeft = requestedTopLeft;
             this.RequestedBottomRight = requestedBottomRight;
+            this.ChangeType = changeType;
 
             this.Cancel = false;
         }
@@ -21,6 +23,8 @@ namespace Game.Output.Layout
         public Coord RequestedTopLeft { get; }
 
         public Coord RequestedBottomRight { get; }
+
+        public RegionChangeType ChangeType { get; }
 
         /// <summary>
         /// Gets or sets whether this event should be cancelled. Set to <see langword="true"/> to cancel the requested

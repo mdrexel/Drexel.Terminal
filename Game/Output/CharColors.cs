@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace Game.Output
 {
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct CharColors
     {
         private static readonly IReadOnlyList<ConsoleColor> Colors = Enum
@@ -18,7 +17,13 @@ namespace Game.Output
         public CharColors(ConsoleColor fg, ConsoleColor bg)
         {
             this.attributes = (CharAttributes)(((ushort)bg << 4) | (ushort)fg);
+            this.Foreground = fg;
+            this.Background = bg;
         }
+
+        public ConsoleColor Foreground { get; }
+
+        public ConsoleColor Background { get; }
 
         public static implicit operator CharAttributes(CharColors color)
         {

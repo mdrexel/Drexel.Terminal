@@ -1,35 +1,53 @@
-﻿using Game.Output.Layout;
+﻿using System;
+using System.Linq;
+using Game.Output.Layout;
 
 namespace Game.Output.Primitives
 {
     public sealed class Text : IDrawable
     {
-        private readonly string content;
-        private readonly IReadOnlyRegion constrainedTo;
-        private readonly CharColors colors;
+        private static short NewLineLength = (short)Environment.NewLine.Length;
+
+        private readonly FormattedString content;
         private readonly CharColors? backgroundFill;
 
         private Rectangle rectangle;
-        private bool leadingOverflow;
-        private bool trailingOverflow;
         private ushort preceedingLinesSkipped;
 
         public Text(
-            string content,
-            CharColors colors,
-            IReadOnlyRegion constrainedTo,
+            FormattedString content,
+            Region region,
             CharColors? backgroundFill = null)
         {
             this.content = content;
-            this.colors = colors;
+            this.Region = region;
             this.backgroundFill = backgroundFill;
-            this.constrainedTo = constrainedTo;
+
             this.preceedingLinesSkipped = 0;
 
-            constrainedTo.OnChanged += (obj, e) => this.Calculate();
+            region.OnChanged +=
+                (obj, e) =>
+                {
+                    // Only need to recalculate contents 
+                    if (e.ChangeType == RegionChangeType.Resize || e.ChangeType == RegionChangeType.MoveAndResize)
+                    {
+                        this.Recalculate();
+                    }
+                };
 
-            this.Calculate();
+            this.Recalculate();
         }
+
+        public static Text Empty { get; } =
+            new Text(
+                FormattedString.Empty,
+                new Region(
+                    new Coord(0, 0),
+                    new Coord(0, 0)));
+
+        public Region Region { get; }
+
+        public ushort TotalLines { get; private set; }
 
         public ushort PreceedingLinesSkipped
         {
@@ -37,31 +55,20 @@ namespace Game.Output.Primitives
             set
             {
                 this.preceedingLinesSkipped = value;
-                this.Calculate();
+                this.Recalculate();
             }
         }
-
-        public bool LeadingOverflow => this.leadingOverflow;
-
-        public bool TrailingOverflow => this.trailingOverflow;
 
         public void Draw(ISink sink)
         {
             this.rectangle.Draw(sink);
         }
 
-        private void Calculate()
+        private void Recalculate()
         {
-            this.rectangle =
-                new Rectangle(
-                    this.constrainedTo.TopLeft,
-                    this.content.ToCharInfo(
-                        this.colors,
-                        this.constrainedTo,
-                        out this.leadingOverflow,
-                        out this.trailingOverflow,
-                        this.backgroundFill,
-                        this.preceedingLinesSkipped));
+            this.TotalLines = 0;
+            this.preceedingLinesSkipped = 0;
+            this.rectangle = new Rectangle()
         }
     }
 }

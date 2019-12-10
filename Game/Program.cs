@@ -73,15 +73,15 @@ namespace Game
 
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
                 BorderBuilder builder = new BorderBuilder(
-                    namePlate: "═══════════\r\nHello World".ToCharInfo(borderColors, out _, out _),
-                    topLeft: "╔═╦\r\n║ ║\r\n╠═╬".ToCharInfo(borderColors, out _, out _),
-                    topRight: "╦═╗\r\n║ ║\r\n╬═╣".ToCharInfo(borderColors, out _, out _),
-                    bottomLeft: "╠═╬\r\n╚═╩".ToCharInfo(borderColors, out _, out _),
-                    bottomRight: "╬═╣\r\n╩═╝".ToCharInfo(borderColors, out _, out _),
-                    leftStroke: "║ ║".ToCharInfo(borderColors, out _, out _),
-                    topStroke: "═\r\n\r\n═".ToCharInfo(borderColors, out _, out _),
-                    rightStroke: "║ ║".ToCharInfo(borderColors, out _, out _),
-                    bottomStroke: "═\r\n═".ToCharInfo(borderColors, out _, out _));
+                    namePlate: new FormattedString("═══════════\r\nHello World", borderColors),
+                    topLeft: new FormattedString("╔═╦\r\n║ ║\r\n╠═╬", borderColors),
+                    topRight: new FormattedString("╦═╗\r\n║ ║\r\n╬═╣", borderColors),
+                    bottomLeft: new FormattedString("╠═╬\r\n╚═╩", borderColors),
+                    bottomRight: new FormattedString("╬═╣\r\n╩═╝", borderColors),
+                    leftStroke: new FormattedString("║ ║", borderColors),
+                    topStroke: new FormattedString("═\r\n\r\n═", borderColors),
+                    rightStroke: new FormattedString("║ ║", borderColors),
+                    bottomStroke: new FormattedString("═\r\n═", borderColors));
 
                 Region region = new Region(new Coord(0, 0), new Coord(50, 15));
                 Border border = builder.Build(region);

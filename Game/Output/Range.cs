@@ -1,5 +1,8 @@
-﻿namespace Game.Output
+﻿using System.Diagnostics;
+
+namespace Game.Output
 {
+    [DebuggerDisplay("[{StartIndexInclusive,nq}, {EndIndexExclusive,nq})")]
     public readonly struct Range
     {
         public readonly ushort StartIndexInclusive;

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Game.Output
 {
+    [DebuggerDisplay("{Value,nq}")]
     public sealed class FormattedString
     {
         private const string SpanStart = "<span ";
@@ -67,7 +69,7 @@ namespace Game.Output
                 Range range = ParseSpan(
                     copy,
                     (ushort)startOfNextSpan, // the start is unchanged after the removal
-                    (ushort)(closeOfNextSpan - closeOfNextSpanLength - lengthOfNextSpan),
+                    (ushort)(closeOfNextSpan - lengthOfNextSpan),
                     defaultColors,
                     defaultDelay);
 
@@ -120,7 +122,7 @@ namespace Game.Output
 
                         current = null;
                     }
-                    else if (current.Value.EndIndexExclusive != next.Value.StartIndexInclusive)
+                    else if (next != null && current.Value.EndIndexExclusive != next.Value.StartIndexInclusive)
                     {
                         linkedList.AddAfter(
                             current,

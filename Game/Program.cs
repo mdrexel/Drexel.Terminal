@@ -73,7 +73,7 @@ namespace Game
 
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
                 BorderBuilder builder = new BorderBuilder(
-                    namePlate: new FormattedString("═══════════\r\n<span fg=Red>Hello World</span>", borderColors),
+                    namePlate: new FormattedString("═══════════\r\n<span fg=Red bg=Green dtime=100>Hello World</span>", borderColors),
                     topLeft: new FormattedString("╔═╦\r\n║ ║\r\n╠═╬", borderColors),
                     topRight: new FormattedString("╦═╗\r\n║ ║\r\n╬═╣", borderColors),
                     bottomLeft: new FormattedString("╠═╬\r\n╚═╩", borderColors),

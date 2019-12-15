@@ -1,10 +1,8 @@
-﻿using Game.Output.Primitives;
-
-namespace Game.Output.Layout
+﻿namespace Game.Output.Layout
 {
     public sealed class BorderBuilder
     {
-        private readonly FormattedString? namePlate;
+        private readonly FormattedString? defaultNamePlate;
         private readonly FormattedString? topLeft;
         private readonly FormattedString? topRight;
         private readonly FormattedString? bottomLeft;
@@ -15,7 +13,7 @@ namespace Game.Output.Layout
         private readonly FormattedString? bottomStroke;
 
         public BorderBuilder(
-            FormattedString? namePlate = null,
+            FormattedString? defaultNamePlate = null,
             FormattedString? topLeft = null,
             FormattedString? topRight = null,
             FormattedString? bottomLeft = null,
@@ -25,7 +23,7 @@ namespace Game.Output.Layout
             FormattedString? rightStroke = null,
             FormattedString? bottomStroke = null)
         {
-            this.namePlate = namePlate;
+            this.defaultNamePlate = defaultNamePlate;
             this.topLeft = topLeft;
             this.topRight = topRight;
             this.bottomLeft = bottomLeft;
@@ -36,11 +34,11 @@ namespace Game.Output.Layout
             this.bottomStroke = bottomStroke;
         }
 
-        public Border Build(Region outerRegion)
+        public Border Build(Region outerRegion, FormattedString? namePlate = null)
         {
             return new Border(
                 outerRegion,
-                this.namePlate,
+                namePlate ?? this.defaultNamePlate,
                 this.topLeft,
                 this.topRight,
                 this.bottomLeft,

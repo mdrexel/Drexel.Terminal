@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Game.Output.Layout;
 
@@ -27,47 +28,25 @@ namespace Game.Output.Primitives
             if (this.hasDelayedContent)
             {
                 this.delayedContent = new CharDelay[height, width];
-                int rangeIndex = 0;
-                Range range = content.Ranges[rangeIndex++];
-                for (int y = 0, index = 0; y < lines.Length; y++, index += Environment.NewLine.Length)
-                {
-                    string line = lines[y];
-                    for (int x = 0; x < line.Length; x++, index++)
-                    {
-                        if (range.EndIndexExclusive == index)
-                        {
-                            range = content.Ranges[rangeIndex++];
-                        }
-
-                        this.delayedContent[y, x] = new CharDelay(
-                            new CharInfo(line[x], range.Attributes),
-                            range.Delay);
-                    }
-                }
-
-                this.Region = new Region(topLeft, this.delayedContent.ToCoord() + topLeft);
+                Label.Process(
+                    this.delayedContent,
+                    lines,
+                    content.Ranges,
+                    (x, y) => new CharDelay(
+                        new CharInfo(x, y.Attributes),
+                        y.Delay));
             }
             else
             {
                 this.undelayedContent = new CharInfo[height, width];
-                int rangeIndex = 0;
-                Range range = content.Ranges[rangeIndex++];
-                for (int y = 0, index = 0; y < lines.Length; y++, index += Environment.NewLine.Length)
-                {
-                    string line = lines[y];
-                    for (int x = 0; x < line.Length; x++, index++)
-                    {
-                        if (range.EndIndexExclusive == index)
-                        {
-                            range = content.Ranges[rangeIndex++];
-                        }
-
-                        this.undelayedContent[y, x] = new CharInfo(line[x], range.Attributes);
-                    }
-                }
-
-                this.Region = new Region(topLeft, this.undelayedContent.ToCoord() + topLeft);
+                Label.Process(
+                    this.undelayedContent,
+                    lines,
+                    content.Ranges,
+                    (x, y) => new CharInfo(x, y.Attributes));
             }
+
+            this.Region = new Region(topLeft, new Coord(width, height) + topLeft);
         }
 
         internal Label(Coord topLeft, CharInfo[,] content)
@@ -164,6 +143,29 @@ namespace Game.Output.Primitives
             }
 
             return result;
+        }
+
+        private static void Process<T>(
+            T[,] output,
+            string[] lines,
+            IReadOnlyList<Range> ranges,
+            Func<char, Range, T> factory)
+        {
+            int rangeIndex = 0;
+            Range range = ranges[rangeIndex++];
+            for (int y = 0, index = 0; y < lines.Length; y++, index += Environment.NewLine.Length)
+            {
+                string line = lines[y];
+                for (int x = 0; x < line.Length; x++, index++)
+                {
+                    if (range.EndIndexExclusive == index)
+                    {
+                        range = ranges[rangeIndex++];
+                    }
+
+                    output[y, x] = factory.Invoke(line[x], range);
+                }
+            }
         }
     }
 }

@@ -142,7 +142,7 @@ namespace Game.Output
             }
 
             this.Value = value;
-            this.Ranges = linkedList.ToList();
+            this.Ranges = new Ranges(linkedList.ToList());
             this.ContainsDelays = this.Ranges.Any(x => x.Delay > 0);
         }
 
@@ -150,7 +150,7 @@ namespace Game.Output
 
         public string Value { get; }
 
-        public IReadOnlyList<Range> Ranges { get; }
+        public Ranges Ranges { get; }
 
         public bool ContainsDelays { get; }
 

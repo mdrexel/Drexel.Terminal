@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Game.Enigma;
 using Game.Enigma.Models;
 using Game.Output;
@@ -55,6 +56,7 @@ namespace Game
         public void Spooky()
         {
             Random random = new Random();
+            using (Source source = new Source())
             using (Sink sink = new Sink("Game", Height, Width))
             {
                 ////CharInfo[,] info = new CharInfo[Height, Width];
@@ -115,25 +117,32 @@ namespace Game
                 ////    35,
                 ////    DelayMode.PerWord);
 
-                while (true)
-                {
-                    var dude = Console.ReadKey(true);
-                    switch (dude.Key)
+                source.OnKeyPressed +=
+                    (obj, e) =>
                     {
-                        case ConsoleKey.UpArrow:
-                            bar.PreceedingLinesSkipped--;
-                            bar.Draw(sink);
-                            break;
-                        case ConsoleKey.DownArrow:
-                            bar.PreceedingLinesSkipped++;
-                            bar.Draw(sink);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                Console.ReadKey();
+                        switch (e.Key)
+                        {
+                            case ConsoleKey.UpArrow:
+                                bar.AdjustLinesSkipped(-1);
+                                bar.Draw(sink);
+                                break;
+                            case ConsoleKey.DownArrow:
+                                bar.AdjustLinesSkipped(1);
+                                bar.Draw(sink);
+                                break;
+                            case ConsoleKey.PageDown:
+                                bar.AdjustLinesSkipped(bar.MaximumVisibleLines);
+                                bar.Draw(sink);
+                                break;
+                            case ConsoleKey.PageUp:
+                                bar.AdjustLinesSkipped(-bar.MaximumVisibleLines);
+                                bar.Draw(sink);
+                                break;
+                            default:
+                                break;
+                        }
+                    };
+                source.DelayUntilExitAccepted(default).Wait();
             }
         }
 

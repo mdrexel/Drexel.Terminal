@@ -9,7 +9,7 @@ namespace Game.Output.Primitives
     {
         private static readonly string[] NewLines = new string[] { Environment.NewLine };
 
-        private bool hasDelayedContent;
+        private readonly bool hasDelayedContent;
         private readonly CharDelay[,]? delayedContent;
         private readonly CharInfo[,]? undelayedContent;
 
@@ -29,7 +29,7 @@ namespace Game.Output.Primitives
             {
                 this.delayedContent = new CharDelay[height, width];
                 Label.Process(
-                    this.delayedContent,
+                    in this.delayedContent,
                     lines,
                     content.Ranges,
                     (x, y) => new CharDelay(
@@ -40,7 +40,7 @@ namespace Game.Output.Primitives
             {
                 this.undelayedContent = new CharInfo[height, width];
                 Label.Process(
-                    this.undelayedContent,
+                    in this.undelayedContent,
                     lines,
                     content.Ranges,
                     (x, y) => new CharInfo(x, y.Attributes));
@@ -146,7 +146,7 @@ namespace Game.Output.Primitives
         }
 
         private static void Process<T>(
-            T[,] output,
+            in T[,] output,
             string[] lines,
             IReadOnlyList<Range> ranges,
             Func<char, Range, T> factory)

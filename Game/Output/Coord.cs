@@ -18,17 +18,26 @@ namespace Game.Output
 
         public static Coord operator +(Coord left, Coord right)
         {
-            return new Coord((short)(left.X + right.X), (short)(left.Y + right.Y));
+            checked
+            {
+                return new Coord((short)(left.X + right.X), (short)(left.Y + right.Y));
+            }
         }
 
         public static Coord operator -(Coord left, Coord right)
         {
-            return new Coord((short)(left.X - right.X), (short)(left.Y - right.Y));
+            checked
+            {
+                return new Coord((short)(left.X - right.X), (short)(left.Y - right.Y));
+            }
         }
 
         public static Coord operator *(Coord left, Coord right)
         {
-            return new Coord((short)(left.X * right.X), (short)(left.Y * right.Y));
+            checked
+            {
+                return new Coord((short)(left.X * right.X), (short)(left.Y * right.Y));
+            }
         }
 
         public static bool operator ==(Coord left, Coord right)

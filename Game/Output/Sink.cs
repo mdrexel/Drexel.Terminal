@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
 namespace Game.Output
@@ -18,7 +14,7 @@ namespace Game.Output
         private const int SC_MAXIMIZE = 0xF030;
         private const int SC_SIZE = 0xF000;
 
-        // TODO: This isn't thread safe, but it doesn't matter for this tiny game
+        private static readonly object ActiveLock = new object();
         private static bool Active = false;
 
         private readonly SafeFileHandle handle;
@@ -32,12 +28,15 @@ namespace Game.Output
             Action? onCancelKeyPress = null,
             uint codePage = 65001)
         {
-            if (Sink.Active)
+            lock (Sink.ActiveLock)
             {
-                throw new InvalidOperationException("Can only have one sink open at a time.");
-            }
+                if (Sink.Active)
+                {
+                    throw new InvalidOperationException("Can only have one sink open at a time.");
+                }
 
-            Sink.Active = true;
+                Sink.Active = true;
+            }
 
             this.height = height;
             this.width = width;
@@ -47,24 +46,6 @@ namespace Game.Output
             Console.WindowHeight = height;
             Console.BufferWidth = width;
             Console.BufferHeight = height;
-
-            Console.CancelKeyPress +=
-                (obj, e) =>
-                {
-                    bool? allowExit = this.OnExitRequested?.Invoke();
-                    if (allowExit.HasValue && !allowExit.Value)
-                    {
-                        e.Cancel = true;
-                    }
-                    else if (onCancelKeyPress != null)
-                    {
-                        onCancelKeyPress.Invoke();
-                    }
-                    else
-                    {
-                        Environment.Exit(0);
-                    }
-                };
 
             IntPtr handle = GetConsoleWindow();
             IntPtr sysMenu = GetSystemMenu(handle, false);
@@ -93,10 +74,6 @@ namespace Game.Output
                 throw new InvalidOperationException("Failed to get safe handle of console output.");
             }
         }
-
-        public delegate bool AllowExitDelegate();
-
-        public event AllowExitDelegate? OnExitRequested;
 
         [DllImport("user32.dll")]
         private static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
@@ -279,7 +256,11 @@ namespace Game.Output
 
         public void Dispose()
         {
-            Sink.Active = false;
+            lock (Sink.ActiveLock)
+            {
+                Sink.Active = false;
+            }
+
             this.handle.Dispose();
         }
 

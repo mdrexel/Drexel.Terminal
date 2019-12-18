@@ -116,7 +116,7 @@ namespace Game.Output
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool WriteConsoleOutputCharacter(
             SafeFileHandle hConsoleOutput,
-            IntPtr lpCharacter,////char[] lpCharacter,
+            IntPtr lpCharacter,
             int nLength,
             Coord dwWriteCoord,
             out int lpNumberOfCharsWritten);
@@ -124,7 +124,7 @@ namespace Game.Output
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool WriteConsoleOutputAttribute(
             SafeFileHandle hConsoleOutput,
-            IntPtr lpAttribute,////CharAttributes[] lpAttribute,
+            IntPtr lpAttribute,
             int nLength,
             Coord dwWriteCoord,
             out int lpNumberOfCharsWritten);
@@ -214,6 +214,45 @@ namespace Game.Output
 
         public void Write(char @char, CharColors colors) =>
             this.Write(new CharInfo(@char, colors));
+
+        public void Write(CharUnion character)
+        {
+            this.Write(character, new Coord((short)Console.CursorLeft, (short)Console.CursorTop));
+            this.AdvanceCursor();
+        }
+
+        public void Write(CharColors colors)
+        {
+            this.Write(colors, new Coord((short)Console.CursorLeft, (short)Console.CursorTop));
+            this.AdvanceCursor();
+        }
+
+        public void Write(CharUnion character, Coord destination)
+        {
+            unsafe
+            {
+                WriteConsoleOutputCharacter(
+                    this.handle,
+                    new IntPtr(&character),
+                    1,
+                    destination,
+                    out _);
+            }
+        }
+
+        public void Write(CharColors colors, Coord destination)
+        {
+            unsafe
+            {
+                CharAttributes attributes = colors;
+                WriteConsoleOutputAttribute(
+                    this.handle,
+                    new IntPtr(&attributes),
+                    1,
+                    destination,
+                    out _);
+            }
+        }
 
         public void WriteRegion(
             CharInfo[,] buffer,

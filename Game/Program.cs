@@ -143,6 +143,15 @@ namespace Game
                         }
                     };
 
+                source.OnLeftMouse +=
+                    (obj, e) =>
+                    {
+                        if (e.ButtonDown)
+                        {
+                            sink.Write('e', e.Position);
+                        }
+                    };
+
                 source.DelayUntilExitAccepted(default).Wait();
             }
         }

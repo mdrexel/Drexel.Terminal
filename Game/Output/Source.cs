@@ -17,10 +17,12 @@ namespace Game.Output
         private static readonly object ActiveLock = new object();
         private static bool Active = false;
 
-        private readonly Box<bool> keyThreadRunning;
-        private readonly Thread keyThread;
+        private readonly Box<bool> eventThreadRunning;
+        private readonly Thread eventThread;
         private readonly IntPtr handle;
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
+
+        private Coord lastKnownMousePosition;
 
         public Source()
         {
@@ -68,16 +70,18 @@ namespace Game.Output
                 this.consoleControlHandler,
                 true);
 
-            this.keyThreadRunning = new Box<bool>(true);
-            this.keyThread =
+            this.lastKnownMousePosition = default;
+
+            this.eventThreadRunning = new Box<bool>(true);
+            this.eventThread =
                 new Thread(
                     () =>
                     {
                         bool GetRunningState()
                         {
-                            lock (this.keyThreadRunning)
+                            lock (this.eventThreadRunning)
                             {
-                                return this.keyThreadRunning.Value;
+                                return this.eventThreadRunning.Value;
                             }
                         }
 
@@ -87,57 +91,34 @@ namespace Game.Output
                             {
                                 while (true)
                                 {
-                                    ////this.OnKeyPressed?.Invoke(this, Console.ReadKey(true));
                                     ConsoleInputEventInfo[] events = this.ListenForEvents();
                                     foreach (ConsoleInputEventInfo @event in events)
                                     {
-                                        switch (@event.EventType)
+                                        try
                                         {
-                                            case ConsoleInputEventType.None:
-                                                // This shouldn't ever happen, but just in case...
-                                                break;
-                                            case ConsoleInputEventType.FocusEvent:
-                                                break;
-                                            case ConsoleInputEventType.KeyEvent:
-                                                if (@event.KeyEvent.KeyDown)
-                                                {
-                                                    this.OnKeyPressed?.Invoke(
-                                                        this,
-                                                        new ConsoleKeyInfo(
-                                                            @event.KeyEvent.UnicodeChar,
-                                                            @event.KeyEvent.VirtualKeyCode,
-                                                            @event.KeyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.ShiftPressed),
-                                                            @event.KeyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftAltPressed)
-                                                                || @event.KeyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightAltPressed),
-                                                            @event.KeyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftCtrlPressed)
-                                                                || @event.KeyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed)));
-                                                }
-
-                                                break;
-                                            case ConsoleInputEventType.MenuEvent:
-                                                break;
-                                            case ConsoleInputEventType.MouseEvent:
-                                                break;
-                                            case ConsoleInputEventType.WindowBufferSizeEvent:
-                                                break;
-                                            default:
-                                                throw new NotImplementedException(
-                                                    "Unrecognized console input event type.");
+                                            this.DispatchEventProcessing(@event);
+                                        }
+                                        catch
+                                        {
+                                            // Processing an event shouldn't emit an exception, but just in case...
                                         }
                                     }
                                 }
                             }
                             catch
                             {
-                                // If the ReadKey is canceled by a disposal, it'll either throw an
-                                // InvalidOperationException or an OperationCanceledException, which will cause the
-                                // inner loop be broken. The Dispose call will have set keyThreadRunning to false, so
-                                // the thread will be ready to join.
+                                // This shouldn't ever happen, but just in case, re-listen for events
                             }
                         }
                     });
-            this.keyThread.Start();
+            this.eventThread.Start();
         }
+
+        public event EventHandler<MouseMoveEventArgs>? OnMouseMove;
+
+        public event EventHandler<MouseClickEventArgs>? OnLeftMouse;
+
+        public event EventHandler<MouseClickEventArgs>? OnRightMouse;
 
         public event EventHandler<ConsoleKeyInfo>? OnKeyPressed;
 
@@ -149,9 +130,9 @@ namespace Game.Output
 
         public void Dispose()
         {
-            lock (this.keyThreadRunning)
+            lock (this.eventThreadRunning)
             {
-                this.keyThreadRunning.Value = false;
+                this.eventThreadRunning.Value = false;
             }
 
             SetConsoleCtrlHandler(
@@ -159,7 +140,7 @@ namespace Game.Output
                 false);
 
             CancelIoEx(this.handle, IntPtr.Zero);
-            this.keyThread.Join();
+            this.eventThread.Join();
 
             lock (Source.ActiveLock)
             {
@@ -170,9 +151,9 @@ namespace Game.Output
         public async Task DelayUntilExitAccepted(CancellationToken cancellationToken)
         {
             CancellationTokenSource cts;
-            lock (this.keyThreadRunning)
+            lock (this.eventThreadRunning)
             {
-                if (!this.keyThreadRunning.Value)
+                if (!this.eventThreadRunning.Value)
                 {
                     return;
                 }
@@ -249,6 +230,83 @@ namespace Game.Output
                 out int count);
 
             return values;
+        }
+
+        private void DispatchEventProcessing(ConsoleInputEventInfo @event)
+        {
+            switch (@event.EventType)
+            {
+                case ConsoleInputEventType.None:
+                    // This shouldn't ever happen, but just in case...
+                    break;
+                case ConsoleInputEventType.FocusEvent:
+                    break;
+                case ConsoleInputEventType.KeyEvent:
+                    this.ProcessKeyEvent(@event.KeyEvent);
+                    break;
+                case ConsoleInputEventType.MenuEvent:
+                    break;
+                case ConsoleInputEventType.MouseEvent:
+                    this.ProcessMouseEvent(@event.MouseEvent);
+                    break;
+                case ConsoleInputEventType.WindowBufferSizeEvent:
+                    break;
+                default:
+                    throw new NotImplementedException(
+                        "Unrecognized console input event type.");
+            }
+        }
+
+        private void ProcessKeyEvent(ConsoleKeyEventInfo keyEvent)
+        {
+            if (keyEvent.KeyDown)
+            {
+                this.OnKeyPressed?.Invoke(
+                    this,
+                    new ConsoleKeyInfo(
+                        keyEvent.UnicodeChar,
+                        keyEvent.VirtualKeyCode,
+                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.ShiftPressed),
+                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftAltPressed)
+                            || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightAltPressed),
+                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftCtrlPressed)
+                            || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed)));
+            }
+        }
+
+        ConsoleMouseEventInfo lastMouseEvent = default;
+        private void ProcessMouseEvent(ConsoleMouseEventInfo mouseEvent)
+        {
+            if (mouseEvent.MousePosition != this.lastMouseEvent.MousePosition)
+            {
+                MouseMoveEventArgs args =
+                    new MouseMoveEventArgs(
+                        this.lastMouseEvent.MousePosition,
+                        mouseEvent.MousePosition);
+                this.OnMouseMove?.Invoke(this, args);
+            }
+
+            ConsoleMouseButtonState delta = mouseEvent.ButtonState & ~lastMouseEvent.ButtonState;
+
+            if (delta.HasFlag(ConsoleMouseButtonState.FromLeft1stButtonPressed))
+            {
+                this.OnLeftMouse?.Invoke(
+                    this,
+                    new MouseClickEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.FromLeft1stButtonPressed)));
+            }
+
+            if (delta.HasFlag(ConsoleMouseButtonState.RightMostButtonPressed))
+            {
+                this.OnRightMouse?.Invoke(
+                    this,
+                    new MouseClickEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.RightMostButtonPressed)));
+            }
+
+            this.lastMouseEvent = mouseEvent;
         }
 
         private sealed class Box<T>

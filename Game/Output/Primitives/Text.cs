@@ -69,6 +69,11 @@ namespace Game.Output.Primitives
             this.rectangle.Draw(sink);
         }
 
+        public void InvertColor()
+        {
+            this.rectangle.InvertColor();
+        }
+
         public void AdjustLinesSkipped(int delta)
         {
             if (delta == 0)

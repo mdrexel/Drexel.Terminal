@@ -99,6 +99,19 @@ namespace Game.Output.Layout
             this.namePlate.Draw(sink);
         }
 
+        public void InvertColor()
+        {
+            this.topLeft.InvertColor();
+            this.topStroke.InvertColor();
+            this.topRight.InvertColor();
+            this.leftStroke.InvertColor();
+            this.bottomLeft.InvertColor();
+            this.rightStroke.InvertColor();
+            this.bottomRight.InvertColor();
+            this.bottomStroke.InvertColor();
+            this.namePlate.InvertColor();
+        }
+
         private void MaybeRecalculate(Coord delta, RegionChangeType changeType)
         {
             if (changeType == RegionChangeType.MoveAndResize || changeType == RegionChangeType.Resize)

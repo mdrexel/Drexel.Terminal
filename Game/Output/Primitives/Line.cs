@@ -19,5 +19,10 @@
         {
             throw new System.NotImplementedException();
         }
+
+        public void InvertColor()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

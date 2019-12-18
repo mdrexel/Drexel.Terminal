@@ -10,5 +10,10 @@
             this.CharInfo = charInfo;
             this.DelayInMilliseconds = delayInMilliseconds;
         }
+
+        public CharDelay GetInvertedColor()
+        {
+            return new CharDelay(this.CharInfo.GetInvertedColor(), this.DelayInMilliseconds);
+        }
     }
 }

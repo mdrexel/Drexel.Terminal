@@ -22,8 +22,6 @@ namespace Game.Output
         private readonly IntPtr handle;
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
 
-        private Coord lastKnownMousePosition;
-
         public Source()
         {
             lock (Source.ActiveLock)
@@ -69,8 +67,6 @@ namespace Game.Output
             SetConsoleCtrlHandler(
                 this.consoleControlHandler,
                 true);
-
-            this.lastKnownMousePosition = default;
 
             this.eventThreadRunning = new Box<bool>(true);
             this.eventThread =
@@ -120,6 +116,8 @@ namespace Game.Output
 
         public event EventHandler<MouseClickEventArgs>? OnRightMouse;
 
+        public event EventHandler<MouseWheelEventArgs>? OnVerticalMouseWheel;
+
         public event EventHandler<ConsoleKeyInfo>? OnKeyPressed;
 
         public event EventHandler<ExitRequestedEventArgs>? OnExitRequested;
@@ -165,7 +163,6 @@ namespace Game.Output
                         {
                             cts.Cancel();
                         };
-
                 }
             }
 
@@ -227,7 +224,7 @@ namespace Game.Output
                 this.handle,
                 values,
                 unreadEventCount,
-                out int count);
+                out _);
 
             return values;
         }
@@ -304,6 +301,15 @@ namespace Game.Output
                     new MouseClickEventArgs(
                         mouseEvent.MousePosition,
                         mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.RightMostButtonPressed)));
+            }
+
+            if (mouseEvent.EventFlags.HasFlag(ConsoleMouseEventType.MouseWheeled))
+            {
+                this.OnVerticalMouseWheel?.Invoke(
+                    this,
+                    new MouseWheelEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.ScrollDown)));
             }
 
             this.lastMouseEvent = mouseEvent;

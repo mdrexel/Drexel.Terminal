@@ -9,6 +9,7 @@ using Game.Enigma;
 using Game.Enigma.Models;
 using Game.Output;
 using Game.Output.Layout;
+using Game.Output.Layout.Symbols;
 using Game.Output.Primitives;
 
 namespace Game
@@ -117,9 +118,20 @@ namespace Game
                 ////    35,
                 ////    DelayMode.PerWord);
 
+                LayoutManager layout = new LayoutManager(sink);
+                Button button = new Button(
+                    layout,
+                    new Region(new Coord(12, 12), new Coord(30, 20)),
+                    builder,
+                    "foo",
+                    "Hello");
+                layout.Add(button);
+
                 source.OnKeyPressed +=
                     (obj, e) =>
                     {
+                        layout.KeyPressed(e);
+
                         switch (e.Key)
                         {
                             case ConsoleKey.UpArrow:
@@ -146,10 +158,36 @@ namespace Game
                 source.OnLeftMouse +=
                     (obj, e) =>
                     {
-                        if (e.ButtonDown)
+                        layout.LeftMouseEvent(e.Position, e.ButtonDown);
+                    };
+
+                source.OnRightMouse +=
+                    (obj, e) =>
+                    {
+                        layout.RightMouseEvent(e.Position, e.ButtonDown);
+                    };
+
+                source.OnMouseMove +=
+                    (obj, e) =>
+                    {
+                        layout.MouseMoveEvent(e.PreviousPosition, e.CurrentPosition);
+                    };
+
+                source.OnVerticalMouseWheel +=
+                    (obj, e) =>
+                    {
+                        layout.ScrollEvent(e.Position, e.Down);
+
+                        if (e.Down)
                         {
-                            sink.Write('e', e.Position);
+                            bar.AdjustLinesSkipped(3);
                         }
+                        else
+                        {
+                            bar.AdjustLinesSkipped(-3);
+                        }
+
+                        bar.Draw(sink);
                     };
 
                 source.DelayUntilExitAccepted(default).Wait();

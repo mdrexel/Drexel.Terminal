@@ -23,6 +23,30 @@ namespace Game.Output.Primitives
 
         public IMoveOnlyRegion Region { get; }
 
+        public void InvertColor()
+        {
+            if (this.delayedContent is null)
+            {
+                for (int y = 0; y < this.undelayedContent.GetHeight(); y++)
+                {
+                    for (int x = 0; x < this.undelayedContent.GetWidth(); x++)
+                    {
+                        this.undelayedContent[y, x] = this.undelayedContent[y, x].GetInvertedColor();
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < this.delayedContent.GetHeight(); y++)
+                {
+                    for (int x = 0; x < this.delayedContent.GetWidth(); x++)
+                    {
+                        this.delayedContent[y, x] = this.delayedContent[y, x].GetInvertedColor();
+                    }
+                }
+            }
+        }
+
         public void Draw(ISink sink)
         {
             if (this.delayedContent is null)

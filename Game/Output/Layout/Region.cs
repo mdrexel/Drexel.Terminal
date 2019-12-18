@@ -239,6 +239,14 @@ namespace Game.Output.Layout
                 && this.bottomRight.Y > other.topLeft.Y;
         }
 
+        public bool Overlaps(Coord coord)
+        {
+            return coord.X >= this.topLeft.X
+                && coord.Y >= this.topLeft.Y
+                && coord.X <= this.bottomRight.X
+                && coord.Y <= this.bottomRight.Y;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is Region other)

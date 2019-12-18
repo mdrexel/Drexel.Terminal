@@ -79,6 +79,30 @@ namespace Game.Output.Primitives
             }
         }
 
+        public void InvertColor()
+        {
+            if (this.hasDelayedContent)
+            {
+                for (int y = 0; y < this.delayedContent.GetHeight(); y++)
+                {
+                    for (int x = 0; x < this.delayedContent.GetWidth(); x++)
+                    {
+                        this.delayedContent[y, x] = this.delayedContent[y, x].GetInvertedColor();
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < this.undelayedContent.GetHeight(); y++)
+                {
+                    for (int x = 0; x < this.undelayedContent.GetWidth(); x++)
+                    {
+                        this.undelayedContent[y, x] = this.undelayedContent[y, x].GetInvertedColor();
+                    }
+                }
+            }
+        }
+
         internal Label RepeatHorizontally(short width)
         {
             if (this.hasDelayedContent)

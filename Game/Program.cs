@@ -142,6 +142,7 @@ namespace Game
                                 break;
                         }
                     };
+
                 source.DelayUntilExitAccepted(default).Wait();
             }
         }

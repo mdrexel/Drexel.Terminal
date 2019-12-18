@@ -10,19 +10,26 @@ namespace Game.Output.Layout.Symbols
     public class Button : Symbol
     {
         private readonly Label label;
+        private readonly Rectangle? background;
 
         public Button(
             LayoutManager layoutManager,
             Region region,
             BorderBuilder borderBuilder,
             string name,
-            FormattedString content)
+            FormattedString content,
+            CharColors? backgroundFill = null)
             : base(
                   layoutManager,
                   region,
                   borderBuilder,
                   name)
         {
+            if (backgroundFill.HasValue)
+            {
+                this.background = new Rectangle(this.InnerRegion, backgroundFill.Value);
+            }
+
             this.label = new Label(this.InnerRegion.TopLeft, content);
             this.InnerRegion.OnChanged +=
                 (obj, e) =>
@@ -59,6 +66,7 @@ namespace Game.Output.Layout.Symbols
 
         protected override void DrawInternal(ISink sink)
         {
+            this.background?.Draw(sink);
             this.label.Draw(sink);
         }
 

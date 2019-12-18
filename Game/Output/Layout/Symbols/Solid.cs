@@ -18,16 +18,7 @@ namespace Game.Output.Layout.Symbols
                   borderBuilder,
                   name)
         {
-            CharInfo[,] content = new CharInfo[this.InnerRegion.Height, this.InnerRegion.Width];
-            for (int y = 0; y < content.GetHeight(); y++)
-            {
-                for (int x = 0; x < content.GetWidth(); x++)
-                {
-                    content[y, x] = new CharInfo(' ', fill);
-                }
-            }
-
-            this.fill = new Rectangle(this.InnerRegion.TopLeft, content);
+            this.fill = new Rectangle(this.InnerRegion, fill);
         }
 
         public override bool CanBeFocused => false;

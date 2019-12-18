@@ -121,7 +121,7 @@ namespace Game
                 LayoutManager layout = new LayoutManager(sink);
                 Solid background = new Solid(
                     layout,
-                    new Region(new Coord(0, 0), new Coord(Width, Height)),
+                    new Region(new Coord(2, 0), new Coord(Width, Height)),
                     builder,
                     "bar",
                     CharColors.Standard);
@@ -130,7 +130,8 @@ namespace Game
                     new Region(new Coord(12, 12), new Coord(30, 20)),
                     builder,
                     "foo",
-                    "Hello");
+                    "Hello",
+                    CharColors.Standard);
                 layout.Add(background);
                 layout.Add(button);
 

@@ -36,20 +36,21 @@ namespace Game.Output.Layout
             FormattedString? leftStroke = null,
             FormattedString? topStroke = null,
             FormattedString? rightStroke = null,
-            FormattedString? bottomStroke = null)
+            FormattedString? bottomStroke = null,
+            CharColors? borderFill = null)
         {
             this.OuterRegion = outerRegion;
             this.innerRegion = new Region(outerRegion.TopLeft, outerRegion.BottomRight);
 
-            this.namePlate = namePlate == null ? Label.Empty : new Label(namePlate);
-            this.topLeft = topLeft == null ? Label.Empty : new Label(topLeft);
-            this.topRight = topRight == null ? Label.Empty : new Label(topRight);
-            this.bottomLeft = bottomLeft == null ? Label.Empty : new Label(bottomLeft);
-            this.bottomRight = bottomRight == null ? Label.Empty : new Label(bottomRight);
-            this.leftStrokePattern = leftStroke == null ? Label.Empty : new Label(leftStroke);
-            this.topStrokePattern = topStroke == null ? Label.Empty : new Label(topStroke);
-            this.rightStrokePattern = rightStroke == null ? Label.Empty : new Label(rightStroke);
-            this.bottomStrokePattern = bottomStroke == null ? Label.Empty : new Label(bottomStroke);
+            this.namePlate = namePlate == null ? Label.Empty : new Label(namePlate, borderFill);
+            this.topLeft = topLeft == null ? Label.Empty : new Label(topLeft, borderFill);
+            this.topRight = topRight == null ? Label.Empty : new Label(topRight, borderFill);
+            this.bottomLeft = bottomLeft == null ? Label.Empty : new Label(bottomLeft, borderFill);
+            this.bottomRight = bottomRight == null ? Label.Empty : new Label(bottomRight, borderFill);
+            this.leftStrokePattern = leftStroke == null ? Label.Empty : new Label(leftStroke, borderFill);
+            this.topStrokePattern = topStroke == null ? Label.Empty : new Label(topStroke, borderFill);
+            this.rightStrokePattern = rightStroke == null ? Label.Empty : new Label(rightStroke, borderFill);
+            this.bottomStrokePattern = bottomStroke == null ? Label.Empty : new Label(bottomStroke, borderFill);
 
             this.largestTopOffset = Largest(
                 this.topLeft.Region.Height,
@@ -137,15 +138,21 @@ namespace Game.Output.Layout
             this.innerRegion.SetCorners(
                 this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
                 this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset));
+            this.OuterRegion.OnChangeRequested +=
+                (obj, e) =>
+                {
+                    // Only let the outer region change if the inner region would allow it
+                    e.Cancel = this.innerRegion.SimulateRequestChange(
+                        e.RequestedTopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+                        e.RequestedBottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
+                        e.ChangeType);
+                };
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
                 {
-                    Coord topLeftDelta = e.CurrentRegion.TopLeft - e.PreviousRegion.TopLeft;
-                    Coord bottomRightDelta = e.PreviousRegion.BottomRight - e.PreviousRegion.BottomRight;
-
                     this.innerRegion.SetCorners(
-                        this.innerRegion.TopLeft + topLeftDelta,
-                        this.innerRegion.BottomRight + bottomRightDelta,
+                        e.CurrentRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+                        e.CurrentRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
                         false);
                 };
 

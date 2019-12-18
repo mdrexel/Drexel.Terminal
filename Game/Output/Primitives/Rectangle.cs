@@ -7,6 +7,19 @@ namespace Game.Output.Primitives
         private readonly CharDelay[,]? delayedContent;
         private readonly CharInfo[,]? undelayedContent;
 
+        public Rectangle(IReadOnlyRegion region, CharColors fill)
+        {
+            this.Region = new Region(region);
+            this.undelayedContent = new CharInfo[region.Height, region.Width];
+            for (int y = 0; y < this.undelayedContent.GetHeight(); y++)
+            {
+                for (int x = 0; x < this.undelayedContent.GetWidth(); x++)
+                {
+                    this.undelayedContent[y, x] = new CharInfo(' ', fill);
+                }
+            }
+        }
+
         public Rectangle(Coord topLeft, CharDelay[,] content)
         {
             this.delayedContent = content;

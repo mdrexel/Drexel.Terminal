@@ -13,12 +13,12 @@ namespace Game.Output.Primitives
         private readonly CharDelay[,]? delayedContent;
         private readonly CharInfo[,]? undelayedContent;
 
-        public Label(FormattedString content)
-            : this(new Coord(0, 0), content)
+        public Label(FormattedString content, CharColors? backgroundFill = null)
+            : this(new Coord(0, 0), content, backgroundFill)
         {
         }
 
-        public Label(Coord topLeft, FormattedString content)
+        public Label(Coord topLeft, FormattedString content, CharColors? backgroundFill = null)
         {
             string[] lines = content.Value.Split(NewLines, StringSplitOptions.None);
             short height = (short)lines.Length;
@@ -30,6 +30,7 @@ namespace Game.Output.Primitives
                 this.delayedContent = new CharDelay[height, width];
                 Label.Process(
                     in this.delayedContent,
+                    backgroundFill,
                     lines,
                     content.Ranges,
                     (x, y) => new CharDelay(
@@ -41,6 +42,7 @@ namespace Game.Output.Primitives
                 this.undelayedContent = new CharInfo[height, width];
                 Label.Process(
                     in this.undelayedContent,
+                    backgroundFill,
                     lines,
                     content.Ranges,
                     (x, y) => new CharInfo(x, y.Attributes));
@@ -171,10 +173,23 @@ namespace Game.Output.Primitives
 
         private static void Process<T>(
             in T[,] output,
+            CharColors? backgroundFill,
             string[] lines,
             IReadOnlyList<Range> ranges,
             Func<char, Range, T> factory)
         {
+            if (backgroundFill.HasValue)
+            {
+                Range fakeRange = new Range(0, 0, backgroundFill.Value);
+                for (int y = 0; y < output.GetHeight(); y++)
+                {
+                    for (int x = 0; x < output.GetWidth(); x++)
+                    {
+                        output[y, x] = factory.Invoke(' ', fakeRange);
+                    }
+                }
+            }
+
             int rangeIndex = 0;
             Range range = ranges[rangeIndex++];
             for (int y = 0, index = 0; y < lines.Length; y++, index += Environment.NewLine.Length)

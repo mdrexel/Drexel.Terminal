@@ -348,6 +348,20 @@ namespace Game.Output.Layout
         public void SetCorners(Coord newTopLeft, Coord newBottomRight) =>
             this.SetCorners(newTopLeft, newBottomRight, true);
 
+        internal bool SimulateRequestChange(
+            Coord newTopLeft,
+            Coord newBottomRight,
+            RegionChangeType changeType)
+        {
+            RegionChangeEventArgs args = new RegionChangeEventArgs(
+                this,
+                newTopLeft,
+                newBottomRight,
+                changeType);
+            this.OnChangeRequested?.Invoke(this, args);
+            return args.Cancel;
+        }
+
         internal void SetCorners(Coord newTopLeft, Coord newBottomRight, bool allowCancel)
         {
             short realNewTop = newTopLeft.Y;

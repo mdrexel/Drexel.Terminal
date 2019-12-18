@@ -17,5 +17,7 @@ namespace Game.Output.Layout
         bool Overlaps(IReadOnlyRegion region);
 
         bool Overlaps(Coord coord);
+
+        bool Contains(IReadOnlyRegion region);
     }
 }

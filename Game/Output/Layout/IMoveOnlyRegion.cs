@@ -4,9 +4,9 @@ namespace Game.Output.Layout
 {
     public interface IMoveOnlyRegion : IReadOnlyRegion
     {
-        void Translate(Coord offset);
+        bool Translate(Coord offset);
 
-        void MoveTo(Coord newTopLeft);
+        bool MoveTo(Coord newTopLeft);
 
         event EventHandler<RegionChangeEventArgs>? OnChangeRequested;
     }

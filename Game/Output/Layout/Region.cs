@@ -231,12 +231,12 @@ namespace Game.Output.Layout
             return !(left == right);
         }
 
-        public bool Overlaps(IReadOnlyRegion other)
+        public bool Overlaps(IReadOnlyRegion region)
         {
-            return this.topLeft.X < other.BottomRight.X
-                && this.bottomRight.X > other.TopLeft.X
-                && this.topLeft.Y < other.BottomRight.Y
-                && this.bottomRight.Y > other.TopLeft.Y;
+            return this.topLeft.X < region.BottomRight.X
+                && this.bottomRight.X > region.TopLeft.X
+                && this.topLeft.Y < region.BottomRight.Y
+                && this.bottomRight.Y > region.TopLeft.Y;
         }
 
         public bool Overlaps(Coord coord)
@@ -245,6 +245,14 @@ namespace Game.Output.Layout
                 && coord.Y >= this.topLeft.Y
                 && coord.X <= this.bottomRight.X
                 && coord.Y <= this.bottomRight.Y;
+        }
+
+        public bool Contains(IReadOnlyRegion region)
+        {
+            return region.TopLeft.X >= this.topLeft.X
+                && region.TopLeft.Y >= this.topLeft.Y
+                && region.BottomRight.X <= this.bottomRight.X
+                && region.BottomRight.Y <= this.bottomRight.Y;
         }
 
         public override bool Equals(object obj)
@@ -280,11 +288,11 @@ namespace Game.Output.Layout
             return hash;
         }
 
-        public void MoveTo(Coord newTopLeft)
+        public bool MoveTo(Coord newTopLeft)
         {
             if (this.topLeft == newTopLeft)
             {
-                return;
+                return false;
             }
 
             Coord delta = this.topLeft - newTopLeft;
@@ -298,7 +306,7 @@ namespace Game.Output.Layout
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
-                return;
+                return false;
             }
 
             Region oldRegion = this.Clone();
@@ -311,13 +319,14 @@ namespace Game.Output.Layout
                     this,
                     RegionChangeType.Move));
 
+            return true;
         }
 
-        public void Translate(Coord offset)
+        public bool Translate(Coord offset)
         {
             if (offset == NoOpVector)
             {
-                return;
+                return false;
             }
 
             Coord newTopLeft = this.topLeft + offset;
@@ -331,7 +340,7 @@ namespace Game.Output.Layout
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
-                return;
+                return false;
             }
 
             Region oldRegion = this.Clone();
@@ -343,9 +352,11 @@ namespace Game.Output.Layout
                     oldRegion,
                     this,
                     RegionChangeType.Move));
+
+            return true;
         }
 
-        public void SetCorners(Coord newTopLeft, Coord newBottomRight) =>
+        public bool SetCorners(Coord newTopLeft, Coord newBottomRight) =>
             this.SetCorners(newTopLeft, newBottomRight, true);
 
         internal bool SimulateRequestChange(
@@ -362,7 +373,7 @@ namespace Game.Output.Layout
             return args.Cancel;
         }
 
-        internal void SetCorners(Coord newTopLeft, Coord newBottomRight, bool allowCancel)
+        internal bool SetCorners(Coord newTopLeft, Coord newBottomRight, bool allowCancel)
         {
             short realNewTop = newTopLeft.Y;
             short realNewLeft = newTopLeft.X;
@@ -385,7 +396,7 @@ namespace Game.Output.Layout
 
             if (this.topLeft == newTopLeft && this.bottomRight == newBottomRight)
             {
-                return;
+                return false;
             }
 
             RegionChangeType changeType;
@@ -416,7 +427,7 @@ namespace Game.Output.Layout
                 this.OnChangeRequested?.Invoke(this, args);
                 if (args.Cancel)
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -429,6 +440,8 @@ namespace Game.Output.Layout
                     oldRegion,
                     this,
                     changeType));
+
+            return true;
         }
 
         private Region Clone()

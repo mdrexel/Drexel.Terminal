@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Game.Output.Layout
 {
@@ -11,6 +9,7 @@ namespace Game.Output.Layout
         internal readonly Sink sink;
         private readonly LinkedList<Symbol> symbols;
         private readonly Dictionary<Symbol, LinkedListNode<Symbol>> symbolMapping;
+        private readonly Dictionary<Symbol, IReadOnlyRegion> constraints;
 
         private Symbol? grabbed;
 
@@ -19,6 +18,7 @@ namespace Game.Output.Layout
             this.sink = sink;
             this.symbols = new LinkedList<Symbol>();
             this.symbolMapping = new Dictionary<Symbol, LinkedListNode<Symbol>>();
+            this.constraints = new Dictionary<Symbol, IReadOnlyRegion>();
 
             this.grabbed = null;
         }
@@ -77,6 +77,11 @@ namespace Game.Output.Layout
                     }
                 }
             }
+        }
+
+        public void Constrain(Symbol symbol, IReadOnlyRegion region)
+        {
+            this.constraints.Add(symbol, region);
         }
 
         public void Draw()
@@ -151,8 +156,21 @@ namespace Game.Output.Layout
         {
             if (this.grabbed != null)
             {
-                this.grabbed.Region.Translate(newPosition - oldPosition);
-                this.Draw(this.grabbed);
+                Coord delta = newPosition - oldPosition;
+                if (this.constraints.TryGetValue(this.grabbed, out IReadOnlyRegion constrainedTo))
+                {
+                    Region newRegion = new Region(this.grabbed.Region);
+                    newRegion.Translate(delta);
+                    if (!constrainedTo.Contains(newRegion))
+                    {
+                        return;
+                    }
+                }
+
+                if (this.grabbed.Region.Translate(delta))
+                {
+                    this.Draw(this.grabbed);
+                }
             }
             else
             {

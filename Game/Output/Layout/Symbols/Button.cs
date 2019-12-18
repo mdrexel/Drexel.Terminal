@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Game.Output.Primitives;
 
 namespace Game.Output.Layout.Symbols
@@ -50,18 +46,21 @@ namespace Game.Output.Layout.Symbols
 
         public override void LeftMouseEvent(Coord coord, bool down)
         {
-            Random random = new Random();
-            CharInfo[,] stuff = new CharInfo[this.Region.Height, this.Region.Width];
-            for (int y = 0; y < stuff.GetHeight(); y++)
+            if (!down)
             {
-                for (int x = 0; x < stuff.GetWidth(); x++)
+                Random random = new Random();
+                CharInfo[,] stuff = new CharInfo[this.Region.Height, this.Region.Width];
+                for (int y = 0; y < stuff.GetHeight(); y++)
                 {
-                    stuff[y, x] = new CharInfo(' ', CharColors.GetRandom(random));
+                    for (int x = 0; x < stuff.GetWidth(); x++)
+                    {
+                        stuff[y, x] = new CharInfo(' ', CharColors.GetRandom(random));
+                    }
                 }
-            }
 
-            Rectangle garbage = new Rectangle(this.Region.TopLeft, stuff);
-            garbage.Draw(this.LayoutManager.sink);
+                Rectangle garbage = new Rectangle(this.Region.TopLeft, stuff);
+                garbage.Draw(this.LayoutManager.sink);
+            }
         }
 
         protected override void DrawInternal(ISink sink)

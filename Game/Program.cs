@@ -132,8 +132,11 @@ namespace Game
                     "foo",
                     "Hello",
                     CharColors.Standard);
+
                 layout.Add(background);
                 layout.Add(button);
+
+                layout.Constrain(button, background.InnerRegion);
 
                 source.OnKeyPressed +=
                     (obj, e) =>

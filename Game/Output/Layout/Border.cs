@@ -137,6 +137,17 @@ namespace Game.Output.Layout
             this.innerRegion.SetCorners(
                 this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
                 this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset));
+            this.OuterRegion.OnChanged +=
+                (obj, e) =>
+                {
+                    Coord topLeftDelta = e.CurrentRegion.TopLeft - e.PreviousRegion.TopLeft;
+                    Coord bottomRightDelta = e.PreviousRegion.BottomRight - e.PreviousRegion.BottomRight;
+
+                    this.innerRegion.SetCorners(
+                        this.innerRegion.TopLeft + topLeftDelta,
+                        this.innerRegion.BottomRight + bottomRightDelta,
+                        false);
+                };
 
             this.topLeft.Region.MoveTo(
                 this.OuterRegion.TopLeft);

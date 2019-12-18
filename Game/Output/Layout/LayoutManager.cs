@@ -12,11 +12,15 @@ namespace Game.Output.Layout
         private readonly LinkedList<Symbol> symbols;
         private readonly Dictionary<Symbol, LinkedListNode<Symbol>> symbolMapping;
 
+        private Symbol? grabbed;
+
         public LayoutManager(Sink sink)
         {
             this.sink = sink;
             this.symbols = new LinkedList<Symbol>();
             this.symbolMapping = new Dictionary<Symbol, LinkedListNode<Symbol>>();
+
+            this.grabbed = null;
         }
 
         public Symbol? Focused { get; private set; }
@@ -83,17 +87,14 @@ namespace Game.Output.Layout
             }
         }
 
-        public void Draw(Symbol startingFromInclusive)
+        public void Draw(Symbol impacted)
         {
-            LinkedListNode<Symbol> node = symbolMapping[startingFromInclusive];
-            while (!(node is null))
+            foreach (Symbol symbol in this.symbols)
             {
-                if (node.Value.Region.Overlaps(startingFromInclusive.Region))
+                if (symbol.Region.Overlaps(impacted.Region))
                 {
-                    node.Value.Draw(this.sink);
+                    symbol.Draw(this.sink);
                 }
-
-                node = node.Next;
             }
         }
 
@@ -148,28 +149,52 @@ namespace Game.Output.Layout
 
         public void MouseMoveEvent(Coord oldPosition, Coord newPosition)
         {
-            foreach (Symbol symbol in this.symbols.Reverse())
+            if (this.grabbed != null)
             {
-                if (symbol.Region.Overlaps(newPosition))
+                this.grabbed.Region.Translate(newPosition - oldPosition);
+                this.Draw(this.grabbed);
+            }
+            else
+            {
+                foreach (Symbol symbol in this.symbols.Reverse())
                 {
-                    symbol.MouseMoveEvent(
-                        symbol.Region.TopLeft - oldPosition,
-                        symbol.Region.TopLeft - newPosition);
+                    if (symbol.Region.Overlaps(newPosition))
+                    {
+                        symbol.MouseMoveEvent(
+                            oldPosition - symbol.Region.TopLeft,
+                            newPosition - symbol.Region.TopLeft);
 
-                    break;
+                        break;
+                    }
                 }
             }
         }
 
         public void LeftMouseEvent(Coord coord, bool down)
         {
+            if (!down)
+            {
+                this.grabbed = null;
+            }
+
             foreach (Symbol symbol in this.symbols.Reverse())
             {
                 if (symbol.Region.Overlaps(coord))
                 {
-                    symbol.LeftMouseEvent(
-                        symbol.Region.TopLeft - coord,
-                        down);
+                    if (symbol.InnerRegion.Overlaps(coord))
+                    {
+                        symbol.LeftMouseEvent(
+                            coord - symbol.Region.TopLeft,
+                            down);
+                    }
+                    else if (symbol.CanBeMoved && down)
+                    {
+                        this.grabbed = symbol;
+                    }
+                    else if (symbol.CanBeResized)
+                    {
+                        // TODO: impl resize
+                    }
 
                     break;
                 }
@@ -183,7 +208,7 @@ namespace Game.Output.Layout
                 if (symbol.Region.Overlaps(coord))
                 {
                     symbol.RightMouseEvent(
-                        symbol.Region.TopLeft - coord,
+                        coord - symbol.Region.TopLeft,
                         down);
 
                     break;
@@ -197,7 +222,9 @@ namespace Game.Output.Layout
             {
                 if (symbol.Region.Overlaps(coord))
                 {
-                    symbol.ScrollEvent(symbol.Region.TopLeft - coord, down);
+                    symbol.ScrollEvent(
+                        coord - symbol.Region.TopLeft,
+                        down);
 
                     break;
                 }

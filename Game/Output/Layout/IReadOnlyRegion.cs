@@ -13,5 +13,9 @@ namespace Game.Output.Layout
         short Height { get; }
 
         event EventHandler<RegionChangedEventArgs>? OnChanged;
+
+        bool Overlaps(IReadOnlyRegion region);
+
+        bool Overlaps(Coord coord);
     }
 }

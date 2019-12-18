@@ -231,12 +231,12 @@ namespace Game.Output.Layout
             return !(left == right);
         }
 
-        public bool Overlaps(Region other)
+        public bool Overlaps(IReadOnlyRegion other)
         {
-            return this.topLeft.X < other.bottomRight.X
-                && this.bottomRight.X > other.topLeft.X
-                && this.topLeft.Y < other.bottomRight.Y
-                && this.bottomRight.Y > other.topLeft.Y;
+            return this.topLeft.X < other.BottomRight.X
+                && this.bottomRight.X > other.TopLeft.X
+                && this.topLeft.Y < other.BottomRight.Y
+                && this.bottomRight.Y > other.TopLeft.Y;
         }
 
         public bool Overlaps(Coord coord)
@@ -345,7 +345,10 @@ namespace Game.Output.Layout
                     RegionChangeType.Move));
         }
 
-        public void SetCorners(Coord newTopLeft, Coord newBottomRight)
+        public void SetCorners(Coord newTopLeft, Coord newBottomRight) =>
+            this.SetCorners(newTopLeft, newBottomRight, true);
+
+        internal void SetCorners(Coord newTopLeft, Coord newBottomRight, bool allowCancel)
         {
             short realNewTop = newTopLeft.Y;
             short realNewLeft = newTopLeft.X;
@@ -389,15 +392,18 @@ namespace Game.Output.Layout
                 }
             }
 
-            RegionChangeEventArgs args = new RegionChangeEventArgs(
-                this,
-                newTopLeft,
-                newBottomRight,
-                changeType);
-            this.OnChangeRequested?.Invoke(this, args);
-            if (args.Cancel)
+            if (allowCancel)
             {
-                return;
+                RegionChangeEventArgs args = new RegionChangeEventArgs(
+                    this,
+                    newTopLeft,
+                    newBottomRight,
+                    changeType);
+                this.OnChangeRequested?.Invoke(this, args);
+                if (args.Cancel)
+                {
+                    return;
+                }
             }
 
             Region oldRegion = this.Clone();

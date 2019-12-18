@@ -24,9 +24,16 @@ namespace Game.Output.Layout.Symbols
                   name)
         {
             this.label = new Label(this.InnerRegion.TopLeft, content);
+            this.InnerRegion.OnChanged +=
+                (obj, e) =>
+                this.label.Region.Translate(e.CurrentRegion.TopLeft - e.PreviousRegion.TopLeft);
         }
 
         public override bool CanBeFocused => true;
+
+        public override bool CanBeMoved => true;
+
+        public override bool CanBeResized => true;
 
         public override void FocusChanged(bool focused)
         {

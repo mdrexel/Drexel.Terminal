@@ -119,12 +119,19 @@ namespace Game
                 ////    DelayMode.PerWord);
 
                 LayoutManager layout = new LayoutManager(sink);
+                Solid background = new Solid(
+                    layout,
+                    new Region(new Coord(0, 0), new Coord(Width, Height)),
+                    builder,
+                    "bar",
+                    CharColors.Standard);
                 Button button = new Button(
                     layout,
                     new Region(new Coord(12, 12), new Coord(30, 20)),
                     builder,
                     "foo",
                     "Hello");
+                layout.Add(background);
                 layout.Add(button);
 
                 source.OnKeyPressed +=

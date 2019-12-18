@@ -23,11 +23,15 @@ namespace Game.Output.Layout
 
         public Region Region { get; }
 
+        public IReadOnlyRegion InnerRegion => this.border.InnerRegion;
+
         public abstract bool CanBeFocused { get; }
 
-        protected LayoutManager LayoutManager { get; }
+        public abstract bool CanBeMoved { get; }
 
-        protected IReadOnlyRegion InnerRegion => this.border.InnerRegion;
+        public abstract bool CanBeResized { get; }
+
+        protected LayoutManager LayoutManager { get; }
 
         public void Draw(ISink sink)
         {
@@ -50,6 +54,14 @@ namespace Game.Output.Layout
         }
 
         public virtual void LeftMouseEvent(Coord coord, bool down)
+        {
+        }
+
+        public virtual void MouseEnteredSymbol()
+        {
+        }
+
+        public virtual void MouseLeftSymbol()
         {
         }
 

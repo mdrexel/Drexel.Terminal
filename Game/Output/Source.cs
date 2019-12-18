@@ -283,7 +283,7 @@ namespace Game.Output
                 this.OnMouseMove?.Invoke(this, args);
             }
 
-            ConsoleMouseButtonState delta = mouseEvent.ButtonState & ~lastMouseEvent.ButtonState;
+            ConsoleMouseButtonState delta = mouseEvent.ButtonState ^ lastMouseEvent.ButtonState;
 
             if (delta.HasFlag(ConsoleMouseButtonState.FromLeft1stButtonPressed))
             {

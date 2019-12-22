@@ -66,15 +66,14 @@ namespace Game.Output.Layout
 
         public void Remove(Symbol symbol)
         {
-            this.symbols.Remove(symbol);
-            if (this.symbolMapping.Remove(symbol))
+            LinkedListNode<Symbol> node = this.symbolMapping[symbol];
+            this.symbols.Remove(node);
+            this.symbolMapping.Remove(symbol);
+            foreach (Symbol existing in this.symbols)
             {
-                foreach (Symbol existing in this.symbols)
+                if (existing.Region.Overlaps(symbol.Region))
                 {
-                    if (existing.Region.Overlaps(symbol.Region))
-                    {
-                        existing.Draw(this.sink);
-                    }
+                    existing.Draw(this.sink);
                 }
             }
         }
@@ -197,21 +196,24 @@ namespace Game.Output.Layout
 
             foreach (Symbol symbol in this.symbols.Reverse())
             {
-                if (symbol.Region.Overlaps(coord))
+                if (symbol.Border.TryGetComponentAt(
+                    coord,
+                    out BorderComponentType component,
+                    out IReadOnlyRegion componentRegion))
                 {
-                    if (symbol.InnerRegion.Overlaps(coord))
+                    if (component == BorderComponentType.Center)
                     {
                         symbol.LeftMouseEvent(
                             coord - symbol.Region.TopLeft,
                             down);
                     }
-                    else if (symbol.CanBeMoved && down)
+                    else if (component == BorderComponentType.Top && symbol.CanBeMoved && down)
                     {
                         this.grabbed = symbol;
                     }
                     else if (symbol.CanBeResized)
                     {
-                        // TODO: impl resize
+                        // TOOD: impl resize
                     }
 
                     break;

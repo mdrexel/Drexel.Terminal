@@ -75,15 +75,7 @@ namespace Game
                 ////    0);
 
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
-                BorderBuilder builder = new BorderBuilder(
-                    topLeft: new FormattedString("╔═╦\r\n║ ║\r\n╠═╬", borderColors),
-                    topRight: new FormattedString("╦═╗\r\n║ ║\r\n╬═╣", borderColors),
-                    bottomLeft: new FormattedString("╠═╬\r\n╚═╩", borderColors),
-                    bottomRight: new FormattedString("╬═╣\r\n╩═╝", borderColors),
-                    leftStroke: new FormattedString("║ ║", borderColors),
-                    topStroke: new FormattedString("═\r\n\r\n═", borderColors),
-                    rightStroke: new FormattedString("║ ║", borderColors),
-                    bottomStroke: new FormattedString("═\r\n═", borderColors));
+                BorderBuilder builder = BorderBuilder.CreateExtraThickWindowStyle(borderColors);
 
                 Region region = new Region(new Coord(0, 0), new Coord(50, 15));
                 Border border = builder.Build(
@@ -118,17 +110,19 @@ namespace Game
                 ////    35,
                 ////    DelayMode.PerWord);
 
+                BorderBuilder thinBorder = BorderBuilder.CreateThinStyle(borderColors);
+                BorderBuilder thickBorder = BorderBuilder.CreateThickStyle(borderColors);
                 LayoutManager layout = new LayoutManager(sink);
                 Solid background = new Solid(
                     layout,
                     new Region(new Coord(2, 0), new Coord(Width, Height)),
-                    builder,
+                    BorderBuilder.Empty,
                     "bar",
                     CharColors.Standard);
                 Button button = new Button(
                     layout,
                     new Region(new Coord(12, 12), new Coord(30, 20)),
-                    builder,
+                    thinBorder,
                     "foo",
                     "Hello",
                     CharColors.Standard);

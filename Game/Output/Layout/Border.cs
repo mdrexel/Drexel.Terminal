@@ -1,8 +1,9 @@
-﻿using Game.Output.Primitives;
+﻿using System;
+using Game.Output.Primitives;
 
 namespace Game.Output.Layout
 {
-    public sealed class Border : IDrawable
+    public sealed class Border : IReadOnlyBorder
     {
         private readonly Label namePlate;
         private readonly Label topLeft;
@@ -25,6 +26,7 @@ namespace Game.Output.Layout
         private readonly short largestRightOffset;
 
         private readonly Region innerRegion;
+        private IReadOnlyRegion[,] components;
 
         internal Border(
             Region outerRegion,
@@ -82,6 +84,8 @@ namespace Game.Output.Layout
         public Region OuterRegion { get; }
 
         public IReadOnlyRegion InnerRegion => this.innerRegion;
+
+        IReadOnlyRegion IReadOnlyBorder.OuterRegion => this.OuterRegion;
 
         public void Draw(ISink sink)
         {
@@ -203,6 +207,14 @@ namespace Game.Output.Layout
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.topLeft.Region.Width + 1),
                     this.OuterRegion.TopLeft.Y));
+
+            this.components =
+                new IReadOnlyRegion[,]
+                {
+                    { this.topLeft.Region, this.topStroke.Region, this.topRight.Region },
+                    { this.leftStroke.Region, this.innerRegion, this.rightStroke.Region },
+                    { this.bottomLeft.Region, this.bottomStroke.Region, this.bottomRight.Region }
+                };
         }
 
         private static short Largest(params short[] values)
@@ -218,5 +230,20 @@ namespace Game.Output.Layout
 
             return largest;
         }
+
+        public IReadOnlyRegion GetComponent(BorderComponentType component) =>
+            component switch
+            {
+                BorderComponentType.TopLeft => this.components[0, 0],
+                BorderComponentType.Top => this.components[0, 1],
+                BorderComponentType.TopRight => this.components[0, 2],
+                BorderComponentType.Left => this.components[1, 0],
+                BorderComponentType.Center => this.components[1, 1],
+                BorderComponentType.Right => this.components[1, 2],
+                BorderComponentType.BottomLeft => this.components[2, 0],
+                BorderComponentType.Bottom => this.components[2, 1],
+                BorderComponentType.BottomRight => this.components[2, 2],
+                _ => throw new ArgumentException("Unrecognized border component type.", nameof(component))
+            };
     }
 }

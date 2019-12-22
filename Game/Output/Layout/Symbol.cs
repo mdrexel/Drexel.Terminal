@@ -25,6 +25,8 @@ namespace Game.Output.Layout
 
         public IReadOnlyRegion InnerRegion => this.border.InnerRegion;
 
+        public IReadOnlyBorder Border => this.border;
+
         public abstract bool CanBeFocused { get; }
 
         public abstract bool CanBeMoved { get; }

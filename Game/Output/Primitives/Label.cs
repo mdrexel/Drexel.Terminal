@@ -139,6 +139,11 @@ namespace Game.Output.Primitives
 
         private static T[,] RepeatHorizontallyInternal<T>(T[,] pattern, short width)
         {
+            if (pattern.Length == 0)
+            {
+                return pattern;
+            }
+
             short originalWidth = pattern.GetWidth();
 
             short height = pattern.GetHeight();
@@ -156,6 +161,11 @@ namespace Game.Output.Primitives
 
         private static T[,] RepeatVerticallyInternal<T>(T[,] pattern, short height)
         {
+            if (pattern.Length == 0)
+            {
+                return pattern;
+            }
+
             short originalHeight = pattern.GetHeight();
 
             short width = pattern.GetWidth();

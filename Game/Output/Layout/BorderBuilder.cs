@@ -105,6 +105,19 @@
                 bottomStroke: new FormattedString("═", borderColors));
         }
 
+        public static BorderBuilder CreateThinWindowStyle(CharColors borderColors)
+        {
+            return new BorderBuilder(
+                topLeft: new FormattedString("┌\r\n│\r\n├", borderColors),
+                topRight: new FormattedString("┐\r\n│\r\n┤", borderColors),
+                bottomLeft: new FormattedString("└", borderColors),
+                bottomRight: new FormattedString("┘", borderColors),
+                leftStroke: new FormattedString("│", borderColors),
+                topStroke: new FormattedString("─\r\n\r\n─", borderColors),
+                rightStroke: new FormattedString("│", borderColors),
+                bottomStroke: new FormattedString("─", borderColors));
+        }
+
         public static BorderBuilder CreateThinStyle(CharColors borderColors)
         {
             return new BorderBuilder(

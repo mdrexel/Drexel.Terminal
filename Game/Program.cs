@@ -110,7 +110,7 @@ namespace Game
                 ////    35,
                 ////    DelayMode.PerWord);
 
-                BorderBuilder thinBorder = BorderBuilder.CreateThinStyle(borderColors);
+                BorderBuilder thinBorder = BorderBuilder.CreateThinWindowStyle(borderColors);
                 BorderBuilder thickBorder = BorderBuilder.CreateThickStyle(borderColors);
                 LayoutManager layout = new LayoutManager(sink);
                 Solid background = new Solid(

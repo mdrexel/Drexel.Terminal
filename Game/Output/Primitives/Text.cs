@@ -16,7 +16,6 @@ namespace Game.Output.Primitives
 
         private Rectangle rectangle;
         private IReadOnlyList<Line> lines;
-        private ushort preceedingLinesSkipped;
 
         public Text(
             FormattedString content,
@@ -34,7 +33,7 @@ namespace Game.Output.Primitives
             this.content = content;
             this.Region = region;
             this.backgroundFill = backgroundFill;
-            this.preceedingLinesSkipped = 0;
+            this.PreceedingLinesSkipped = 0;
 
             region.OnChanged +=
                 (obj, e) =>
@@ -60,7 +59,7 @@ namespace Game.Output.Primitives
 
         public ushort TotalLines { get; private set; }
 
-        public ushort PreceedingLinesSkipped => this.preceedingLinesSkipped;
+        public ushort PreceedingLinesSkipped { get; private set; }
 
         public ushort MaximumVisibleLines { get; private set; }
 
@@ -86,25 +85,25 @@ namespace Game.Output.Primitives
                 if (delta < 0)
                 {
                     delta = -delta;
-                    if (delta > this.preceedingLinesSkipped)
+                    if (delta > this.PreceedingLinesSkipped)
                     {
-                        this.preceedingLinesSkipped = 0;
+                        this.PreceedingLinesSkipped = 0;
                     }
                     else
                     {
-                        this.preceedingLinesSkipped -= (ushort)delta;
+                        this.PreceedingLinesSkipped -= (ushort)delta;
                     }
                 }
                 else
                 {
-                    this.preceedingLinesSkipped += (ushort)delta;
+                    this.PreceedingLinesSkipped += (ushort)delta;
                 }
             }
 
             // Make sure that at least one line is always visible at the top of the text window.
-            if (this.preceedingLinesSkipped >= this.lines.Count)
+            if (this.PreceedingLinesSkipped >= this.lines.Count)
             {
-                this.preceedingLinesSkipped = (ushort)(this.lines.Count - 1);
+                this.PreceedingLinesSkipped = (ushort)(this.lines.Count - 1);
             }
 
             this.PopulateDrawBuffer();
@@ -193,9 +192,9 @@ namespace Game.Output.Primitives
                 this.lines = calculated;
                 this.TotalLines = (ushort)this.lines.Count;
 
-                if (this.preceedingLinesSkipped > this.TotalLines)
+                if (this.PreceedingLinesSkipped > this.TotalLines)
                 {
-                    this.preceedingLinesSkipped = (ushort)(this.TotalLines - 1);
+                    this.PreceedingLinesSkipped = (ushort)(this.TotalLines - 1);
                 }
             }
 
@@ -206,25 +205,24 @@ namespace Game.Output.Primitives
 
         private void PopulateDrawBuffer()
         {
-            if (this.content.ContainsDelays)
+            Rectangle Populate<T>(
+                Func<char, Range, T> charFactory,
+                Func<T[,], Rectangle> rectangleFactory)
             {
-                throw new NotImplementedException("delays not impl yet");
-            }
-            else
-            {
-                CharInfo[,] output = new CharInfo[this.Region.Height, this.Region.Width];
+                T[,] output = new T[this.Region.Height, this.Region.Width];
                 if (this.backgroundFill.HasValue)
                 {
+                    Range fakeRange = new Range(0, 0, this.backgroundFill.Value, 0);
                     for (int y = 0; y < this.Region.Height; y++)
                     {
                         for (int x = 0; x < this.Region.Width; x++)
                         {
-                            output[y, x] = new CharInfo(' ', this.backgroundFill.Value);
+                            output[y, x] = charFactory.Invoke(' ', fakeRange);
                         }
                     }
                 }
 
-                IEnumerator<Line> line = lines.Skip(this.preceedingLinesSkipped).GetEnumerator();
+                IEnumerator<Line> line = lines.Skip(this.PreceedingLinesSkipped).GetEnumerator();
                 for (int y = 0; y < this.Region.Height && line.MoveNext(); y++)
                 {
                     Range range = this.content.Ranges.GetRangeByIndex(line.Current.StartOffset);
@@ -236,11 +234,24 @@ namespace Game.Output.Primitives
                             range = this.content.Ranges.GetNextRange(range);
                         }
 
-                        output[y, x] = new CharInfo(line.Current.Content[x], range.Attributes);
+                        output[y, x] = charFactory.Invoke(line.Current.Content[x], range);
                     }
                 }
 
-                this.rectangle = new Rectangle(this.Region.TopLeft, output);
+                return rectangleFactory.Invoke(output);
+            }
+
+            if (this.content.ContainsDelays)
+            {
+                this.rectangle = Populate(
+                    (x, y) => new CharDelay(new CharInfo(x, y.Attributes), y.Delay),
+                    x => new Rectangle(this.Region.TopLeft, x));
+            }
+            else
+            {
+                this.rectangle = Populate(
+                    (x, y) => new CharInfo(x, y.Attributes),
+                    x => new Rectangle(this.Region.TopLeft, x));
             }
         }
 

@@ -112,7 +112,11 @@ namespace Game
 
                 BorderBuilder thinBorder = BorderBuilder.CreateThinWindowStyle(borderColors);
                 BorderBuilder thickBorder = BorderBuilder.CreateThickStyle(borderColors);
-                LayoutManager layout = new LayoutManager(sink);
+                LayoutManager layout = new LayoutManager(
+                    sink,
+                    () => source.LeftMouseDown,
+                    () => source.RightMouseDown,
+                    false);
                 Solid background = new Solid(
                     layout,
                     new Region(new Coord(2, 0), new Coord(Width, Height)),
@@ -127,10 +131,19 @@ namespace Game
                     "Hello",
                     CharColors.Standard);
 
-                ////layout.Add(background);
-                ////layout.Add(button);
+                button.OnClicked +=
+                    (obj, e) =>
+                    {
+                        button.Text = new string(Enumerable
+                            .Range(0, random.Next(3, 9))
+                            .Select(x => (char)random.Next(65, 91))
+                            .ToArray());
+                    };
 
-                layout.Constrain(button, background.InnerRegion);
+                layout.Add(background);
+                layout.Add(button);
+
+                layout.SetConstraint(button, background.InnerRegion);
 
                 source.OnKeyPressed +=
                     (obj, e) =>
@@ -194,6 +207,8 @@ namespace Game
 
                         bar.Draw(sink);
                     };
+
+                layout.Active = true;
 
                 source.DelayUntilExitAccepted(default).Wait();
             }

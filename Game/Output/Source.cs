@@ -68,6 +68,9 @@ namespace Game.Output
                 this.consoleControlHandler,
                 true);
 
+            this.OnLeftMouse += (obj, e) => this.LeftMouseDown = e.ButtonDown;
+            this.OnRightMouse += (obj, e) => this.RightMouseDown = e.ButtonDown;
+
             this.eventThreadRunning = new Box<bool>(true);
             this.eventThread =
                 new Thread(
@@ -125,6 +128,10 @@ namespace Game.Output
         public event EventHandler? OnExitAccepted;
 
         private delegate bool ConsoleCtrlHandlerDelegate(ConsoleControlEventType CtrlType);
+
+        public bool LeftMouseDown { get; private set; }
+
+        public bool RightMouseDown { get; private set; }
 
         public void Dispose()
         {

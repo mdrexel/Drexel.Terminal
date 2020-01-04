@@ -2,7 +2,7 @@
 
 namespace Game.Output.Primitives
 {
-    public sealed class Rectangle : IDrawable
+    public sealed class Fill : IDrawable
     {
         private readonly FormattedString? fill;
         private readonly CharColors? backgroundFill;
@@ -10,7 +10,7 @@ namespace Game.Output.Primitives
         private CharDelay[,]? delayedContent;
         private CharInfo[,]? undelayedContent;
 
-        public Rectangle(IReadOnlyRegion region, CharColors fill)
+        public Fill(IReadOnlyRegion region, CharColors fill)
         {
             this.Region = new Region(region);
             this.undelayedContent = new CharInfo[region.Height, region.Width];
@@ -23,7 +23,7 @@ namespace Game.Output.Primitives
             }
         }
 
-        public Rectangle(
+        public Fill(
             IReadOnlyRegion region,
             FormattedString fill,
             CharColors? backgroundFill = null)
@@ -44,19 +44,19 @@ namespace Game.Output.Primitives
             this.Recalculate(this.Region);
         }
 
-        internal Rectangle(Coord topLeft, CharDelay[,] content)
+        internal Fill(Coord topLeft, CharDelay[,] content)
         {
             this.delayedContent = content;
             this.Region = new Region(topLeft, topLeft + content.ToCoord());
         }
 
-        internal Rectangle(Coord topLeft, CharInfo[,] content)
+        internal Fill(Coord topLeft, CharInfo[,] content)
         {
             this.undelayedContent = content;
             this.Region = new Region(topLeft, topLeft + content.ToCoord());
         }
 
-        public static Rectangle Empty { get; } = new Rectangle(new Coord(0, 0), new CharInfo[0, 0]);
+        public static Fill Empty { get; } = new Fill(new Coord(0, 0), new CharInfo[0, 0]);
 
         public IMoveOnlyRegion Region { get; }
 
@@ -92,15 +92,25 @@ namespace Game.Output.Primitives
             }
             else
             {
-                for (short yPos = 0; yPos < this.delayedContent.GetHeight(); yPos++)
-                {
-                    for (short xPos = 0; xPos < this.delayedContent.GetWidth(); xPos++)
-                    {
-                        sink.Write(
-                            this.delayedContent[yPos, xPos],
-                            this.Region.TopLeft + new Coord(xPos, yPos));
-                    }
-                }
+                sink.WriteRegion(this.delayedContent!, this.Region.TopLeft);
+            }
+        }
+
+        public void Draw(ISink sink, Rectangle region)
+        {
+            if (this.delayedContent is null)
+            {
+                sink.WriteRegion(
+                    this.undelayedContent!,
+                    this.Region.TopLeft,
+                    region);
+            }
+            else
+            {
+                sink.WriteRegion(
+                    this.delayedContent!,
+                    this.Region.TopLeft,
+                    region);
             }
         }
 

@@ -280,9 +280,43 @@ namespace Game.Output
             CharDelay[,] buffer,
             Coord topLeft)
         {
-            for (short y = 0; y < buffer.GetHeight(); y++)
+            this.WriteRegion(
+                buffer,
+                topLeft,
+                new Rectangle(new Coord(0, 0), buffer.ToCoord()));
+        }
+
+        public void WriteRegion(
+            CharInfo[,] buffer,
+            Coord topLeft,
+            Rectangle bufferRegion)
+        {
+            Coord size = buffer.ToCoord();
+            Coord offset = topLeft + size - bufferRegion.BottomRight;
+            SmallRect rect = new SmallRect(topLeft.X, topLeft.Y, offset.X, offset.Y);
+            unsafe
             {
-                for (short x = 0; x < buffer.GetWidth(); x++)
+                fixed (CharInfo* pinned = buffer)
+                {
+                    IntPtr pointer = (IntPtr)pinned;
+                    WriteConsoleOutputW(
+                        this.handle,
+                        pointer,
+                        new Coord(size.X, size.Y),
+                        bufferRegion.TopLeft,
+                        in rect);
+                }
+            }
+        }
+
+        public void WriteRegion(
+            CharDelay[,] buffer,
+            Coord topLeft,
+            Rectangle bufferRegion)
+        {
+            for (short y = bufferRegion.TopLeft.Y; y < bufferRegion.BottomRight.Y; y++)
+            {
+                for (short x = bufferRegion.TopLeft.X; x < bufferRegion.BottomRight.X; x++)
                 {
                     CharDelay @char = buffer[y, x];
                     this.WriteInternal(

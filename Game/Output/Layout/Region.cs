@@ -80,13 +80,13 @@ namespace Game.Output.Layout
         public Coord TopLeft
         {
             get => this.topLeft;
-            set => this.SetCorners(value, this.bottomRight);
+            set => this.TrySetCorners(value, this.bottomRight, out _);
         }
 
         public Coord BottomRight
         {
             get => this.bottomRight;
-            set => this.SetCorners(this.topLeft, value);
+            set => this.TrySetCorners(this.topLeft, value, out _);
         }
 
         public short Width
@@ -285,10 +285,11 @@ namespace Game.Output.Layout
             return hash;
         }
 
-        public bool MoveTo(Coord newTopLeft)
+        public bool TryMoveTo(Coord newTopLeft, out IReadOnlyRegion beforeChange)
         {
             if (this.topLeft == newTopLeft)
             {
+                beforeChange = default!;
                 return false;
             }
 
@@ -302,6 +303,7 @@ namespace Game.Output.Layout
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
+                beforeChange = default!;
                 return false;
             }
 
@@ -315,13 +317,15 @@ namespace Game.Output.Layout
                     this,
                     RegionChangeTypes.Move));
 
+            beforeChange = oldRegion;
             return true;
         }
 
-        public bool Translate(Coord offset)
+        public bool TryTranslate(Coord offset, out IReadOnlyRegion beforeChange)
         {
             if (offset == NoOpVector)
             {
+                beforeChange = default!;
                 return false;
             }
 
@@ -335,6 +339,7 @@ namespace Game.Output.Layout
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
+                beforeChange = default!;
                 return false;
             }
 
@@ -348,11 +353,16 @@ namespace Game.Output.Layout
                     this,
                     RegionChangeTypes.Move));
 
+            beforeChange = oldRegion;
             return true;
         }
 
-        public bool SetCorners(Coord newTopLeft, Coord newBottomRight) =>
-            this.SetCorners(newTopLeft, newBottomRight, true);
+        public bool TrySetCorners(Coord newTopLeft, Coord newBottomRight, out IReadOnlyRegion beforeChange) =>
+            this.TrySetCorners(
+                newTopLeft,
+                newBottomRight,
+                true,
+                out beforeChange);
 
         internal bool SimulateRequestChange(
             Coord newTopLeft,
@@ -365,7 +375,11 @@ namespace Game.Output.Layout
             return args.Cancel;
         }
 
-        internal bool SetCorners(Coord newTopLeft, Coord newBottomRight, bool allowCancel)
+        internal bool TrySetCorners(
+            Coord newTopLeft,
+            Coord newBottomRight,
+            bool allowCancel,
+            out IReadOnlyRegion beforeChange)
         {
             short realNewTop = newTopLeft.Y;
             short realNewLeft = newTopLeft.X;
@@ -388,6 +402,7 @@ namespace Game.Output.Layout
 
             if (this.topLeft == newTopLeft && this.bottomRight == newBottomRight)
             {
+                beforeChange = default!;
                 return false;
             }
 
@@ -418,6 +433,7 @@ namespace Game.Output.Layout
                 this.OnChangeRequested?.Invoke(this, args);
                 if (args.Cancel)
                 {
+                    beforeChange = default!;
                     return false;
                 }
             }
@@ -432,6 +448,7 @@ namespace Game.Output.Layout
                     this,
                     changeType));
 
+            beforeChange = oldRegion;
             return true;
         }
 

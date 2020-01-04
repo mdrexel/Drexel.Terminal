@@ -20,6 +20,11 @@
             throw new System.NotImplementedException();
         }
 
+        public void Draw(ISink sink, Rectangle region)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void InvertColor()
         {
             throw new System.NotImplementedException();

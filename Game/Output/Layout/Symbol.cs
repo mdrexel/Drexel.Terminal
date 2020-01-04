@@ -41,6 +41,37 @@ namespace Game.Output.Layout
             this.DrawInternal(sink);
         }
 
+        public void Draw(ISink sink, Rectangle rectangle)
+        {
+            this.border.Draw(sink, rectangle);
+            this.DrawInternal(sink, rectangle);
+        }
+
+        /// <summary>
+        /// Draws the symbol, but only within the specified region.
+        /// </summary>
+        /// <param name="sink">
+        /// The sink to draw to.
+        /// </param>
+        /// <param name="region">
+        /// The region to draw within.
+        /// </param>
+        public void Draw(ISink sink, IReadOnlyRegion region)
+        {
+            if (this.InnerRegion.Contains(region))
+            {
+                this.DrawInternal(
+                    sink,
+                    new Rectangle(
+                        region.TopLeft - this.InnerRegion.TopLeft,
+                        region.BottomRight - this.InnerRegion.BottomRight));
+            }
+            else if (this.border.OuterRegion.Overlaps(region))
+            {
+                this.Draw(sink);
+            }
+        }
+
         public void InvertColor()
         {
             this.border.InvertColor();
@@ -59,11 +90,11 @@ namespace Game.Output.Layout
         {
         }
 
-        public virtual void MouseEnteredSymbol()
+        public virtual void MouseEnteredSymbol(bool leftMouseDown, bool rightMouseDown)
         {
         }
 
-        public virtual void MouseLeftSymbol()
+        public virtual void MouseExitedSymbol()
         {
         }
 
@@ -80,6 +111,8 @@ namespace Game.Output.Layout
         }
 
         protected abstract void DrawInternal(ISink sink);
+
+        protected abstract void DrawInternal(ISink sink, Rectangle region);
 
         protected abstract void InvertColorInternal();
     }

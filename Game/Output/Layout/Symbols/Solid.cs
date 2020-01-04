@@ -4,7 +4,7 @@ namespace Game.Output.Layout.Symbols
 {
     public class Solid : Symbol
     {
-        private readonly Rectangle fill;
+        private readonly Fill fill;
 
         public Solid(
             LayoutManager layoutManager,
@@ -18,7 +18,7 @@ namespace Game.Output.Layout.Symbols
                   borderBuilder,
                   name)
         {
-            this.fill = new Rectangle(this.InnerRegion, fill);
+            this.fill = new Fill(this.InnerRegion, fill);
         }
 
         public Solid(
@@ -26,14 +26,15 @@ namespace Game.Output.Layout.Symbols
             Region region,
             BorderBuilder borderBuilder,
             string name,
-            FormattedString fill)
+            FormattedString fill,
+            CharColors? backgroundFill = null)
             : base(
                   layoutManager,
                   region,
                   borderBuilder,
                   name)
         {
-            Label label = new Label(fill);
+            this.fill = new Fill(this.InnerRegion, fill, backgroundFill);
         }
 
         public override bool CanBeFocused => false;
@@ -45,6 +46,11 @@ namespace Game.Output.Layout.Symbols
         protected override void DrawInternal(ISink sink)
         {
             this.fill.Draw(sink);
+        }
+
+        protected override void DrawInternal(ISink sink, Rectangle region)
+        {
+            this.fill.Draw(sink, region);
         }
 
         protected override void InvertColorInternal()

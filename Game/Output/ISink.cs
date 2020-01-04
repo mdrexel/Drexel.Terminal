@@ -21,5 +21,9 @@
         void WriteRegion(CharInfo[,] buffer, Coord topLeft);
 
         void WriteRegion(CharDelay[,] buffer, Coord topLeft);
+
+        void WriteRegion(CharInfo[,] buffer, Coord topLeft, Rectangle bufferRegion);
+
+        void WriteRegion(CharDelay[,] buffer, Coord topLeft, Rectangle bufferRegion);
     }
 }

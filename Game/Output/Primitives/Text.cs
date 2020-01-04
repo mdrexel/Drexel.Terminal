@@ -14,7 +14,7 @@ namespace Game.Output.Primitives
         private readonly FormattedString content;
         private readonly CharColors? backgroundFill;
 
-        private Rectangle rectangle;
+        private Fill rectangle;
         private IReadOnlyList<Line> lines;
 
         private ushort preceedingLinesSkipped;
@@ -76,6 +76,11 @@ namespace Game.Output.Primitives
         public void Draw(ISink sink)
         {
             this.rectangle.Draw(sink);
+        }
+
+        public void Draw(ISink sink, Rectangle region)
+        {
+            this.rectangle.Draw(sink, region);
         }
 
         public void InvertColor()
@@ -207,9 +212,9 @@ namespace Game.Output.Primitives
 
         private void PopulateDrawBuffer()
         {
-            Rectangle Populate<T>(
+            Fill Populate<T>(
                 Func<char, Range, T> charFactory,
-                Func<T[,], Rectangle> rectangleFactory)
+                Func<T[,], Fill> rectangleFactory)
             {
                 T[,] output = new T[this.Region.Height, this.Region.Width];
                 if (this.backgroundFill.HasValue)
@@ -247,13 +252,13 @@ namespace Game.Output.Primitives
             {
                 this.rectangle = Populate(
                     (x, y) => new CharDelay(new CharInfo(x, y.Attributes), y.Delay),
-                    x => new Rectangle(this.Region.TopLeft, x));
+                    x => new Fill(this.Region.TopLeft, x));
             }
             else
             {
                 this.rectangle = Populate(
                     (x, y) => new CharInfo(x, y.Attributes),
-                    x => new Rectangle(this.Region.TopLeft, x));
+                    x => new Fill(this.Region.TopLeft, x));
             }
         }
 

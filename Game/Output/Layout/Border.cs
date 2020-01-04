@@ -104,6 +104,25 @@ namespace Game.Output.Layout
             this.namePlate.Draw(sink);
         }
 
+        public void Draw(ISink sink, Rectangle region)
+        {
+            ////throw new NotImplementedException("TODO complicated");
+
+            this.topLeft.Draw(sink);
+            this.topStroke.Draw(sink);
+
+            this.topRight.Draw(sink);
+            this.leftStroke.Draw(sink);
+
+            this.bottomLeft.Draw(sink);
+            this.rightStroke.Draw(sink);
+
+            this.bottomRight.Draw(sink);
+            this.bottomStroke.Draw(sink);
+
+            this.namePlate.Draw(sink);
+        }
+
         public void InvertColor()
         {
             this.topLeft.InvertColor();
@@ -125,23 +144,24 @@ namespace Game.Output.Layout
             }
             else
             {
-                this.namePlate.Region.Translate(delta);
-                this.topLeft.Region.Translate(delta);
-                this.topRight.Region.Translate(delta);
-                this.bottomLeft.Region.Translate(delta);
-                this.bottomRight.Region.Translate(delta);
-                this.leftStroke.Region.Translate(delta);
-                this.topStroke.Region.Translate(delta);
-                this.rightStroke.Region.Translate(delta);
-                this.bottomStroke.Region.Translate(delta);
+                this.namePlate.Region.TryTranslate(delta, out _);
+                this.topLeft.Region.TryTranslate(delta, out _);
+                this.topRight.Region.TryTranslate(delta, out _);
+                this.bottomLeft.Region.TryTranslate(delta, out _);
+                this.bottomRight.Region.TryTranslate(delta, out _);
+                this.leftStroke.Region.TryTranslate(delta, out _);
+                this.topStroke.Region.TryTranslate(delta, out _);
+                this.rightStroke.Region.TryTranslate(delta, out _);
+                this.bottomStroke.Region.TryTranslate(delta, out _);
             }
         }
 
         private void Recalculate()
         {
-            this.innerRegion.SetCorners(
+            this.innerRegion.TrySetCorners(
                 this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset));
+                this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
+                out _);
             this.OuterRegion.OnChangeRequested +=
                 (obj, e) =>
                 {
@@ -153,59 +173,69 @@ namespace Game.Output.Layout
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
                 {
-                    this.innerRegion.SetCorners(
+                    this.innerRegion.TrySetCorners(
                         e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
                         e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-                        false);
+                        false,
+                        out _);
                 };
 
-            this.topLeft.Region.MoveTo(
-                this.OuterRegion.TopLeft);
-            this.topRight.Region.MoveTo(
+            this.topLeft.Region.TryMoveTo(
+                this.OuterRegion.TopLeft,
+                out _);
+            this.topRight.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.BottomRight.X - this.topRight.Region.Width),
-                    this.OuterRegion.TopLeft.Y));
-            this.bottomLeft.Region.MoveTo(
+                    this.OuterRegion.TopLeft.Y),
+                out _);
+            this.bottomLeft.Region.TryMoveTo(
                 new Coord(
                     this.OuterRegion.TopLeft.X,
-                    (short)(this.OuterRegion.BottomRight.Y - this.bottomLeft.Region.Height)));
-            this.bottomRight.Region.MoveTo(
+                    (short)(this.OuterRegion.BottomRight.Y - this.bottomLeft.Region.Height)),
+                out _);
+            this.bottomRight.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.BottomRight.X - this.bottomRight.Region.Width),
-                    (short)(this.OuterRegion.BottomRight.Y - this.bottomRight.Region.Height)));
+                    (short)(this.OuterRegion.BottomRight.Y - this.bottomRight.Region.Height)),
+                out _);
 
             this.topStroke = this.topStrokePattern.RepeatHorizontally(
                 (short)(this.OuterRegion.Width - this.topLeft.Region.Width - this.topRight.Region.Width));
-            this.topStroke.Region.MoveTo(
+            this.topStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.topLeft.Region.Width),
-                    this.OuterRegion.TopLeft.Y));
+                    this.OuterRegion.TopLeft.Y),
+                out _);
 
             this.leftStroke = this.leftStrokePattern.RepeatVertically(
                 (short)(this.OuterRegion.Height - this.topLeft.Region.Height - this.bottomLeft.Region.Height));
-            this.leftStroke.Region.MoveTo(
+            this.leftStroke.Region.TryMoveTo(
                 new Coord(
                     this.OuterRegion.TopLeft.X,
-                    (short)(this.OuterRegion.TopLeft.Y + this.topLeft.Region.Height)));
+                    (short)(this.OuterRegion.TopLeft.Y + this.topLeft.Region.Height)),
+                out _);
 
             this.rightStroke = this.rightStrokePattern.RepeatVertically(
                 (short)(this.OuterRegion.Height - this.topRight.Region.Height - this.bottomRight.Region.Height));
-            this.rightStroke.Region.MoveTo(
+            this.rightStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.BottomRight.X - this.rightStroke.Region.Width),
-                    (short)(this.OuterRegion.TopLeft.Y + this.topRight.Region.Height)));
+                    (short)(this.OuterRegion.TopLeft.Y + this.topRight.Region.Height)),
+                out _);
 
             this.bottomStroke = this.bottomStrokePattern.RepeatHorizontally(
                 (short)(this.OuterRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width));
-            this.bottomStroke.Region.MoveTo(
+            this.bottomStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.bottomLeft.Region.Width),
-                    (short)(this.OuterRegion.BottomRight.Y - bottomStroke.Region.Height)));
+                    (short)(this.OuterRegion.BottomRight.Y - bottomStroke.Region.Height)),
+                out _);
 
-            this.namePlate.Region.MoveTo(
+            this.namePlate.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.topLeft.Region.Width + 1),
-                    this.OuterRegion.TopLeft.Y));
+                    this.OuterRegion.TopLeft.Y),
+                out _);
 
             this.components =
                 new IReadOnlyRegion[,]

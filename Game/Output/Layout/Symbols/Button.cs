@@ -5,8 +5,11 @@ namespace Game.Output.Layout.Symbols
 {
     public class Button : Symbol
     {
-        private readonly Label label;
-        private readonly Rectangle? background;
+        private readonly Fill? background;
+
+        private FormattedString text;
+        private Label label;
+        private bool inverted;
 
         public Button(
             LayoutManager layoutManager,
@@ -21,15 +24,17 @@ namespace Game.Output.Layout.Symbols
                   borderBuilder,
                   name)
         {
+            this.Text = content;
+            this.inverted = false;
+
             if (backgroundFill.HasValue)
             {
-                this.background = new Rectangle(this.InnerRegion, backgroundFill.Value);
+                this.background = new Fill(this.InnerRegion, backgroundFill.Value);
             }
 
-            this.label = new Label(this.InnerRegion.TopLeft, content);
             this.InnerRegion.OnChanged +=
                 (obj, e) =>
-                this.label.Region.Translate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft);
+                this.label.Region.TryTranslate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft, out _);
         }
 
         public override bool CanBeFocused => true;
@@ -38,29 +43,45 @@ namespace Game.Output.Layout.Symbols
 
         public override bool CanBeResized => true;
 
+        public FormattedString Text
+        {
+            get => this.text;
+            set
+            {
+                this.text = value;
+                this.label = new Label(this.InnerRegion.TopLeft, this.text);
+                if (this.inverted)
+                {
+                    this.label.InvertColor();
+                }
+
+                this.LayoutManager.Draw(this.InnerRegion);
+            }
+        }
+
+        public event EventHandler<ClickedEventArgs>? OnClicked;
+
         public override void FocusChanged(bool focused)
         {
-            this.InvertColor();
-            this.LayoutManager.Draw(this);
+            this.AppearanceEvent(focused);
         }
 
         public override void LeftMouseEvent(Coord coord, bool down)
         {
             if (!down)
             {
-                Random random = new Random();
-                CharInfo[,] stuff = new CharInfo[this.Region.Height, this.Region.Width];
-                for (int y = 0; y < stuff.GetHeight(); y++)
-                {
-                    for (int x = 0; x < stuff.GetWidth(); x++)
-                    {
-                        stuff[y, x] = new CharInfo(' ', CharColors.GetRandom(random));
-                    }
-                }
-
-                Rectangle garbage = new Rectangle(this.Region.TopLeft, stuff);
-                garbage.Draw(this.LayoutManager.sink);
+                this.OnClicked?.Invoke(this, new ClickedEventArgs(coord));
             }
+        }
+
+        public override void MouseEnteredSymbol(bool leftMouseDown, bool rightMouseDown)
+        {
+            this.AppearanceEvent(leftMouseDown);
+        }
+
+        public override void MouseExitedSymbol()
+        {
+            this.AppearanceEvent(false);
         }
 
         protected override void DrawInternal(ISink sink)
@@ -69,9 +90,33 @@ namespace Game.Output.Layout.Symbols
             this.label.Draw(sink);
         }
 
+        protected override void DrawInternal(ISink sink, Rectangle region)
+        {
+            this.background?.Draw(sink, region);
+            this.label.Draw(sink, region);
+        }
+
         protected override void InvertColorInternal()
         {
             this.label.InvertColor();
+        }
+
+        private void AppearanceEvent(bool wantToBeInverted)
+        {
+            if (wantToBeInverted && !this.inverted)
+            {
+                this.inverted = true;
+
+                this.InvertColor();
+                this.LayoutManager.Draw(this.Region);
+            }
+            else if (!wantToBeInverted && this.inverted)
+            {
+                this.inverted = false;
+
+                this.InvertColor();
+                this.LayoutManager.Draw(this.Region);
+            }
         }
     }
 }

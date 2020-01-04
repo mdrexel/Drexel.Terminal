@@ -79,11 +79,29 @@ namespace Game.Output.Primitives
         {
             if (this.hasDelayedContent)
             {
-                sink.WriteRegion(this.delayedContent, this.Region.TopLeft);
+                sink.WriteRegion(this.delayedContent!, this.Region.TopLeft);
             }
             else
             {
-                sink.WriteRegion(this.undelayedContent, this.Region.TopLeft);
+                sink.WriteRegion(this.undelayedContent!, this.Region.TopLeft);
+            }
+        }
+
+        public void Draw(ISink sink, Rectangle region)
+        {
+            if (this.hasDelayedContent)
+            {
+                sink.WriteRegion(
+                    this.delayedContent!,
+                    this.Region.TopLeft,
+                    region);
+            }
+            else
+            {
+                sink.WriteRegion(
+                    this.undelayedContent!,
+                    this.Region.TopLeft,
+                    region);
             }
         }
 
@@ -91,21 +109,21 @@ namespace Game.Output.Primitives
         {
             if (this.hasDelayedContent)
             {
-                for (int y = 0; y < this.delayedContent.GetHeight(); y++)
+                for (int y = 0; y < this.delayedContent!.GetHeight(); y++)
                 {
-                    for (int x = 0; x < this.delayedContent.GetWidth(); x++)
+                    for (int x = 0; x < this.delayedContent!.GetWidth(); x++)
                     {
-                        this.delayedContent[y, x] = this.delayedContent[y, x].GetInvertedColor();
+                        this.delayedContent![y, x] = this.delayedContent[y, x].GetInvertedColor();
                     }
                 }
             }
             else
             {
-                for (int y = 0; y < this.undelayedContent.GetHeight(); y++)
+                for (int y = 0; y < this.undelayedContent!.GetHeight(); y++)
                 {
-                    for (int x = 0; x < this.undelayedContent.GetWidth(); x++)
+                    for (int x = 0; x < this.undelayedContent!.GetWidth(); x++)
                     {
-                        this.undelayedContent[y, x] = this.undelayedContent[y, x].GetInvertedColor();
+                        this.undelayedContent![y, x] = this.undelayedContent[y, x].GetInvertedColor();
                     }
                 }
             }
@@ -117,13 +135,13 @@ namespace Game.Output.Primitives
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatHorizontallyInternal(this.delayedContent, width));
+                    RepeatHorizontallyInternal(this.delayedContent!, width));
             }
             else
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatHorizontallyInternal(this.undelayedContent, width));
+                    RepeatHorizontallyInternal(this.undelayedContent!, width));
             }
         }
 
@@ -133,13 +151,13 @@ namespace Game.Output.Primitives
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatVerticallyInternal(this.delayedContent, height));
+                    RepeatVerticallyInternal(this.delayedContent!, height));
             }
             else
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatVerticallyInternal(this.undelayedContent, height));
+                    RepeatVerticallyInternal(this.undelayedContent!, height));
             }
         }
 

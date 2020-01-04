@@ -21,6 +21,21 @@ namespace Game.Output.Layout.Symbols
             this.fill = new Rectangle(this.InnerRegion, fill);
         }
 
+        public Solid(
+            LayoutManager layoutManager,
+            Region region,
+            BorderBuilder borderBuilder,
+            string name,
+            FormattedString fill)
+            : base(
+                  layoutManager,
+                  region,
+                  borderBuilder,
+                  name)
+        {
+            Label label = new Label(fill);
+        }
+
         public override bool CanBeFocused => false;
 
         public override bool CanBeMoved => false;

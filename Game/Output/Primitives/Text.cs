@@ -17,6 +17,8 @@ namespace Game.Output.Primitives
         private Rectangle rectangle;
         private IReadOnlyList<Line> lines;
 
+        private ushort preceedingLinesSkipped;
+
         public Text(
             FormattedString content,
             IReadOnlyRegion constrainedTo,
@@ -31,17 +33,18 @@ namespace Game.Output.Primitives
             CharColors? backgroundFill = null)
         {
             this.content = content;
-            this.Region = region;
             this.backgroundFill = backgroundFill;
-            this.PreceedingLinesSkipped = 0;
+            this.preceedingLinesSkipped = 0;
+
+            this.Region = region;
 
             region.OnChanged +=
                 (obj, e) =>
                 {
                     // Only need to recalculate contents on resize
-                    if (e.ChangeType == RegionChangeType.Resize || e.ChangeType == RegionChangeType.MoveAndResize)
+                    if (e.ChangeTypes.HasFlag(RegionChangeTypes.Resize))
                     {
-                        this.ReflowContent(e.PreviousRegion.Width != e.CurrentRegion.Width);
+                        this.ReflowContent(e.BeforeChange.Width != e.AfterChange.Width);
                     }
                 };
 
@@ -59,7 +62,14 @@ namespace Game.Output.Primitives
 
         public ushort TotalLines { get; private set; }
 
-        public ushort PreceedingLinesSkipped { get; private set; }
+        public ushort PreceedingLinesSkipped
+        {
+            get => this.preceedingLinesSkipped;
+            private set
+            {
+                this.preceedingLinesSkipped = (ushort)Math.Min(value, this.TotalLines - this.MaximumVisibleLines);
+            }
+        }
 
         public ushort MaximumVisibleLines { get; private set; }
 
@@ -100,17 +110,13 @@ namespace Game.Output.Primitives
                 }
             }
 
-            // Make sure that at least one line is always visible at the top of the text window.
-            if (this.PreceedingLinesSkipped >= this.lines.Count)
-            {
-                this.PreceedingLinesSkipped = (ushort)(this.lines.Count - 1);
-            }
-
             this.PopulateDrawBuffer();
         }
 
         private void ReflowContent(bool widthChanged)
         {
+            this.MaximumVisibleLines = (ushort)this.Region.Height;
+
             if (widthChanged)
             {
                 string[] rawLines = this.content.Value.Split(NewLine, StringSplitOptions.None);
@@ -192,13 +198,9 @@ namespace Game.Output.Primitives
                 this.lines = calculated;
                 this.TotalLines = (ushort)this.lines.Count;
 
-                if (this.PreceedingLinesSkipped > this.TotalLines)
-                {
-                    this.PreceedingLinesSkipped = (ushort)(this.TotalLines - 1);
-                }
+                // Intentionally set lines skipped to itself, so that overflow is evaluated
+                this.PreceedingLinesSkipped = this.PreceedingLinesSkipped;
             }
-
-            this.MaximumVisibleLines = (ushort)this.Region.Height;
 
             this.PopulateDrawBuffer();
         }

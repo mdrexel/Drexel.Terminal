@@ -69,6 +69,12 @@ namespace Game.Output.Primitives
 
         public IMoveOnlyRegion Region { get; private set; }
 
+        internal CharDelay[,]? DelayedContent => this.delayedContent;
+
+        internal CharInfo[,]? UndelayedContent => this.undelayedContent;
+
+        internal bool HasDelayedContent => this.hasDelayedContent;
+
         public void Draw(ISink sink)
         {
             if (this.hasDelayedContent)

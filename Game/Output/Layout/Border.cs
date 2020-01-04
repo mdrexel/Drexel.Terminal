@@ -75,7 +75,7 @@ namespace Game.Output.Layout
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
                 {
-                    this.MaybeRecalculate(e.CurrentRegion.TopLeft - e.PreviousRegion.TopLeft, e.ChangeType);
+                    this.MaybeRecalculate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft, e.ChangeTypes);
                 };
 
             this.Recalculate();
@@ -117,9 +117,9 @@ namespace Game.Output.Layout
             this.namePlate.InvertColor();
         }
 
-        private void MaybeRecalculate(Coord delta, RegionChangeType changeType)
+        private void MaybeRecalculate(Coord delta, RegionChangeTypes changeType)
         {
-            if (changeType == RegionChangeType.MoveAndResize || changeType == RegionChangeType.Resize)
+            if (changeType.HasFlag(RegionChangeTypes.Resize))
             {
                 this.Recalculate();
             }
@@ -147,16 +147,15 @@ namespace Game.Output.Layout
                 {
                     // Only let the outer region change if the inner region would allow it
                     e.Cancel = this.innerRegion.SimulateRequestChange(
-                        e.RequestedTopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                        e.RequestedBottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-                        e.ChangeType);
+                        e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+                        e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset));
                 };
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
                 {
                     this.innerRegion.SetCorners(
-                        e.CurrentRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                        e.CurrentRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
+                        e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+                        e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
                         false);
                 };
 

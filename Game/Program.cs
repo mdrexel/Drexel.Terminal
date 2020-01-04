@@ -127,8 +127,8 @@ namespace Game
                     "Hello",
                     CharColors.Standard);
 
-                layout.Add(background);
-                layout.Add(button);
+                ////layout.Add(background);
+                ////layout.Add(button);
 
                 layout.Constrain(button, background.InnerRegion);
 

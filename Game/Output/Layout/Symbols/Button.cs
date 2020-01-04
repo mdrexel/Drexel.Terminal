@@ -29,7 +29,7 @@ namespace Game.Output.Layout.Symbols
             this.label = new Label(this.InnerRegion.TopLeft, content);
             this.InnerRegion.OnChanged +=
                 (obj, e) =>
-                this.label.Region.Translate(e.CurrentRegion.TopLeft - e.PreviousRegion.TopLeft);
+                this.label.Region.Translate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft);
         }
 
         public override bool CanBeFocused => true;

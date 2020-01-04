@@ -23,38 +23,37 @@ namespace Game.Output.Layout
             region.OnChanged +=
                 (obj, e) =>
                 {
-                    RegionChangeType changeType;
-                    if (e.CurrentRegion.TopLeft == this.topLeft)
+                    RegionChangeTypes changeType;
+                    if (e.AfterChange.TopLeft == this.topLeft)
                     {
-                        if (e.CurrentRegion.BottomRight == this.bottomRight)
+                        if (e.AfterChange.BottomRight == this.bottomRight)
                         {
                             return;
                         }
                         else
                         {
-                            changeType = RegionChangeType.Resize;
+                            changeType = RegionChangeTypes.Resize;
                         }
                     }
                     else
                     {
-                        Coord newSize = new Coord(e.CurrentRegion.Width, e.CurrentRegion.Height);
+                        Coord newSize = new Coord(e.AfterChange.Width, e.AfterChange.Height);
                         Coord currentSize = new Coord(this.Width, this.Height);
 
                         Coord delta = currentSize - newSize;
                         if (delta.X == 0 && delta.Y == 0)
                         {
-                            changeType = RegionChangeType.Move;
+                            changeType = RegionChangeTypes.Move;
                         }
                         else
                         {
-                            changeType = RegionChangeType.MoveAndResize;
+                            changeType = RegionChangeTypes.Move | RegionChangeTypes.Resize;
                         }
                     }
 
                     RegionChangeEventArgs args = new RegionChangeEventArgs(
                         this,
-                        e.CurrentRegion.TopLeft,
-                        e.CurrentRegion.BottomRight,
+                        e.AfterChange,
                         changeType);
                     this.OnChangeRequested?.Invoke(obj, args);
                     if (args.Cancel)
@@ -63,8 +62,8 @@ namespace Game.Output.Layout
                     }
 
                     Region oldRegion = this.Clone();
-                    this.topLeft = e.CurrentRegion.TopLeft;
-                    this.bottomRight = e.CurrentRegion.BottomRight;
+                    this.topLeft = e.AfterChange.TopLeft;
+                    this.bottomRight = e.AfterChange.BottomRight;
 
                     if (this != oldRegion)
                     {
@@ -95,7 +94,7 @@ namespace Game.Output.Layout
             get => (this.bottomRight - this.topLeft).X;
             set
             {
-                RegionChangeType changeType;
+                RegionChangeTypes changeType;
                 if (this.Width == value)
                 {
                     return;
@@ -111,23 +110,22 @@ namespace Game.Output.Layout
                     {
                         // If our width is unchanged after the operation, it means they flipped us - we haven't
                         // resized, just translated to the left by our width.
-                        changeType = RegionChangeType.Move;
+                        changeType = RegionChangeTypes.Move;
                     }
                     else
                     {
-                        changeType = RegionChangeType.MoveAndResize;
+                        changeType = RegionChangeTypes.Move | RegionChangeTypes.Resize;
                     }
                 }
                 else
                 {
                     newBottomRight = new Coord((short)(this.topLeft.X + value), this.bottomRight.Y);
-                    changeType = RegionChangeType.Resize;
+                    changeType = RegionChangeTypes.Resize;
                 }
 
                 RegionChangeEventArgs args = new RegionChangeEventArgs(
                     this,
-                    newTopLeft,
-                    newBottomRight,
+                    new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
                 if (args.Cancel)
@@ -156,7 +154,7 @@ namespace Game.Output.Layout
             get => (this.bottomRight - this.topLeft).Y;
             set
             {
-                RegionChangeType changeType;
+                RegionChangeTypes changeType;
                 if (this.Height == value)
                 {
                     return;
@@ -172,23 +170,22 @@ namespace Game.Output.Layout
                     {
                         // If our height is unchanged after the operation, it means they flipped us - we haven't
                         // resized, just translated upwards by our height.
-                        changeType = RegionChangeType.Move;
+                        changeType = RegionChangeTypes.Move;
                     }
                     else
                     {
-                        changeType = RegionChangeType.MoveAndResize;
+                        changeType = RegionChangeTypes.Move | RegionChangeTypes.Resize;
                     }
                 }
                 else
                 {
                     newBottomRight = new Coord(this.bottomRight.X, (short)(this.topLeft.Y + value));
-                    changeType = RegionChangeType.Resize;
+                    changeType = RegionChangeTypes.Resize;
                 }
 
                 RegionChangeEventArgs args = new RegionChangeEventArgs(
                     this,
-                    newTopLeft,
-                    newBottomRight,
+                    new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
                 if (args.Cancel)
@@ -300,9 +297,8 @@ namespace Game.Output.Layout
 
             RegionChangeEventArgs args = new RegionChangeEventArgs(
                 this,
-                newTopLeft,
-                newBottomRight,
-                RegionChangeType.Move);
+                new Region(newTopLeft, newBottomRight),
+                RegionChangeTypes.Move);
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
@@ -317,7 +313,7 @@ namespace Game.Output.Layout
                 new RegionChangedEventArgs(
                     oldRegion,
                     this,
-                    RegionChangeType.Move));
+                    RegionChangeTypes.Move));
 
             return true;
         }
@@ -334,9 +330,8 @@ namespace Game.Output.Layout
 
             RegionChangeEventArgs args = new RegionChangeEventArgs(
                 this,
-                newTopLeft,
-                newBottomRight,
-                RegionChangeType.Move);
+                new Region(newTopLeft, newBottomRight),
+                RegionChangeTypes.Move);
             this.OnChangeRequested?.Invoke(this, args);
             if (args.Cancel)
             {
@@ -351,7 +346,7 @@ namespace Game.Output.Layout
                 new RegionChangedEventArgs(
                     oldRegion,
                     this,
-                    RegionChangeType.Move));
+                    RegionChangeTypes.Move));
 
             return true;
         }
@@ -361,14 +356,11 @@ namespace Game.Output.Layout
 
         internal bool SimulateRequestChange(
             Coord newTopLeft,
-            Coord newBottomRight,
-            RegionChangeType changeType)
+            Coord newBottomRight)
         {
             RegionChangeEventArgs args = new RegionChangeEventArgs(
                 this,
-                newTopLeft,
-                newBottomRight,
-                changeType);
+                new Region(newTopLeft, newBottomRight));
             this.OnChangeRequested?.Invoke(this, args);
             return args.Cancel;
         }
@@ -399,21 +391,21 @@ namespace Game.Output.Layout
                 return false;
             }
 
-            RegionChangeType changeType;
+            RegionChangeTypes changeType;
             if (this.topLeft == newTopLeft)
             {
-                changeType = RegionChangeType.Resize;
+                changeType = RegionChangeTypes.Resize;
             }
             else
             {
                 Coord size = newTopLeft - newBottomRight;
                 if (size.X == this.Width && size.Y == this.Height)
                 {
-                    changeType = RegionChangeType.Move;
+                    changeType = RegionChangeTypes.Move;
                 }
                 else
                 {
-                    changeType = RegionChangeType.MoveAndResize;
+                    changeType = RegionChangeTypes.Move | RegionChangeTypes.Resize;
                 }
             }
 
@@ -421,8 +413,7 @@ namespace Game.Output.Layout
             {
                 RegionChangeEventArgs args = new RegionChangeEventArgs(
                     this,
-                    newTopLeft,
-                    newBottomRight,
+                    new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
                 if (args.Cancel)

@@ -64,7 +64,7 @@ namespace Game.Output.Layout
                     sink,
                     new Rectangle(
                         region.TopLeft - this.InnerRegion.TopLeft,
-                        region.BottomRight - this.InnerRegion.BottomRight));
+                        region.BottomRight - this.InnerRegion.TopLeft));
             }
             else if (this.border.OuterRegion.Overlaps(region))
             {

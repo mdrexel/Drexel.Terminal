@@ -292,8 +292,13 @@ namespace Game.Output
             Rectangle bufferRegion)
         {
             Coord size = buffer.ToCoord();
-            Coord offset = topLeft + size - bufferRegion.BottomRight;
-            SmallRect rect = new SmallRect(topLeft.X, topLeft.Y, offset.X, offset.Y);
+            Coord adjustedTopLeft = topLeft + bufferRegion.TopLeft;
+            Coord adjustedBottomRight = topLeft + bufferRegion.BottomRight;
+            SmallRect rect = new SmallRect(
+                adjustedTopLeft.X,
+                adjustedTopLeft.Y,
+                adjustedBottomRight.X,
+                adjustedBottomRight.Y);
             unsafe
             {
                 fixed (CharInfo* pinned = buffer)

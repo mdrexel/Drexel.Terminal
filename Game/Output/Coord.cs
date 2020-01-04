@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static System.FormattableString;
 
 namespace Game.Output
 {
+    [DebuggerDisplay("({this.X,nq}, {this.Y,nq})")]
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Coord : IEquatable<Coord>
     {
@@ -57,6 +59,11 @@ namespace Game.Output
             }
 
             return false;
+        }
+
+        public Coord Invert()
+        {
+            return new Coord(this.Y, this.X);
         }
 
         public bool Equals(Coord other)

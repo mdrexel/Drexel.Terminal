@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Game.Output
 {
+    [DebuggerDisplay("{TopLeft,nq}, {BottomRight,nq}")]
     public readonly struct Rectangle : IEquatable<Rectangle>
     {
         public readonly Coord TopLeft;

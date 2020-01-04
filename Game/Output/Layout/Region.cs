@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Game.Output.Layout
 {
+    [DebuggerDisplay("{this.TopLeft,nq}, {this.BottomRight,nq}")]
     public sealed class Region : IMoveOnlyRegion, IEquatable<Region>
     {
         private static readonly Coord NoOpVector = new Coord(0, 0);

@@ -298,6 +298,10 @@ namespace Game.Output.Layout
                 return;
             }
 
+            // Focus is lost when a mouse event occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
+
             if (!down)
             {
                 this.grabbed = null;
@@ -308,7 +312,7 @@ namespace Game.Output.Layout
                 if (symbol.Border.TryGetComponentAt(
                     coord,
                     out BorderComponentType component,
-                    out IReadOnlyRegion componentRegion))
+                    out _))
                 {
                     if (component == BorderComponentType.Center)
                     {
@@ -337,6 +341,10 @@ namespace Game.Output.Layout
                 return;
             }
 
+            // Focus is lost when a mouse event occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
+
             foreach (Symbol symbol in this.symbols.Reverse())
             {
                 if (symbol.Region.Overlaps(coord))
@@ -356,6 +364,10 @@ namespace Game.Output.Layout
             {
                 return;
             }
+
+            // Focus is lost when a scroll event occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
 
             foreach (Symbol symbol in this.symbols.Reverse())
             {

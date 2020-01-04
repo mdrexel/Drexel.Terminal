@@ -20,6 +20,15 @@ namespace Game.Output.Primitives
 
         public Label(Coord topLeft, FormattedString content, CharColors? backgroundFill = null)
         {
+            // Special case - if the content is empty, bail out early.
+            if (content.Value.Length == 0)
+            {
+                this.Region = new Region(topLeft, topLeft);
+                this.hasDelayedContent = false;
+                this.undelayedContent = new CharInfo[0, 0];
+                return;
+            }
+
             string[] lines = content.Value.Split(NewLines, StringSplitOptions.None);
             short height = (short)lines.Length;
             short width = (short)lines.Max(x => x.Length);

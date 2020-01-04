@@ -269,7 +269,7 @@ namespace Game.Output
                     WriteConsoleOutputW(
                         this.handle,
                         pointer,
-                        new Coord(size.X, size.Y),
+                        size,
                         new Coord(0, 0),
                         in rect);
                 }
@@ -291,7 +291,6 @@ namespace Game.Output
             Coord topLeft,
             Rectangle bufferRegion)
         {
-            Coord size = buffer.ToCoord();
             Coord adjustedTopLeft = topLeft + bufferRegion.TopLeft;
             Coord adjustedBottomRight = topLeft + bufferRegion.BottomRight;
             SmallRect rect = new SmallRect(
@@ -307,7 +306,7 @@ namespace Game.Output
                     WriteConsoleOutputW(
                         this.handle,
                         pointer,
-                        new Coord(size.X, size.Y),
+                        buffer.ToCoord(),
                         bufferRegion.TopLeft,
                         in rect);
                 }
@@ -319,9 +318,12 @@ namespace Game.Output
             Coord topLeft,
             Rectangle bufferRegion)
         {
-            for (short y = bufferRegion.TopLeft.Y; y < bufferRegion.BottomRight.Y; y++)
+            short maxX = Math.Min(bufferRegion.BottomRight.X, buffer.GetWidth());
+            short maxY = Math.Min(bufferRegion.BottomRight.Y, buffer.GetHeight());
+
+            for (short y = bufferRegion.TopLeft.Y; y < maxY; y++)
             {
-                for (short x = bufferRegion.TopLeft.X; x < bufferRegion.BottomRight.X; x++)
+                for (short x = bufferRegion.TopLeft.X; x < maxX; x++)
                 {
                     CharDelay @char = buffer[y, x];
                     this.WriteInternal(

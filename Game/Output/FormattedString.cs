@@ -16,12 +16,10 @@ namespace Game.Output
             CharColors defaultColors,
             int defaultDelay = 0)
         {
-            //// Foo bar <span fg="" bg="">baz bazinga bazongo</span> diddle doodle piddle poodle;
             List<Range> ranges = new List<Range>();
-            this.Ranges = Ranges;
             if (value.Length == 0)
             {
-                goto exit;
+                goto end;
             }
 
             int startIndex = 0;
@@ -141,8 +139,11 @@ namespace Game.Output
                 }
             }
 
+            ranges = linkedList.ToList();
+
+        end:
             this.Value = value;
-            this.Ranges = new Ranges(linkedList.ToList());
+            this.Ranges = new Ranges(ranges);
             this.ContainsDelays = this.Ranges.Any(x => x.Delay > 0);
         }
 
@@ -159,7 +160,6 @@ namespace Game.Output
             return new FormattedString(value, CharColors.Standard);
         }
 
-        ////<span fg="Blue" bg="Red" fg=Green>
         private static Range ParseSpan(
             string token,
             ushort startIndexInclusive,

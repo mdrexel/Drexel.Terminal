@@ -121,13 +121,13 @@ namespace Game
                     layout,
                     new Region(new Coord(2, 0), new Coord(Width, Height)),
                     BorderBuilder.Empty,
-                    "bar",
+                    "background",
                     CharColors.Standard);
                 Button button = new Button(
                     layout,
                     new Region(new Coord(12, 12), new Coord(30, 20)),
                     thinBorder,
-                    "foo",
+                    "button",
                     "Hello",
                     CharColors.Standard);
 
@@ -167,6 +167,9 @@ namespace Game
                             case ConsoleKey.PageUp:
                                 bar.AdjustLinesSkipped(-bar.MaximumVisibleLines);
                                 bar.Draw(sink);
+                                break;
+                            case ConsoleKey.Spacebar:
+                                layout.Draw();
                                 break;
                             default:
                                 break;

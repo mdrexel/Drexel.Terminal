@@ -9,6 +9,9 @@ namespace Game.Output
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Coord : IEquatable<Coord>
     {
+        public static readonly Coord Zero = new Coord(0, 0);
+        public static readonly Coord OneOffset = new Coord(1, 1);
+
         public readonly short X;
         public readonly short Y;
 
@@ -39,6 +42,22 @@ namespace Game.Output
             checked
             {
                 return new Coord((short)(left.X * right.X), (short)(left.Y * right.Y));
+            }
+        }
+
+        public static Coord operator *(short left, Coord right)
+        {
+            checked
+            {
+                return new Coord((short)(left * right.X), (short)(left * right.Y));
+            }
+        }
+
+        public static Coord operator *(Coord left, short right)
+        {
+            checked
+            {
+                return new Coord((short)(left.X * right), (short)(left.Y * right));
             }
         }
 

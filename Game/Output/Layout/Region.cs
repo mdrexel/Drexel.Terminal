@@ -6,8 +6,6 @@ namespace Game.Output.Layout
     [DebuggerDisplay("{this.TopLeft,nq}, {this.BottomRight,nq}")]
     public sealed class Region : IMoveOnlyRegion, IEquatable<Region>
     {
-        private static readonly Coord NoOpVector = new Coord(0, 0);
-
         private Coord topLeft;
         private Coord bottomRight;
 
@@ -325,7 +323,7 @@ namespace Game.Output.Layout
 
         public bool TryTranslate(Coord offset, out IReadOnlyRegion beforeChange)
         {
-            if (offset == NoOpVector)
+            if (offset == Coord.Zero)
             {
                 beforeChange = default!;
                 return false;

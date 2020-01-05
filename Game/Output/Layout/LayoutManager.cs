@@ -93,11 +93,7 @@ namespace Game.Output.Layout
             {
                 while (!(node is null))
                 {
-                    if (node.Value.Region.Overlaps(newSymbol.Region))
-                    {
-                        node.Value.Draw(this.sink, newSymbol.Region);
-                    }
-
+                    node.Value.Draw(this.sink, newSymbol.Region);
                     node = node.Next;
                 }
             }
@@ -112,11 +108,7 @@ namespace Game.Output.Layout
             {
                 while (!(node is null))
                 {
-                    if (node.Value.Region.Overlaps(newSymbol.Region))
-                    {
-                        node.Value.Draw(this.sink, newSymbol.Region);
-                    }
-
+                    node.Value.Draw(this.sink, newSymbol.Region);
                     node = node.Next;
                 }
             }
@@ -132,10 +124,7 @@ namespace Game.Output.Layout
             {
                 foreach (Symbol existing in this.symbols)
                 {
-                    if (existing.Region.Overlaps(symbol.Region))
-                    {
-                        existing.Draw(this.sink, symbol.Region);
-                    }
+                    existing.Draw(this.sink, symbol.Region);
                 }
             }
         }
@@ -167,10 +156,7 @@ namespace Game.Output.Layout
             {
                 foreach (Symbol symbol in this.symbols)
                 {
-                    if (symbol.Region.Overlaps(region))
-                    {
-                        symbol.Draw(this.sink, region);
-                    }
+                    symbol.Draw(this.sink, region);
                 }
             }
         }
@@ -257,8 +243,8 @@ namespace Game.Output.Layout
                             Math.Min(beforeChange.TopLeft.X, this.grabbed.Region.TopLeft.X),
                             Math.Min(beforeChange.TopLeft.Y, this.grabbed.Region.TopLeft.Y)),
                         new Coord(
-                            Math.Min(beforeChange.BottomRight.X, this.grabbed.Region.BottomRight.X),
-                            Math.Min(beforeChange.BottomRight.Y, this.grabbed.Region.BottomRight.Y)));
+                            Math.Max(beforeChange.BottomRight.X, this.grabbed.Region.BottomRight.X),
+                            Math.Max(beforeChange.BottomRight.Y, this.grabbed.Region.BottomRight.Y)));
                     this.Draw(superset);
                 }
             }

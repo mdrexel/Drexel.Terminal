@@ -47,15 +47,6 @@ namespace Game.Output.Layout
             this.DrawInternal(sink, rectangle);
         }
 
-        /// <summary>
-        /// Draws the symbol, but only within the specified region.
-        /// </summary>
-        /// <param name="sink">
-        /// The sink to draw to.
-        /// </param>
-        /// <param name="region">
-        /// The region to draw within.
-        /// </param>
         public void Draw(ISink sink, IReadOnlyRegion region)
         {
             if (this.InnerRegion.Contains(region))
@@ -64,7 +55,7 @@ namespace Game.Output.Layout
                     sink,
                     new Rectangle(
                         region.TopLeft - this.InnerRegion.TopLeft,
-                        region.BottomRight - this.InnerRegion.TopLeft));
+                        region.BottomRight - this.InnerRegion.TopLeft - Coord.OneOffset));
             }
             else if (this.border.OuterRegion.Overlaps(region))
             {

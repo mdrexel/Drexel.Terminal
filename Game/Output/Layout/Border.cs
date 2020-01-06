@@ -21,7 +21,7 @@ namespace Game.Output.Layout
         private readonly short largestRightOffset;
 
         private readonly Region innerRegion;
-        private IReadOnlyRegion[,] components;
+        private readonly IReadOnlyRegion[,] components;
 
         internal Border(
             Region outerRegion,
@@ -118,21 +118,8 @@ namespace Game.Output.Layout
 
         public void Draw(ISink sink, Rectangle window)
         {
-            ////throw new NotImplementedException("TODO complicated");
-
-            this.topLeft.Draw(sink);
-            this.topStroke.Draw(sink);
-
-            this.topRight.Draw(sink);
-            this.leftStroke.Draw(sink);
-
-            this.bottomLeft.Draw(sink);
-            this.rightStroke.Draw(sink);
-
-            this.bottomRight.Draw(sink);
-            this.bottomStroke.Draw(sink);
-
-            this.namePlate.Draw(sink);
+            // TODO: need to move the window around to be appropriate for each border component; too lazy to do now
+            this.Draw(sink);
         }
 
         public void InvertColor()

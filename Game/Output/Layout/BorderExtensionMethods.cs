@@ -21,9 +21,9 @@
                 goto fail;
             }
 
-            for (int y = 0; y < 3; y++)
+            for (int y = 2; 0 < y; y--)
             {
-                for (int x = 0; x < 3; x++)
+                for (int x = 2; 0 < x; x--)
                 {
                     BorderComponentType type = ComponentTypes[y, x];
                     IReadOnlyRegion region = border.GetComponent(type);
@@ -38,7 +38,7 @@
 
             fail:
             component = default;
-            componentRegion = default;
+            componentRegion = default!;
             return false;
         }
     }

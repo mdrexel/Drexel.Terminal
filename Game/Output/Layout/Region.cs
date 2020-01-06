@@ -56,7 +56,7 @@ namespace Game.Output.Layout
                         e.AfterChange,
                         changeType);
                     this.OnChangeRequested?.Invoke(obj, args);
-                    if (args.Cancel)
+                    if (args.Canceled)
                     {
                         return;
                     }
@@ -128,7 +128,7 @@ namespace Game.Output.Layout
                     new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
-                if (args.Cancel)
+                if (args.Canceled)
                 {
                     return;
                 }
@@ -188,7 +188,7 @@ namespace Game.Output.Layout
                     new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
-                if (args.Cancel)
+                if (args.Canceled)
                 {
                     return;
                 }
@@ -301,7 +301,7 @@ namespace Game.Output.Layout
                 new Region(newTopLeft, newBottomRight),
                 RegionChangeTypes.Move);
             this.OnChangeRequested?.Invoke(this, args);
-            if (args.Cancel)
+            if (args.Canceled)
             {
                 beforeChange = default!;
                 return false;
@@ -337,7 +337,7 @@ namespace Game.Output.Layout
                 new Region(newTopLeft, newBottomRight),
                 RegionChangeTypes.Move);
             this.OnChangeRequested?.Invoke(this, args);
-            if (args.Cancel)
+            if (args.Canceled)
             {
                 beforeChange = default!;
                 return false;
@@ -372,7 +372,7 @@ namespace Game.Output.Layout
                 this,
                 new Region(newTopLeft, newBottomRight));
             this.OnChangeRequested?.Invoke(this, args);
-            return args.Cancel;
+            return args.Canceled;
         }
 
         internal bool TrySetCorners(
@@ -431,7 +431,7 @@ namespace Game.Output.Layout
                     new Region(newTopLeft, newBottomRight),
                     changeType);
                 this.OnChangeRequested?.Invoke(this, args);
-                if (args.Cancel)
+                if (args.Canceled)
                 {
                     beforeChange = default!;
                     return false;

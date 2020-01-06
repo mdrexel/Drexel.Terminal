@@ -67,6 +67,14 @@ namespace Game.Output.Layout
                 this.bottomRight.Region.Width,
                 this.rightStroke.Region.Width);
 
+            this.OuterRegion.OnChangeRequested +=
+                (obj, e) =>
+                {
+                    // Only let the outer region change if the inner region allows it
+                    e.Cancel(this.innerRegion.SimulateRequestChange(
+                        e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+                        e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset)));
+                };
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
                 {
@@ -154,26 +162,10 @@ namespace Game.Output.Layout
         private void Recalculate()
         {
             this.innerRegion.TrySetCorners(
-                this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-                out _);
-            this.OuterRegion.OnChangeRequested +=
-                (obj, e) =>
-                {
-                    // Only let the outer region change if the inner region would allow it
-                    e.Cancel = this.innerRegion.SimulateRequestChange(
-                        e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                        e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset));
-                };
-            this.OuterRegion.OnChanged +=
-                (obj, e) =>
-                {
-                    this.innerRegion.TrySetCorners(
-                        e.AfterChange.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
-                        e.AfterChange.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-                        false,
-                        out _);
-                };
+               this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
+               this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
+               false, // This method only gets called in the constructor, or if a resize event was allowed.
+               out _);
 
             this.topLeft.Region.TryMoveTo(
                 this.OuterRegion.TopLeft,

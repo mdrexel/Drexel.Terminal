@@ -43,7 +43,7 @@ namespace Game.Output.Layout
 
             this.ChangeTypes = changeTypes;
 
-            this.Cancel = false;
+            this.Canceled = false;
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Game.Output.Layout
             this.AfterChange = afterChange;
             this.ChangeTypes = changeTypes;
 
-            this.Cancel = false;
+            this.Canceled = false;
         }
 
         /// <summary>
@@ -90,8 +90,29 @@ namespace Game.Output.Layout
         public RegionChangeTypes ChangeTypes { get; }
 
         /// <summary>
-        /// Gets or sets whether this change should be cancelled. Set to <see langword="true"/> to cancel the change.
+        /// Gets whether this change should be cancelled. 
+        /// <br/><br/>
+        /// To cancel a change, call <see cref="Cancel"/> or <see cref="Cancel(bool)"/>.
         /// </summary>
-        public bool Cancel { get; set; }
+        public bool Canceled { get; private set; }
+
+        /// <summary>
+        /// Cancels this change.
+        /// </summary>
+        public void Cancel()
+        {
+            this.Canceled = true;
+        }
+
+        /// <summary>
+        /// If <paramref name="condition"/> is <see langword="true"/>, cancels this change. Otherwise, has no effect.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition.
+        /// </param>
+        public void Cancel(bool condition)
+        {
+            this.Canceled |= condition;
+        }
     }
 }

@@ -113,10 +113,8 @@ namespace Game.Output.Primitives
             this.Region.OnChangeRequested +=
                 (obj, e) =>
                 {
-                    if (e.AfterChange.Height < this.content.Height || e.AfterChange.Width < this.content.Width)
-                    {
-                        e.Cancel = true;
-                    }
+                    e.Cancel(e.AfterChange.Height < this.content.Height
+                        || e.AfterChange.Width < this.content.Width);
                 };
 
             this.Region.OnChanged +=

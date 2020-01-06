@@ -81,6 +81,7 @@ namespace Game.Output.Layout
                     this.MaybeRecalculate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft, e.ChangeTypes);
                 };
 
+            this.AdjustInnerRegion();
             this.Recalculate();
         }
 
@@ -141,6 +142,7 @@ namespace Game.Output.Layout
 
         private void MaybeRecalculate(Coord delta, RegionChangeTypes changeType)
         {
+            this.AdjustInnerRegion();
             if (changeType.HasFlag(RegionChangeTypes.Resize))
             {
                 this.Recalculate();
@@ -159,14 +161,17 @@ namespace Game.Output.Layout
             }
         }
 
-        private void Recalculate()
+        private void AdjustInnerRegion()
         {
             this.innerRegion.TrySetCorners(
                this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
                this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-               false, // This method only gets called in the constructor, or if a resize event was allowed.
+               false, // This method only gets in conditions where a resize was allowed.
                out _);
+        }
 
+        private void Recalculate()
+        {
             this.topLeft.Region.TryMoveTo(
                 this.OuterRegion.TopLeft,
                 out _);

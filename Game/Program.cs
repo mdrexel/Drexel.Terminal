@@ -110,8 +110,6 @@ namespace Game
                 ////    35,
                 ////    DelayMode.PerWord);
 
-                BorderBuilder thinBorder = BorderBuilder.CreateThinWindowStyle(borderColors);
-                BorderBuilder thickBorder = BorderBuilder.CreateThickStyle(borderColors);
                 LayoutManager layout = new LayoutManager(
                     sink,
                     () => source.LeftMouseDown,
@@ -120,13 +118,13 @@ namespace Game
                 Solid background = new Solid(
                     layout,
                     new Region(new Coord(2, 0), new Coord(Width, Height)),
-                    BorderBuilder.Empty,
+                    BorderBuilder.CreateThinStyle(borderColors),
                     "background",
                     CharColors.Standard);
                 Button button = new Button(
                     layout,
                     new Region(new Coord(12, 12), new Coord(30, 20)),
-                    thinBorder,
+                    BorderBuilder.CreateThinWindowStyle(borderColors),
                     "button",
                     "Hello",
                     CharColors.Standard);
@@ -143,7 +141,10 @@ namespace Game
                 layout.Add(background);
                 layout.Add(button);
 
-                layout.SetConstraint(button, background.InnerRegion);
+                Region constrainRegion = new Region(background.InnerRegion);
+                constrainRegion.TopLeft += new Coord(1, 0);
+                constrainRegion.BottomRight -= new Coord(1, 0);
+                layout.SetConstraint(button, constrainRegion);
 
                 source.OnKeyPressed +=
                     (obj, e) =>

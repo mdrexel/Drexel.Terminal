@@ -154,7 +154,12 @@ namespace Game.Output.Layout
         {
             if (this.Active)
             {
-                foreach (Symbol symbol in this.symbols)
+                Symbol? containedBy = this.symbols.Reverse().FirstOrDefault(x => x.Region.Contains(region));
+
+                foreach (Symbol symbol in
+                    object.ReferenceEquals(containedBy, null)
+                        ? this.symbols
+                        : this.symbols.SkipWhile(x => !object.ReferenceEquals(x, containedBy)))
                 {
                     symbol.Draw(this.sink, region);
                 }

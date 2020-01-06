@@ -8,6 +8,7 @@ namespace Game.Output.Layout.Symbols
         private readonly Fill? background;
 
         private FormattedString text;
+        private Alignments alignments;
         private Label label;
         private bool inverted;
 
@@ -17,6 +18,7 @@ namespace Game.Output.Layout.Symbols
             BorderBuilder borderBuilder,
             string name,
             FormattedString content,
+            Alignments alignments,
             CharColors? backgroundFill = null)
             : base(
                   layoutManager,
@@ -24,13 +26,16 @@ namespace Game.Output.Layout.Symbols
                   borderBuilder,
                   name)
         {
-            this.Text = content;
+            this.text = content;
+            this.alignments = alignments;
             this.inverted = false;
 
             if (backgroundFill.HasValue)
             {
                 this.background = new Fill(this.InnerRegion, backgroundFill.Value);
             }
+
+            this.Recalculate();
 
             this.InnerRegion.OnChanged +=
                 (obj, e) =>
@@ -39,23 +44,37 @@ namespace Game.Output.Layout.Symbols
 
         public override bool CanBeFocused => true;
 
-        public override bool CanBeMoved => true;
+        public override bool CanBeMoved => false;
 
-        public override bool CanBeResized => true;
+        public override bool CanBeResized => false;
 
         public FormattedString Text
         {
             get => this.text;
             set
             {
-                this.text = value;
-                this.label = new Label(this.InnerRegion.TopLeft, this.text);
-                if (this.inverted)
+                if (this.text == value)
                 {
-                    this.label.InvertColor();
+                    return;
                 }
 
-                this.LayoutManager.Draw(this.InnerRegion);
+                this.text = value;
+                this.Recalculate();
+            }
+        }
+
+        public Alignments Alignments
+        {
+            get => this.alignments;
+            set
+            {
+                if (this.alignments == value)
+                {
+                    return;
+                }
+
+                this.alignments = value;
+                this.Recalculate();
             }
         }
 
@@ -63,7 +82,7 @@ namespace Game.Output.Layout.Symbols
 
         public override void FocusChanged(bool focused)
         {
-            this.AppearanceEvent(focused);
+            this.InvertEvent(focused);
         }
 
         public override void LeftMouseEvent(Coord coord, bool down)
@@ -76,12 +95,12 @@ namespace Game.Output.Layout.Symbols
 
         public override void MouseEnteredSymbol(bool leftMouseDown, bool rightMouseDown)
         {
-            this.AppearanceEvent(leftMouseDown);
+            this.InvertEvent(leftMouseDown);
         }
 
         public override void MouseExitedSymbol()
         {
-            this.AppearanceEvent(false);
+            this.InvertEvent(false);
         }
 
         protected override void DrawInternal(ISink sink)
@@ -101,7 +120,7 @@ namespace Game.Output.Layout.Symbols
             this.label.InvertColor();
         }
 
-        private void AppearanceEvent(bool wantToBeInverted)
+        private void InvertEvent(bool wantToBeInverted)
         {
             if (wantToBeInverted && !this.inverted)
             {
@@ -117,6 +136,20 @@ namespace Game.Output.Layout.Symbols
                 this.InvertColor();
                 this.LayoutManager.Draw(this.Region);
             }
+        }
+
+        private void Recalculate()
+        {
+            this.label = new Label(
+                this.InnerRegion,
+                this.alignments,
+                this.text);
+            if (this.inverted)
+            {
+                this.label.InvertColor();
+            }
+
+            this.LayoutManager.Draw(this.InnerRegion);
         }
     }
 }

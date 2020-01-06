@@ -116,7 +116,7 @@ namespace Game.Output.Primitives
 
         private void Recalculate(IReadOnlyRegion region)
         {
-            Label label = new Label(this.fill!, this.backgroundFill);
+            Label label = new Label(this.fill!, Alignments.Default, this.backgroundFill);
             label.RepeatHorizontally(region.Width);
             label.RepeatVertically(region.Height);
 

@@ -44,15 +44,15 @@ namespace Game.Output.Layout
             this.OuterRegion = outerRegion;
             this.innerRegion = new Region(outerRegion.TopLeft, outerRegion.BottomRight);
 
-            this.namePlate = namePlate == null ? Label.Empty : new Label(namePlate, borderFill);
-            this.topLeft = topLeft == null ? Label.Empty : new Label(topLeft, borderFill);
-            this.topRight = topRight == null ? Label.Empty : new Label(topRight, borderFill);
-            this.bottomLeft = bottomLeft == null ? Label.Empty : new Label(bottomLeft, borderFill);
-            this.bottomRight = bottomRight == null ? Label.Empty : new Label(bottomRight, borderFill);
-            this.leftStrokePattern = leftStroke == null ? Label.Empty : new Label(leftStroke, borderFill);
-            this.topStrokePattern = topStroke == null ? Label.Empty : new Label(topStroke, borderFill);
-            this.rightStrokePattern = rightStroke == null ? Label.Empty : new Label(rightStroke, borderFill);
-            this.bottomStrokePattern = bottomStroke == null ? Label.Empty : new Label(bottomStroke, borderFill);
+            this.namePlate = namePlate == null ? Label.Empty : new Label(namePlate, Alignments.Default, borderFill);
+            this.topLeft = topLeft == null ? Label.Empty : new Label(topLeft, Alignments.Default, borderFill);
+            this.topRight = topRight == null ? Label.Empty : new Label(topRight, Alignments.Default, borderFill);
+            this.bottomLeft = bottomLeft == null ? Label.Empty : new Label(bottomLeft, Alignments.Default, borderFill);
+            this.bottomRight = bottomRight == null ? Label.Empty : new Label(bottomRight, Alignments.Default, borderFill);
+            this.leftStrokePattern = leftStroke == null ? Label.Empty : new Label(leftStroke, Alignments.Default, borderFill);
+            this.topStrokePattern = topStroke == null ? Label.Empty : new Label(topStroke, Alignments.Default, borderFill);
+            this.rightStrokePattern = rightStroke == null ? Label.Empty : new Label(rightStroke, Alignments.Default, borderFill);
+            this.bottomStrokePattern = bottomStroke == null ? Label.Empty : new Label(bottomStroke, Alignments.Default, borderFill);
 
             this.largestTopOffset = Largest(
                 this.topLeft.Region.Height,

@@ -127,6 +127,7 @@ namespace Game
                     BorderBuilder.CreateThinWindowStyle(borderColors),
                     "button",
                     "Hello",
+                    Alignments.Default,
                     CharColors.Standard);
 
                 button.OnClicked +=

@@ -9,72 +9,56 @@ namespace Game.Output.Primitives
     {
         private static readonly string[] NewLines = new string[] { Environment.NewLine };
 
-        private readonly bool hasDelayedContent;
-        private readonly CharDelay[,]? delayedContent;
-        private readonly CharInfo[,]? undelayedContent;
+        private readonly ContentValue content;
+        private readonly Alignments alignments;
+        private readonly CharColors? backgroundFill;
 
-        public Label(FormattedString content, CharColors? backgroundFill = null)
-            : this(new Coord(0, 0), content, backgroundFill)
+        private CharDelay[,]? delayedContent;
+        private CharInfo[,]? undelayedContent;
+
+        public Label(
+            FormattedString content,
+            Alignments alignments,
+            CharColors? backgroundFill = null)
         {
+            this.content = new ContentValue(content);
+            this.alignments = alignments;
+            this.backgroundFill = backgroundFill;
+
+            this.Ctor(
+                new Region(
+                    new Coord(0, 0),
+                    new Coord(this.content.Width, this.content.Height)));
         }
 
-        public Label(Coord topLeft, FormattedString content, CharColors? backgroundFill = null)
+        public Label(
+            IReadOnlyRegion region,
+            Alignments alignments,
+            FormattedString content,
+            CharColors? backgroundFill = null)
         {
-            // Special case - if the content is empty, bail out early.
-            if (content.Value.Length == 0)
-            {
-                this.Region = new Region(topLeft, topLeft);
-                this.hasDelayedContent = false;
-                this.undelayedContent = new CharInfo[0, 0];
-                return;
-            }
+            this.content = new ContentValue(content);
+            this.alignments = alignments;
+            this.backgroundFill = backgroundFill;
 
-            string[] lines = content.Value.Split(NewLines, StringSplitOptions.None);
-            short height = (short)lines.Length;
-            short width = (short)lines.Max(x => x.Length);
-
-            this.hasDelayedContent = content.ContainsDelays;
-            if (this.hasDelayedContent)
-            {
-                this.delayedContent = new CharDelay[height, width];
-                Label.Process(
-                    in this.delayedContent,
-                    backgroundFill,
-                    lines,
-                    content.Ranges,
-                    (x, y) => new CharDelay(
-                        new CharInfo(x, y.Attributes),
-                        y.Delay));
-            }
-            else
-            {
-                this.undelayedContent = new CharInfo[height, width];
-                Label.Process(
-                    in this.undelayedContent,
-                    backgroundFill,
-                    lines,
-                    content.Ranges,
-                    (x, y) => new CharInfo(x, y.Attributes));
-            }
-
-            this.Region = new Region(topLeft, new Coord(width, height) + topLeft);
+            this.Ctor(region);
         }
 
-        internal Label(Coord topLeft, CharInfo[,] content)
+        private Label(Coord topLeft, CharInfo[,] content, ContentValue originalContent)
         {
+            this.content = originalContent;
             this.undelayedContent = content;
-            this.hasDelayedContent = false;
             this.Region = new Region(topLeft, content.ToCoord() + topLeft);
         }
 
-        internal Label(Coord topLeft, CharDelay[,] content)
+        private Label(Coord topLeft, CharDelay[,] content, ContentValue originalContent)
         {
+            this.content = originalContent;
             this.delayedContent = content;
-            this.hasDelayedContent = true;
             this.Region = new Region(topLeft, content.ToCoord() + topLeft);
         }
 
-        public static Label Empty { get; } = new Label(FormattedString.Empty);
+        public static Label Empty { get; } = new Label(FormattedString.Empty, Alignments.Default);
 
         public IMoveOnlyRegion Region { get; private set; }
 
@@ -82,11 +66,11 @@ namespace Game.Output.Primitives
 
         internal CharInfo[,]? UndelayedContent => this.undelayedContent;
 
-        internal bool HasDelayedContent => this.hasDelayedContent;
+        internal bool HasDelayedContent => this.content.Content.ContainsDelays;
 
         public void Draw(ISink sink)
         {
-            if (this.hasDelayedContent)
+            if (this.HasDelayedContent)
             {
                 sink.WriteRegion(this.delayedContent!, this.Region.TopLeft);
             }
@@ -98,7 +82,7 @@ namespace Game.Output.Primitives
 
         public void Draw(ISink sink, Rectangle region)
         {
-            if (this.hasDelayedContent)
+            if (this.HasDelayedContent)
             {
                 sink.WriteRegion(
                     this.delayedContent!,
@@ -116,7 +100,7 @@ namespace Game.Output.Primitives
 
         public void InvertColor()
         {
-            if (this.hasDelayedContent)
+            if (this.HasDelayedContent)
             {
                 for (int y = 0; y < this.delayedContent!.GetHeight(); y++)
                 {
@@ -140,33 +124,37 @@ namespace Game.Output.Primitives
 
         internal Label RepeatHorizontally(short width)
         {
-            if (this.hasDelayedContent)
+            if (this.HasDelayedContent)
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatHorizontallyInternal(this.delayedContent!, width));
+                    RepeatHorizontallyInternal(this.delayedContent!, width),
+                    this.content);
             }
             else
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatHorizontallyInternal(this.undelayedContent!, width));
+                    RepeatHorizontallyInternal(this.undelayedContent!, width),
+                    this.content);
             }
         }
 
         internal Label RepeatVertically(short height)
         {
-            if (this.hasDelayedContent)
+            if (this.HasDelayedContent)
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatVerticallyInternal(this.delayedContent!, height));
+                    RepeatVerticallyInternal(this.delayedContent!, height),
+                    this.content);
             }
             else
             {
                 return new Label(
                     this.Region.TopLeft,
-                    RepeatVerticallyInternal(this.undelayedContent!, height));
+                    RepeatVerticallyInternal(this.undelayedContent!, height),
+                    this.content);
             }
         }
 
@@ -247,6 +235,86 @@ namespace Game.Output.Primitives
 
                     output[y, x] = factory.Invoke(line[x], range);
                 }
+            }
+        }
+
+        private void Ctor(IReadOnlyRegion region)
+        {
+            if (this.content.Content.Value.Length == 0)
+            {
+                this.Region = new Region(region.TopLeft, region.TopLeft);
+                this.undelayedContent = new CharInfo[0, 0];
+
+                return;
+            }
+
+            this.Region = new Region(region);
+            this.Region.OnChangeRequested +=
+                (obj, e) =>
+                {
+                    if (e.AfterChange.Height < this.content.Height || e.AfterChange.Width < this.content.Width)
+                    {
+                        e.Cancel = true;
+                    }
+                };
+
+            this.Region.OnChanged +=
+                (obj, e) =>
+                {
+                    if (e.ChangeTypes.HasFlag(RegionChangeTypes.Move))
+                    {
+                        this.Region.TryMoveTo(e.AfterChange.TopLeft, out _);
+                    }
+
+                    if (e.ChangeTypes.HasFlag(RegionChangeTypes.Resize))
+                    {
+                        this.Recalculate();
+                    }
+                };
+
+            this.Recalculate();
+        }
+
+        private void Recalculate()
+        {
+            if (this.content.Content.ContainsDelays)
+            {
+                this.delayedContent = new CharDelay[this.content.Height, this.content.Width];
+                Label.Process(
+                    in this.delayedContent!,
+                    this.backgroundFill,
+                    this.content.Lines,
+                    this.content.Content.Ranges,
+                    (x, y) => new CharDelay(
+                        new CharInfo(x, y.Attributes),
+                        y.Delay));
+            }
+            else
+            {
+                this.undelayedContent = new CharInfo[this.content.Height, this.content.Width];
+                Label.Process(
+                    in this.undelayedContent!,
+                    this.backgroundFill,
+                    this.content.Lines,
+                    this.content.Content.Ranges,
+                    (x, y) => new CharInfo(x, y.Attributes));
+            }
+        }
+
+        private readonly struct ContentValue
+        {
+            public readonly FormattedString Content;
+            public readonly string[] Lines;
+            public readonly short Height;
+            public readonly short Width;
+
+            public ContentValue(FormattedString content)
+            {
+                this.Content = content;
+
+                this.Lines = content.Value.Split(NewLines, StringSplitOptions.None);
+                this.Height = (short)this.Lines.Length;
+                this.Width = (short)this.Lines.Max(x => x.Length);
             }
         }
     }

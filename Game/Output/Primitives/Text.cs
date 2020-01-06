@@ -78,9 +78,9 @@ namespace Game.Output.Primitives
             this.rectangle.Draw(sink);
         }
 
-        public void Draw(ISink sink, Rectangle region)
+        public void Draw(ISink sink, Rectangle window)
         {
-            this.rectangle.Draw(sink, region);
+            this.rectangle.Draw(sink, window);
         }
 
         public void InvertColor()

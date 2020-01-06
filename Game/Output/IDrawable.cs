@@ -4,7 +4,7 @@
     {
         void Draw(ISink sink);
 
-        void Draw(ISink sink, Rectangle region);
+        void Draw(ISink sink, Rectangle window);
 
         void InvertColor();
     }

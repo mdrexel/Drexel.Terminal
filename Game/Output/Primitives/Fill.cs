@@ -4,44 +4,65 @@ namespace Game.Output.Primitives
 {
     public sealed class Fill : IDrawable
     {
-        private readonly FormattedString? fill;
-        private readonly CharColors? backgroundFill;
-
         private CharDelay[,]? delayedContent;
         private CharInfo[,]? undelayedContent;
 
         public Fill(IReadOnlyRegion region, CharColors fill)
         {
-            this.Region = new Region(region);
-            this.undelayedContent = new CharInfo[region.Height, region.Width];
-            for (int y = 0; y < this.undelayedContent.GetHeight(); y++)
+            void Fill(IReadOnlyRegion fillToSize)
             {
-                for (int x = 0; x < this.undelayedContent.GetWidth(); x++)
-                {
-                    this.undelayedContent[y, x] = new CharInfo(' ', fill);
-                }
+                this.undelayedContent = new CharInfo[fillToSize.Height, fillToSize.Width];
+                this.undelayedContent.Fill(new CharInfo(' ', fill));
             }
+
+            this.Region = new Region(region);
+            Fill(this.Region);
+
+            this.Region.OnChanged +=
+                (obj, e) =>
+                {
+                    if (e.ChangeTypes.HasFlag(RegionChangeTypes.Resize))
+                    {
+                        Fill(e.AfterChange);
+                    }
+                };
         }
 
         public Fill(
             IReadOnlyRegion region,
-            FormattedString fill,
+            FormattedString pattern,
             CharColors? backgroundFill = null)
         {
-            this.fill = fill;
-            this.backgroundFill = backgroundFill;
-
+            ContentValue contentValue = new ContentValue(pattern);
             this.Region = new Region(region);
             this.Region.OnChanged +=
                 (obj, e) =>
                 {
                     if (e.ChangeTypes.HasFlag(RegionChangeTypes.Resize))
                     {
-                        this.Recalculate(e.AfterChange);
+                        this.Recalculate(e.AfterChange, contentValue, backgroundFill);
                     }
                 };
 
-            this.Recalculate(this.Region);
+            this.Recalculate(this.Region, contentValue, backgroundFill);
+        }
+
+        internal Fill(
+            FormattedString pattern,
+            CharColors? backgroundFill = null)
+        {
+            ContentValue contentValue = new ContentValue(pattern);
+            this.Region = new Region(Coord.Zero, contentValue.ToCoord());
+            this.Region.OnChanged +=
+                (obj, e) =>
+                {
+                    if (e.ChangeTypes.HasFlag(RegionChangeTypes.Resize))
+                    {
+                        this.Recalculate(e.AfterChange, contentValue, backgroundFill);
+                    }
+                };
+
+            this.Recalculate(this.Region, contentValue, backgroundFill);
         }
 
         internal Fill(Coord topLeft, CharDelay[,] content)
@@ -58,7 +79,7 @@ namespace Game.Output.Primitives
 
         public static Fill Empty { get; } = new Fill(new Coord(0, 0), new CharInfo[0, 0]);
 
-        public IMoveOnlyRegion Region { get; }
+        public IRegion Region { get; }
 
         public void InvertColor()
         {
@@ -96,37 +117,46 @@ namespace Game.Output.Primitives
             }
         }
 
-        public void Draw(ISink sink, Rectangle region)
+        public void Draw(ISink sink, Rectangle window)
         {
             if (this.delayedContent is null)
             {
                 sink.WriteRegion(
                     this.undelayedContent!,
                     this.Region.TopLeft,
-                    region);
+                    window);
             }
             else
             {
                 sink.WriteRegion(
                     this.delayedContent!,
                     this.Region.TopLeft,
-                    region);
+                    window);
             }
         }
 
-        private void Recalculate(IReadOnlyRegion region)
+        private void Recalculate(
+            IReadOnlyRegion sizeTo,
+            ContentValue content,
+            CharColors? backgroundFill)
         {
-            Label label = new Label(this.fill!, Alignments.Default, this.backgroundFill);
-            label.RepeatHorizontally(region.Width);
-            label.RepeatVertically(region.Height);
-
-            if (label.HasDelayedContent)
+            if (content.Content.ContainsDelays)
             {
-                this.delayedContent = label.DelayedContent;
+                this.delayedContent = content
+                    .ToCharDelayArray(
+                        backgroundFill.HasValue
+                            ? new CharDelay(new CharInfo(' ', backgroundFill.Value), 0)
+                            : default)
+                    .Repeat(sizeTo.Height, sizeTo.Width);
             }
             else
             {
-                this.undelayedContent = label.UndelayedContent;
+                this.undelayedContent = content
+                    .ToCharInfoArray(
+                        backgroundFill.HasValue
+                            ? new CharInfo(' ', backgroundFill.Value)
+                            : default)
+                    .Repeat(sizeTo.Height, sizeTo.Width);
             }
         }
     }

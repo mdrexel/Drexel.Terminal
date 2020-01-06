@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Game.Output.Layout
 {
     [DebuggerDisplay("{this.TopLeft,nq}, {this.BottomRight,nq}")]
-    public sealed class Region : IMoveOnlyRegion, IEquatable<Region>
+    public sealed class Region : IRegion, IEquatable<Region>
     {
         private Coord topLeft;
         private Coord bottomRight;

@@ -20,7 +20,7 @@
             throw new System.NotImplementedException();
         }
 
-        public void Draw(ISink sink, Rectangle region)
+        public void Draw(ISink sink, Rectangle window)
         {
             throw new System.NotImplementedException();
         }

@@ -44,7 +44,7 @@ namespace Game.Output.Layout.Symbols
 
         public override bool CanBeFocused => true;
 
-        public override bool CanBeMoved => false;
+        public override bool CanBeMoved => true;
 
         public override bool CanBeResized => false;
 

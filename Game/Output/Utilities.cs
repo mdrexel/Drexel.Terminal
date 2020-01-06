@@ -8,17 +8,21 @@ namespace Game.Output
 {
     public static class Utilities
     {
-        public static U[,] CreateSameSizeArray<T, U>(this T[,] array, U defaultValue)
+        public static void Fill<T>(this T[,] array, T value)
         {
-            // Why, Microsoft? Why is .NET Standard 2.1 not available on Framework? Array.Fill would do this for us...
-            U[,] result = new U[array.GetHeight(), array.GetWidth()];
-            for (int y = 0; y < result.GetHeight(); y++)
+            for (int y = 0; y < array.GetHeight(); y++)
             {
-                for (int x = 0; x < result.GetWidth(); x++)
+                for (int x = 0; x < array.GetWidth(); x++)
                 {
-                    result[y, x] = defaultValue;
+                    array[y, x] = value;
                 }
             }
+        }
+
+        public static U[,] CreateSameSizeArray<T, U>(this T[,] array, U defaultValue)
+        {
+            U[,] result = new U[array.GetHeight(), array.GetWidth()];
+            result.Fill(defaultValue);
 
             return result;
         }

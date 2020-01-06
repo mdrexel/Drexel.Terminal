@@ -5,20 +5,15 @@ namespace Game.Output.Layout
 {
     public sealed class Border : IReadOnlyBorder
     {
-        private readonly Label namePlate;
-        private readonly Label topLeft;
-        private readonly Label topRight;
-        private readonly Label bottomLeft;
-        private readonly Label bottomRight;
-        private readonly Label leftStrokePattern;
-        private readonly Label topStrokePattern;
-        private readonly Label rightStrokePattern;
-        private readonly Label bottomStrokePattern;
-
-        private Label leftStroke;
-        private Label topStroke;
-        private Label rightStroke;
-        private Label bottomStroke;
+        private readonly Fill namePlate;
+        private readonly Fill topLeft;
+        private readonly Fill topRight;
+        private readonly Fill bottomLeft;
+        private readonly Fill bottomRight;
+        private readonly Fill leftStroke;
+        private readonly Fill topStroke;
+        private readonly Fill rightStroke;
+        private readonly Fill bottomStroke;
 
         private readonly short largestTopOffset;
         private readonly short largestLeftOffset;
@@ -44,33 +39,33 @@ namespace Game.Output.Layout
             this.OuterRegion = outerRegion;
             this.innerRegion = new Region(outerRegion.TopLeft, outerRegion.BottomRight);
 
-            this.namePlate = namePlate == null ? Label.Empty : new Label(namePlate, Alignments.Default, borderFill);
-            this.topLeft = topLeft == null ? Label.Empty : new Label(topLeft, Alignments.Default, borderFill);
-            this.topRight = topRight == null ? Label.Empty : new Label(topRight, Alignments.Default, borderFill);
-            this.bottomLeft = bottomLeft == null ? Label.Empty : new Label(bottomLeft, Alignments.Default, borderFill);
-            this.bottomRight = bottomRight == null ? Label.Empty : new Label(bottomRight, Alignments.Default, borderFill);
-            this.leftStrokePattern = leftStroke == null ? Label.Empty : new Label(leftStroke, Alignments.Default, borderFill);
-            this.topStrokePattern = topStroke == null ? Label.Empty : new Label(topStroke, Alignments.Default, borderFill);
-            this.rightStrokePattern = rightStroke == null ? Label.Empty : new Label(rightStroke, Alignments.Default, borderFill);
-            this.bottomStrokePattern = bottomStroke == null ? Label.Empty : new Label(bottomStroke, Alignments.Default, borderFill);
+            this.namePlate = namePlate == null ? Fill.Empty : new Fill(namePlate, borderFill);
+            this.topLeft = topLeft == null ? Fill.Empty : new Fill(topLeft, borderFill);
+            this.topRight = topRight == null ? Fill.Empty : new Fill(topRight, borderFill);
+            this.bottomLeft = bottomLeft == null ? Fill.Empty : new Fill(bottomLeft, borderFill);
+            this.bottomRight = bottomRight == null ? Fill.Empty : new Fill(bottomRight, borderFill);
+            this.leftStroke = leftStroke == null ? Fill.Empty : new Fill(leftStroke, borderFill);
+            this.topStroke = topStroke == null ? Fill.Empty : new Fill(topStroke, borderFill);
+            this.rightStroke = rightStroke == null ? Fill.Empty : new Fill(rightStroke, borderFill);
+            this.bottomStroke = bottomStroke == null ? Fill.Empty : new Fill(bottomStroke, borderFill);
 
             this.largestTopOffset = Largest(
                 this.topLeft.Region.Height,
                 this.topRight.Region.Height,
-                this.topStrokePattern.Region.Height,
+                this.topStroke.Region.Height,
                 this.namePlate.Region.Height);
             this.largestLeftOffset = Largest(
                 this.topLeft.Region.Width,
                 this.topRight.Region.Width,
-                this.leftStrokePattern.Region.Width);
+                this.leftStroke.Region.Width);
             this.largestBottomOffset = Largest(
                 this.bottomLeft.Region.Height,
                 this.bottomRight.Region.Height,
-                this.bottomStrokePattern.Region.Height);
+                this.bottomStroke.Region.Height);
             this.largestRightOffset = Largest(
                 this.topRight.Region.Width,
                 this.bottomRight.Region.Width,
-                this.rightStrokePattern.Region.Width);
+                this.rightStroke.Region.Width);
 
             this.OuterRegion.OnChanged +=
                 (obj, e) =>
@@ -104,7 +99,7 @@ namespace Game.Output.Layout
             this.namePlate.Draw(sink);
         }
 
-        public void Draw(ISink sink, Rectangle region)
+        public void Draw(ISink sink, Rectangle window)
         {
             ////throw new NotImplementedException("TODO complicated");
 
@@ -199,32 +194,32 @@ namespace Game.Output.Layout
                     (short)(this.OuterRegion.BottomRight.Y - this.bottomRight.Region.Height)),
                 out _);
 
-            this.topStroke = this.topStrokePattern.RepeatHorizontally(
-                (short)(this.OuterRegion.Width - this.topLeft.Region.Width - this.topRight.Region.Width));
+            this.topStroke.Region.Width =
+                (short)(this.OuterRegion.Width - this.topLeft.Region.Width - this.topRight.Region.Width);
             this.topStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.topLeft.Region.Width),
                     this.OuterRegion.TopLeft.Y),
                 out _);
 
-            this.leftStroke = this.leftStrokePattern.RepeatVertically(
-                (short)(this.OuterRegion.Height - this.topLeft.Region.Height - this.bottomLeft.Region.Height));
+            this.leftStroke.Region.Height =
+                (short)(this.OuterRegion.Height - this.topLeft.Region.Height - this.bottomLeft.Region.Height);
             this.leftStroke.Region.TryMoveTo(
                 new Coord(
                     this.OuterRegion.TopLeft.X,
                     (short)(this.OuterRegion.TopLeft.Y + this.topLeft.Region.Height)),
                 out _);
 
-            this.rightStroke = this.rightStrokePattern.RepeatVertically(
-                (short)(this.OuterRegion.Height - this.topRight.Region.Height - this.bottomRight.Region.Height));
+            this.rightStroke.Region.Height =
+                (short)(this.OuterRegion.Height - this.topRight.Region.Height - this.bottomRight.Region.Height);
             this.rightStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.BottomRight.X - this.rightStroke.Region.Width),
                     (short)(this.OuterRegion.TopLeft.Y + this.topRight.Region.Height)),
                 out _);
 
-            this.bottomStroke = this.bottomStrokePattern.RepeatHorizontally(
-                (short)(this.OuterRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width));
+            this.bottomStroke.Region.Width =
+                (short)(this.OuterRegion.Width - this.bottomLeft.Region.Width - this.bottomRight.Region.Width);
             this.bottomStroke.Region.TryMoveTo(
                 new Coord(
                     (short)(this.OuterRegion.TopLeft.X + this.bottomLeft.Region.Width),

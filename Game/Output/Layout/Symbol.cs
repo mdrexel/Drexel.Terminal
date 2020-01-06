@@ -41,10 +41,10 @@ namespace Game.Output.Layout
             this.DrawInternal(sink);
         }
 
-        public void Draw(ISink sink, Rectangle rectangle)
+        public void Draw(ISink sink, Rectangle window)
         {
-            this.border.Draw(sink, rectangle);
-            this.DrawInternal(sink, rectangle);
+            this.border.Draw(sink, window);
+            this.DrawInternal(sink, window);
         }
 
         public void Draw(ISink sink, IReadOnlyRegion region)
@@ -103,7 +103,7 @@ namespace Game.Output.Layout
 
         protected abstract void DrawInternal(ISink sink);
 
-        protected abstract void DrawInternal(ISink sink, Rectangle region);
+        protected abstract void DrawInternal(ISink sink, Rectangle window);
 
         protected abstract void InvertColorInternal();
     }

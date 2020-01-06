@@ -35,11 +35,11 @@ namespace Game.Output.Layout.Symbols
                 this.background = new Fill(this.InnerRegion, backgroundFill.Value);
             }
 
-            this.Recalculate();
-
             this.InnerRegion.OnChanged +=
                 (obj, e) =>
                 this.label.Region.TryTranslate(e.AfterChange.TopLeft - e.BeforeChange.TopLeft, out _);
+
+            this.Recalculate();
         }
 
         public override bool CanBeFocused => true;
@@ -93,12 +93,12 @@ namespace Game.Output.Layout.Symbols
             }
         }
 
-        public override void MouseEnteredSymbol(bool leftMouseDown, bool rightMouseDown)
+        public override void MouseEnteredSymbol(Coord enterCoord, bool leftMouseDown, bool rightMouseDown)
         {
             this.InvertEvent(leftMouseDown);
         }
 
-        public override void MouseExitedSymbol()
+        public override void MouseExitedSymbol(Coord exitCoord)
         {
             this.InvertEvent(false);
         }

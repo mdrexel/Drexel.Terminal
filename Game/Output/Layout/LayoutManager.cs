@@ -261,8 +261,9 @@ namespace Game.Output.Layout
                     {
                         if (symbol != this.lastMouseMove)
                         {
-                            this.lastMouseMove?.MouseExitedSymbol();
+                            this.lastMouseMove?.MouseExitedSymbol(oldPosition);
                             symbol.MouseEnteredSymbol(
+                                newPosition,
                                 this.leftMouseStateCallback.Invoke(),
                                 this.rightMouseStateCallback.Invoke());
 
@@ -303,8 +304,12 @@ namespace Game.Output.Layout
                 if (symbol.Border.TryGetComponentAt(
                     coord,
                     out BorderComponentType component,
-                    out _))
+                    out IReadOnlyRegion region))
                 {
+                    this.sink.WriteRegion(
+                        new CharInfo[region.Height, region.Width].Fill(new CharInfo('e')),
+                        region.TopLeft);
+
                     if (component == BorderComponentType.Center)
                     {
                         symbol.LeftMouseEvent(

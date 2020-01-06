@@ -49,6 +49,14 @@ namespace Game.Output.Layout
             this.rightStroke = rightStroke == null ? Fill.Empty : new Fill(rightStroke, borderFill);
             this.bottomStroke = bottomStroke == null ? Fill.Empty : new Fill(bottomStroke, borderFill);
 
+            this.components =
+                new IReadOnlyRegion[,]
+                {
+                    { this.topLeft.Region, this.topStroke.Region, this.topRight.Region },
+                    { this.leftStroke.Region, this.innerRegion, this.rightStroke.Region },
+                    { this.bottomLeft.Region, this.bottomStroke.Region, this.bottomRight.Region }
+                };
+
             this.largestTopOffset = Largest(
                 this.topLeft.Region.Height,
                 this.topRight.Region.Height,
@@ -166,7 +174,7 @@ namespace Game.Output.Layout
             this.innerRegion.TrySetCorners(
                this.OuterRegion.TopLeft + new Coord(this.largestLeftOffset, this.largestTopOffset),
                this.OuterRegion.BottomRight - new Coord(this.largestRightOffset, this.largestBottomOffset),
-               false, // This method only gets in conditions where a resize was allowed.
+               false, // This method is called when a resize was allowed, so any subsequent cancel is a race condition
                out _);
         }
 
@@ -228,14 +236,6 @@ namespace Game.Output.Layout
                     (short)(this.OuterRegion.TopLeft.X + this.topLeft.Region.Width + 1),
                     this.OuterRegion.TopLeft.Y),
                 out _);
-
-            this.components =
-                new IReadOnlyRegion[,]
-                {
-                    { this.topLeft.Region, this.topStroke.Region, this.topRight.Region },
-                    { this.leftStroke.Region, this.innerRegion, this.rightStroke.Region },
-                    { this.bottomLeft.Region, this.bottomStroke.Region, this.bottomRight.Region }
-                };
         }
 
         private static short Largest(params short[] values)

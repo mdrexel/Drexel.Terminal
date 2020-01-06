@@ -81,11 +81,11 @@ namespace Game.Output.Layout
         {
         }
 
-        public virtual void MouseEnteredSymbol(bool leftMouseDown, bool rightMouseDown)
+        public virtual void MouseEnteredSymbol(Coord enterCoord, bool leftMouseDown, bool rightMouseDown)
         {
         }
 
-        public virtual void MouseExitedSymbol()
+        public virtual void MouseExitedSymbol(Coord exitCoord)
         {
         }
 

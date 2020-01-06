@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Game.Output.Primitives
+﻿namespace Game.Output.Primitives
 {
     internal static class ExtensionMethods
     {
-        public static T[,] Repeat<T>(this T[,] pattern, short height, short width)
+        public static T[,] Repeat<T>(this T[,] pattern, Coord size)
         {
             if (pattern.Length == 0)
             {
@@ -14,10 +12,10 @@ namespace Game.Output.Primitives
             short originalHeight = pattern.GetHeight();
             short originalWidth = pattern.GetWidth();
 
-            T[,] result = new T[height, width];
-            for (short y = 0; y < height; y++)
+            T[,] result = new T[size.Y, size.X];
+            for (short y = 0; y < size.Y; y++)
             {
-                for (short x = 0; x < width; x++)
+                for (short x = 0; x < size.X; x++)
                 {
                     result[y, x] = pattern[y % originalHeight, x % originalWidth];
                 }

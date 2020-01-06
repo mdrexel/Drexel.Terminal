@@ -147,7 +147,7 @@ namespace Game.Output.Primitives
                         backgroundFill.HasValue
                             ? new CharDelay(new CharInfo(' ', backgroundFill.Value), 0)
                             : default)
-                    .Repeat(sizeTo.Height, sizeTo.Width);
+                    .Repeat(new Coord(sizeTo.Width, sizeTo.Height));
             }
             else
             {
@@ -156,7 +156,7 @@ namespace Game.Output.Primitives
                         backgroundFill.HasValue
                             ? new CharInfo(' ', backgroundFill.Value)
                             : default)
-                    .Repeat(sizeTo.Height, sizeTo.Width);
+                    .Repeat(new Coord(sizeTo.Width, sizeTo.Height));
             }
         }
     }

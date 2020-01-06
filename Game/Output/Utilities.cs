@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Game.Output
+﻿namespace Game.Output
 {
     public static class Utilities
     {
-        public static void Fill<T>(this T[,] array, T value)
+        public static T[,] Fill<T>(this T[,] array, T value)
         {
             for (int y = 0; y < array.GetHeight(); y++)
             {
@@ -17,6 +11,8 @@ namespace Game.Output
                     array[y, x] = value;
                 }
             }
+
+            return array;
         }
 
         public static U[,] CreateSameSizeArray<T, U>(this T[,] array, U defaultValue)

@@ -17,9 +17,21 @@ namespace Drexel.Terminal.Sink.Win32
 
         private readonly SafeFileHandle handle;
 
-        internal TerminalSink(SafeFileHandle handle)
+        internal TerminalSink()
         {
-            this.handle = handle;
+            this.handle = TerminalInstance.CreateFileW(
+                "CONOUT$",
+                0x40000000,
+                2,
+                IntPtr.Zero,
+                FileMode.Open,
+                0,
+                IntPtr.Zero);
+
+            if (this.handle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
         }
 
         public Coord CursorPosition
@@ -51,49 +63,15 @@ namespace Drexel.Terminal.Sink.Win32
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write()
         {
+            Coord currentPosition = this.CursorPosition;
             if (!SetConsoleCursorPosition(
                 this.handle,
-                new Coord((short)(Console.CursorLeft + 1), (short)Console.CursorTop)))
+                currentPosition + Coord.OneXOffset))
             {
                 SetConsoleCursorPosition(
                     this.handle,
-                    new Coord(0, (short)(Console.CursorTop + 1)));
+                    new Coord(0, (short)(currentPosition.Y + 1)));
             }
-        }
-
-        public void Write(CharInfo charInfo)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(CharInfo charInfo, Coord destination)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(CharInfo[,] buffer, Coord topLeft)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(CharInfo[,] buffer, Coord topLeft, Rectangle window)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(Line line)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(Fill fill)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Write(Polygon polygon)
-        {
-            throw new NotImplementedException();
         }
 
         [DllImport("user32.dll")]
@@ -149,5 +127,45 @@ namespace Drexel.Terminal.Sink.Win32
         private static extern bool GetConsoleScreenBufferInfo(
             SafeFileHandle hConsoleOutput,
             out ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
+
+        public void Write(CharInfo charInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(CharInfo charInfo, Coord destination)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(CharInfo[,] buffer, Coord topLeft)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(CharInfo[,] buffer, Coord topLeft, Rectangle window)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(Line line)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(Fill fill)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Write(Polygon polygon)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void Dispose()
+        {
+            this.handle.Dispose();
+        }
     }
 }

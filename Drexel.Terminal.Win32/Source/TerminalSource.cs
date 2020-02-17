@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,20 +10,39 @@ namespace Drexel.Terminal.Source.Win32
 {
     public sealed class TerminalSource : ITerminalSource
     {
-        private const uint ENABLE_QUICK_EDIT = 0x0040;
+        private const int STD_INPUT_HANDLE = -10;
         private const int INFINITE = -1;
 
         private readonly Box<bool> eventThreadRunning;
         private readonly Thread eventThread;
-        private readonly SafeFileHandle handle;
+        private readonly SafeFileHandle inputHandle;
+        private readonly SafeFileHandle inputStreamHandle;
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
 
         private bool mouseEnabled;
         private ConsoleMouseEventInfo lastMouseEvent;
 
-        internal TerminalSource(SafeFileHandle handle)
+        internal TerminalSource()
         {
-            this.handle = handle;
+            this.inputHandle = TerminalInstance.CreateFileW(
+                "CONIN$",
+                0x80000000,
+                1,
+                IntPtr.Zero,
+                FileMode.Open,
+                0,
+                IntPtr.Zero);
+
+            if (this.inputHandle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+
+            this.inputStreamHandle = TerminalInstance.GetStdHandle(STD_INPUT_HANDLE);
+            if (this.inputStreamHandle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
 
             lastMouseEvent = default;
 
@@ -112,9 +132,10 @@ namespace Drexel.Terminal.Source.Win32
                 this.mouseEnabled = value;
 
                 // Toggle quick-edit mode (the ability to highlight regions of the console with the mouse)
-                GetConsoleMode(this.handle, out uint consoleMode);
-                consoleMode &= ~ENABLE_QUICK_EDIT;
-                SetConsoleMode(this.handle, consoleMode);
+                GetConsoleMode(this.inputStreamHandle.DangerousGetHandle(), out uint consoleMode);
+                SetConsoleMode(
+                    this.inputStreamHandle.DangerousGetHandle(),
+                    (uint)(((ConsoleInputModes)consoleMode) ^ ConsoleInputModes.ENABLE_QUICK_EDIT_MODE));
             }
         }
 
@@ -194,10 +215,14 @@ namespace Drexel.Terminal.Source.Win32
         private static extern bool CancelIoEx(SafeFileHandle handle, IntPtr lpOverlapped);
 
         [DllImport("kernel32.dll")]
-        private static extern bool GetConsoleMode(SafeFileHandle hConsoleHandle, out uint lpMode);
+        private static extern bool GetConsoleMode(
+            IntPtr hConsoleHandle,
+            out uint lpMode);
 
         [DllImport("kernel32.dll")]
-        private static extern bool SetConsoleMode(SafeFileHandle hConsoleHandle, uint dwMode);
+        private static extern bool SetConsoleMode(
+            IntPtr hConsoleHandle,
+            uint dwMode);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool ReadConsoleInput(
@@ -222,22 +247,26 @@ namespace Drexel.Terminal.Source.Win32
                 this.consoleControlHandler,
                 false);
 
-            CancelIoEx(this.handle, IntPtr.Zero);
+            CancelIoEx(this.inputHandle, IntPtr.Zero);
+
+            this.inputHandle.Dispose();
+            this.inputStreamHandle.Dispose();
+
             this.eventThread.Join();
         }
 
         private ConsoleInputEventInfo[] ListenForEvents()
         {
             // Wait until the console notifies us that at least one event has been received
-            WaitForSingleObject(this.handle.DangerousGetHandle(), INFINITE);
+            WaitForSingleObject(this.inputHandle.DangerousGetHandle(), INFINITE);
 
             // Find out the number of console events waiting for us
-            GetNumberOfConsoleInputEvents(this.handle, out int unreadEventCount);
+            GetNumberOfConsoleInputEvents(this.inputHandle, out int unreadEventCount);
 
             // Allocate an array to read events into, and then read them
             ConsoleInputEventInfo[] values = new ConsoleInputEventInfo[unreadEventCount];
             ReadConsoleInput(
-                this.handle,
+                this.inputHandle,
                 values,
                 unreadEventCount,
                 out _);

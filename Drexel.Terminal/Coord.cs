@@ -21,6 +21,16 @@ namespace Drexel.Terminal
         public static readonly Coord OneOffset = new Coord(1, 1);
 
         /// <summary>
+        /// A coordinate representing a one offset in the X dimension (1, 0).
+        /// </summary>
+        public static readonly Coord OneXOffset = new Coord(1, 0);
+
+        /// <summary>
+        /// A coordinate representing a one offset in the Y dimension (0, 1).
+        /// </summary>
+        public static readonly Coord OneYOffset = new Coord(0, 1);
+
+        /// <summary>
         /// The horizontal position of this coordinate.
         /// </summary>
         public readonly short X;

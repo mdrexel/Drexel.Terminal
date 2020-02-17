@@ -21,7 +21,8 @@ namespace Drexel.Game
                 terminal.Source.OnKeyPressed +=
                     (obj, e) =>
                     {
-                        terminal.Sink.Write(new CharInfo(e.KeyChar, TerminalColors.Default));
+                        terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
+                        ////terminal.Sink.Write(new CharInfo(e.KeyChar, TerminalColors.Default));
                     };
 
                 await terminal.Source.DelayUntilExitAccepted(default);

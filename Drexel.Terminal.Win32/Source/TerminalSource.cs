@@ -187,7 +187,7 @@ namespace Drexel.Terminal.Source.Win32
 
         [DllImport("kernel32.dll")]
         private static extern uint WaitForSingleObject(
-            SafeFileHandle hHandle, // This is really IntPtr, but since the code only needs to work with the Console...
+            IntPtr hHandle,
             int dwMilliseconds);
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -229,7 +229,14 @@ namespace Drexel.Terminal.Source.Win32
         private ConsoleInputEventInfo[] ListenForEvents()
         {
             // Wait until the console notifies us that at least one event has been received
-            WaitForSingleObject(this.handle, INFINITE);
+            try
+            {
+                WaitForSingleObject(this.handle.DangerousGetHandle(), INFINITE);
+            }
+            finally
+            {
+                this.handle.DangerousRelease();
+            }
 
             // Find out the number of console events waiting for us
             GetNumberOfConsoleInputEvents(this.handle, out int unreadEventCount);

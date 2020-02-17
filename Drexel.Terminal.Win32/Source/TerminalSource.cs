@@ -229,14 +229,7 @@ namespace Drexel.Terminal.Source.Win32
         private ConsoleInputEventInfo[] ListenForEvents()
         {
             // Wait until the console notifies us that at least one event has been received
-            try
-            {
-                WaitForSingleObject(this.handle.DangerousGetHandle(), INFINITE);
-            }
-            finally
-            {
-                this.handle.DangerousRelease();
-            }
+            WaitForSingleObject(this.handle.DangerousGetHandle(), INFINITE);
 
             // Find out the number of console events waiting for us
             GetNumberOfConsoleInputEvents(this.handle, out int unreadEventCount);

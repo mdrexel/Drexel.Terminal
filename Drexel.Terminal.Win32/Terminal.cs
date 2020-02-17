@@ -15,13 +15,14 @@ namespace Drexel.Terminal.Win32
     {
         private static readonly SemaphoreSlim ActiveSemaphore = new SemaphoreSlim(1, 1);
 
-        private readonly SafeFileHandle handle;
+        private readonly SafeFileHandle outputHandle;
+        private readonly SafeFileHandle inputHandle;
         private readonly Action releaseCallback;
         private bool isDisposed;
 
         private TerminalInstance(Action releaseCallback)
         {
-            this.handle = CreateFile(
+            this.outputHandle = CreateFileW(
                 "CONOUT$",
                 0x40000000,
                 2,
@@ -30,15 +31,29 @@ namespace Drexel.Terminal.Win32
                 0,
                 IntPtr.Zero);
 
-            if (this.handle.IsInvalid)
+            if (this.outputHandle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+
+            this.inputHandle = CreateFileW(
+                "CONIN$",
+                0x80000000,
+                1,
+                IntPtr.Zero,
+                FileMode.Open,
+                0,
+                IntPtr.Zero);
+
+            if (this.inputHandle.IsInvalid)
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
             }
 
             this.releaseCallback = releaseCallback;
 
-            this.Source = new TerminalSource(this.handle);
-            this.Sink = new TerminalSink(this.handle);
+            this.Source = new TerminalSource(this.inputHandle);
+            this.Sink = new TerminalSink(this.outputHandle);
 
             this.isDisposed = false;
         }
@@ -102,7 +117,7 @@ namespace Drexel.Terminal.Win32
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern SafeFileHandle CreateFile(
+        private static extern SafeFileHandle CreateFileW(
             string fileName,
             [MarshalAs(UnmanagedType.U4)] uint fileAccess,
             [MarshalAs(UnmanagedType.U4)] uint fileShare,
@@ -118,9 +133,16 @@ namespace Drexel.Terminal.Win32
                 this.isDisposed = true;
 
                 this.Source.Dispose();
-                this.handle.Dispose();
+                this.inputHandle.Dispose();
+                this.outputHandle.Dispose();
                 this.releaseCallback.Invoke();
             }
+        }
+
+        public void SetCodePage(ConsoleCodePage codePage)
+        {
+            this.Source.CodePage = codePage;
+            this.Sink.CodePage = codePage;
         }
     }
 }

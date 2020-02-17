@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Drexel.Terminal.Sink;
 using Drexel.Terminal.Win32;
 
 namespace Drexel.Game
@@ -11,13 +12,20 @@ namespace Drexel.Game
     {
         public static async Task<int> Main(string[] args)
         {
-            TerminalInstance terminal = await TerminalInstance.GetSingletonAsync(default);
+            using (TerminalInstance terminal = await TerminalInstance.GetSingletonAsync(default))
+            {
+                terminal.Title = "Foo";
+                terminal.Height = 12;
+                terminal.Width = 40;
 
-            terminal.Title = "Foo";
-            terminal.Height = 12;
-            terminal.Width = 40;
+                terminal.Source.OnKeyPressed +=
+                    (obj, e) =>
+                    {
+                        terminal.Sink.Write(new CharInfo(e.KeyChar, TerminalColors.Default));
+                    };
 
-            await terminal.Source.DelayUntilExitAccepted(default);
+                await terminal.Source.DelayUntilExitAccepted(default);
+            }
 
             return 0;
         }

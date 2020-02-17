@@ -22,6 +22,26 @@ namespace Drexel.Terminal.Sink.Win32
             this.handle = handle;
         }
 
+        public Coord CursorPosition
+        {
+            get
+            {
+                if (!GetConsoleScreenBufferInfo(this.handle, out ConsoleScreenBufferInfo info))
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
+
+                return info.CursorPosition;
+            }
+            set
+            {
+                if (!SetConsoleCursorPosition(this.handle, value))
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
+            }
+        }
+
         public ConsoleCodePage CodePage
         {
             get => (ConsoleCodePage)GetConsoleOutputCP();
@@ -125,9 +145,9 @@ namespace Drexel.Terminal.Sink.Win32
             SafeFileHandle hConsoleOutput,
             Coord dwCursorPosition);
 
-        private void SetCursorPosition(Coord destination)
-        {
-            SetConsoleCursorPosition(this.handle, destination);
-        }
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetConsoleScreenBufferInfo(
+            SafeFileHandle hConsoleOutput,
+            out ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
     }
 }

@@ -2,41 +2,28 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace Drexel.Terminal.Source.Win32
 {
-    public sealed class TerminalSource : ITerminalSource, IDisposable
+    public sealed class TerminalSource : ITerminalSource
     {
-        private const int STD_INPUT_HANDLE = -10;
         private const uint ENABLE_QUICK_EDIT = 0x0040;
         private const int INFINITE = -1;
 
-        private static Lazy<TerminalSource> backingInstance = new Lazy<TerminalSource>(
-            () => new TerminalSource(),
-            LazyThreadSafetyMode.ExecutionAndPublication);
-
-        private readonly bool gui;
         private readonly Box<bool> eventThreadRunning;
         private readonly Thread eventThread;
-        private readonly IntPtr handle;
+        private readonly SafeFileHandle handle;
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
 
+        private bool mouseEnabled;
         private ConsoleMouseEventInfo lastMouseEvent;
 
-        private TerminalSource(bool gui = true)
+        internal TerminalSource(SafeFileHandle handle)
         {
+            this.handle = handle;
+
             lastMouseEvent = default;
-            this.gui = gui;
-
-            this.handle = GetStdHandle(STD_INPUT_HANDLE);
-
-            if (gui)
-            {
-                // Disable quick-edit mode (the ability to highlight regions of the console with the mouse)
-                GetConsoleMode(this.handle, out uint consoleMode);
-                consoleMode &= ~ENABLE_QUICK_EDIT;
-                SetConsoleMode(this.handle, consoleMode);
-            }
 
             this.consoleControlHandler =
                 (consoleControlEventType) =>
@@ -111,7 +98,22 @@ namespace Drexel.Terminal.Source.Win32
             this.eventThread.Start();
         }
 
-        public static TerminalSource Singleton => backingInstance.Value;
+        public bool MouseEnabled
+        {
+            get => this.mouseEnabled;
+            set
+            {
+                if (this.mouseEnabled == value)
+                {
+                    return;
+                }
+
+                // Toggle quick-edit mode (the ability to highlight regions of the console with the mouse)
+                GetConsoleMode(this.handle, out uint consoleMode);
+                consoleMode &= ~ENABLE_QUICK_EDIT;
+                SetConsoleMode(this.handle, consoleMode);
+            }
+        }
 
         public bool LeftMouseDown { get; private set; }
 
@@ -132,27 +134,6 @@ namespace Drexel.Terminal.Source.Win32
         public event EventHandler<ExitAcceptedEventArgs>? OnExitAccepted;
 
         private delegate bool ConsoleCtrlHandlerDelegate(ConsoleControlEventType CtrlType);
-
-        public void Dispose()
-        {
-            backingInstance = new Lazy<TerminalSource>(
-                () =>
-                {
-                    throw new InvalidOperationException("Cannot access terminal after singleton has been disposed.");
-                });
-
-            lock (this.eventThreadRunning)
-            {
-                this.eventThreadRunning.Value = false;
-            }
-
-            SetConsoleCtrlHandler(
-                this.consoleControlHandler,
-                false);
-
-            CancelIoEx(this.handle, IntPtr.Zero);
-            this.eventThread.Join();
-        }
 
         public async Task DelayUntilExitAccepted(CancellationToken cancellationToken)
         {
@@ -191,32 +172,44 @@ namespace Drexel.Terminal.Source.Win32
 
         [DllImport("kernel32.dll")]
         private static extern uint WaitForSingleObject(
-            IntPtr hHandle,
+            SafeFileHandle hHandle, // This is really IntPtr, but since the code only needs to work with the Console...
             int dwMilliseconds);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GetStdHandle(int nStdHandle);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CancelIoEx(IntPtr handle, IntPtr lpOverlapped);
+        private static extern bool CancelIoEx(SafeFileHandle handle, IntPtr lpOverlapped);
 
         [DllImport("kernel32.dll")]
-        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+        private static extern bool GetConsoleMode(SafeFileHandle hConsoleHandle, out uint lpMode);
 
         [DllImport("kernel32.dll")]
-        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+        private static extern bool SetConsoleMode(SafeFileHandle hConsoleHandle, uint dwMode);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool ReadConsoleInput(
-            IntPtr hConsoleInput,
+            SafeFileHandle hConsoleInput,
             [Out][MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] ConsoleInputEventInfo[] lpBuffer,
             int nLength,
             out int lpNumberOfEventsRead);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetNumberOfConsoleInputEvents(
-            IntPtr hConsoleInput,
+            SafeFileHandle hConsoleInput,
             out int lpcNumberOfEvents);
+
+        internal void Dispose()
+        {
+            lock (this.eventThreadRunning)
+            {
+                this.eventThreadRunning.Value = false;
+            }
+
+            SetConsoleCtrlHandler(
+                this.consoleControlHandler,
+                false);
+
+            CancelIoEx(this.handle, IntPtr.Zero);
+            this.eventThread.Join();
+        }
 
         private ConsoleInputEventInfo[] ListenForEvents()
         {
@@ -252,7 +245,7 @@ namespace Drexel.Terminal.Source.Win32
                 case ConsoleInputEventType.MenuEvent:
                     break;
                 case ConsoleInputEventType.MouseEvent:
-                    if (this.gui)
+                    if (this.mouseEnabled)
                     {
                         this.ProcessMouseEvent(@event.MouseEvent);
                     }

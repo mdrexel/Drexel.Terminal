@@ -1,26 +1,47 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Drexel.Terminal.Sink;
 using Drexel.Terminal.Sink.Win32;
 using Drexel.Terminal.Source;
 using Drexel.Terminal.Source.Win32;
+using Microsoft.Win32.SafeHandles;
 
 namespace Drexel.Terminal.Win32
 {
     public sealed class Terminal : ITerminal, IDisposable
     {
-        private static Lazy<Terminal> backingInstance =
-            new Lazy<Terminal>(
-                () => new Terminal(TerminalSource.Singleton, TerminalSink.Singleton),
-                LazyThreadSafetyMode.ExecutionAndPublication);
+        private static readonly SemaphoreSlim ActiveSemaphore = new SemaphoreSlim(1, 1);
 
-        private Terminal(TerminalSource source, TerminalSink sink)
+        private readonly SafeFileHandle handle;
+        private readonly Action releaseCallback;
+        private bool isDisposed;
+
+        private Terminal(Action releaseCallback)
         {
-            this.Source = source;
-            this.Sink = sink;
-        }
+            this.handle = CreateFile(
+                "CONOUT$",
+                0x40000000,
+                2,
+                IntPtr.Zero,
+                FileMode.Open,
+                0,
+                IntPtr.Zero);
 
-        public static Terminal Singleton => backingInstance.Value;
+            if (this.handle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+
+            this.releaseCallback = releaseCallback;
+
+            this.Source = new TerminalSource(this.handle);
+            this.Sink = new TerminalSink(this.handle);
+
+            this.isDisposed = false;
+        }
 
         public TerminalSource Source { get; }
 
@@ -66,16 +87,32 @@ namespace Drexel.Terminal.Win32
 
         ushort IReadOnlyTerminal.Width => this.Width;
 
+        public static async Task<Terminal> GetSingletonAsync(CancellationToken cancellationToken)
+        {
+            await Terminal.ActiveSemaphore.WaitAsync(cancellationToken);
+            return new Terminal(() => Terminal.ActiveSemaphore.Release());
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern SafeFileHandle CreateFile(
+            string fileName,
+            [MarshalAs(UnmanagedType.U4)] uint fileAccess,
+            [MarshalAs(UnmanagedType.U4)] uint fileShare,
+            IntPtr securityAttributes,
+            [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+            [MarshalAs(UnmanagedType.U4)] int flags,
+            IntPtr template);
+
         public void Dispose()
         {
-            this.Source.Dispose();
-            this.Sink.Dispose();
+            if (!this.isDisposed)
+            {
+                this.isDisposed = true;
 
-            backingInstance = new Lazy<Terminal>(
-                () =>
-                {
-                    throw new InvalidOperationException("Cannot access terminal after singleton has been disposed.");
-                });
+                this.Source.Dispose();
+                this.handle.Dispose();
+                this.releaseCallback.Invoke();
+            }
         }
     }
 }

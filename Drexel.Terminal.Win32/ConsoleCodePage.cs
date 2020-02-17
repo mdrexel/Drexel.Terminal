@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Drexel.Terminal.Source.Win32
+namespace Drexel.Terminal.Win32
 {
     /// <summary>
-    /// Represents a Windows code page. A code page is used by Windows to map bytes to displayable characters. These
-    /// have mostly been scraped from Microsoft documentation and then adjusted for consistency.
+    /// Represents a Windows code page. A code page is used by Windows to map bytes to displayable characters.
     /// </summary>
     // TODO: Need utility methods to convert these enum values to the .NET Name or official CP name for interop
     public enum ConsoleCodePage : uint

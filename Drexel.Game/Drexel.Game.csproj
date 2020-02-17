@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Drexel.Game.Program</StartupObject>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Drexel.Terminal.Text\Drexel.Terminal.Text.csproj" />
+    <ProjectReference Include="..\Drexel.Terminal.Win32\Drexel.Terminal.Win32.csproj" />
+    <ProjectReference Include="..\Drexel.Terminal\Drexel.Terminal.csproj" />
+  </ItemGroup>
+
+</Project>

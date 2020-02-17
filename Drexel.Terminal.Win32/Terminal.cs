@@ -11,7 +11,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Drexel.Terminal.Win32
 {
-    public sealed class Terminal : ITerminal, IDisposable
+    public sealed class TerminalInstance : ITerminal, IDisposable
     {
         private static readonly SemaphoreSlim ActiveSemaphore = new SemaphoreSlim(1, 1);
 
@@ -19,7 +19,7 @@ namespace Drexel.Terminal.Win32
         private readonly Action releaseCallback;
         private bool isDisposed;
 
-        private Terminal(Action releaseCallback)
+        private TerminalInstance(Action releaseCallback)
         {
             this.handle = CreateFile(
                 "CONOUT$",
@@ -62,7 +62,11 @@ namespace Drexel.Terminal.Win32
                     return (ushort)Console.BufferHeight;
                 }
             }
-            set => Console.BufferHeight = value;
+            set
+            {
+                Console.WindowHeight = value;
+                Console.BufferHeight = value;
+            }
         }
 
         public ushort Width
@@ -74,7 +78,11 @@ namespace Drexel.Terminal.Win32
                     return (ushort)Console.BufferWidth;
                 }
             }
-            set => Console.BufferWidth = value;
+            set
+            {
+                Console.WindowWidth = value;
+                Console.BufferWidth = value;
+            }
         }
 
         ITerminalSource IReadOnlyTerminal.Source => this.Source;
@@ -87,10 +95,10 @@ namespace Drexel.Terminal.Win32
 
         ushort IReadOnlyTerminal.Width => this.Width;
 
-        public static async Task<Terminal> GetSingletonAsync(CancellationToken cancellationToken)
+        public static async Task<TerminalInstance> GetSingletonAsync(CancellationToken cancellationToken)
         {
-            await Terminal.ActiveSemaphore.WaitAsync(cancellationToken);
-            return new Terminal(() => Terminal.ActiveSemaphore.Release());
+            await TerminalInstance.ActiveSemaphore.WaitAsync(cancellationToken);
+            return new TerminalInstance(() => TerminalInstance.ActiveSemaphore.Release());
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]

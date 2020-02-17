@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Drexel.Terminal.Win32;
 using Microsoft.Win32.SafeHandles;
 
 namespace Drexel.Terminal.Source.Win32
@@ -108,11 +109,19 @@ namespace Drexel.Terminal.Source.Win32
                     return;
                 }
 
+                this.mouseEnabled = value;
+
                 // Toggle quick-edit mode (the ability to highlight regions of the console with the mouse)
                 GetConsoleMode(this.handle, out uint consoleMode);
                 consoleMode &= ~ENABLE_QUICK_EDIT;
                 SetConsoleMode(this.handle, consoleMode);
             }
+        }
+
+        public ConsoleCodePage CodePage
+        {
+            get => (ConsoleCodePage)GetConsoleCP();
+            set => SetConsoleCP((uint)value);
         }
 
         public bool LeftMouseDown { get; private set; }
@@ -164,6 +173,12 @@ namespace Drexel.Terminal.Source.Win32
                 // An exception being thrown is expected.
             }
         }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern uint GetConsoleCP();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCP(uint wCodePageID);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleCtrlHandler(

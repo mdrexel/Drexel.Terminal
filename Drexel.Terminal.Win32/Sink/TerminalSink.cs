@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Drexel.Terminal.Primitives;
+using Drexel.Terminal.Win32;
 using Microsoft.Win32.SafeHandles;
 
 namespace Drexel.Terminal.Sink.Win32
@@ -16,12 +17,15 @@ namespace Drexel.Terminal.Sink.Win32
 
         private readonly SafeFileHandle handle;
 
-        internal TerminalSink(
-            SafeFileHandle handle,
-            uint codePage = 65001)
+        internal TerminalSink(SafeFileHandle handle)
         {
             this.handle = handle;
-            SetConsoleOutputCP(codePage);
+        }
+
+        public ConsoleCodePage CodePage
+        {
+            get => (ConsoleCodePage)GetConsoleOutputCP();
+            set => SetConsoleOutputCP((uint)value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,6 +81,9 @@ namespace Drexel.Terminal.Sink.Win32
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern uint GetConsoleOutputCP();
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleOutputCP(uint wCodePageID);

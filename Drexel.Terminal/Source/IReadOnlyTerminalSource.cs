@@ -45,6 +45,11 @@ namespace Drexel.Terminal.Source
         event EventHandler<TerminalKeyInfo>? OnKeyPressed;
 
         /// <summary>
+        /// Occurs when a terminal key is released.
+        /// </summary>
+        event EventHandler<TerminalKeyInfo>? OnKeyReleased;
+
+        /// <summary>
         /// Occurs when an exit request has been accepted by this terminal.
         /// </summary>
         event EventHandler<ExitAcceptedEventArgs>? OnExitAccepted;

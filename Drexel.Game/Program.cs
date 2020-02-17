@@ -12,7 +12,7 @@ namespace Drexel.Game
     {
         public static async Task<int> Main(string[] args)
         {
-            using (TerminalInstance terminal = await TerminalInstance.GetSingletonAsync(default))
+            using (TerminalInstance terminal = await TerminalInstance.GetInstanceAsync(default))
             {
                 terminal.Title = "Foo";
                 terminal.Height = 12;

@@ -94,9 +94,8 @@ namespace Drexel.Terminal.Source.Win32
                         {
                             try
                             {
-                                while (true)
+                                while (this.ListenForEvents(out ConsoleInputEventInfo[] events))
                                 {
-                                    ConsoleInputEventInfo[] events = this.ListenForEvents();
                                     foreach (ConsoleInputEventInfo @event in events)
                                     {
                                         try
@@ -161,6 +160,8 @@ namespace Drexel.Terminal.Source.Win32
 
         public event EventHandler<TerminalKeyInfo>? OnKeyPressed;
 
+        public event EventHandler<TerminalKeyInfo>? OnKeyReleased;
+
         public event EventHandler<ExitAcceptedEventArgs>? OnExitAccepted;
 
         private delegate bool ConsoleCtrlHandlerDelegate(ConsoleControlEventType CtrlType);
@@ -211,6 +212,11 @@ namespace Drexel.Terminal.Source.Win32
             IntPtr hHandle,
             int dwMilliseconds);
 
+        [DllImport("kernel32.dll")]
+        private static extern uint WaitForSingleObject(
+            SafeFileHandle hHandle,
+            int dwMilliseconds);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CancelIoEx(SafeFileHandle handle, IntPtr lpOverlapped);
 
@@ -255,23 +261,42 @@ namespace Drexel.Terminal.Source.Win32
             this.eventThread.Join();
         }
 
-        private ConsoleInputEventInfo[] ListenForEvents()
+        private bool ListenForEvents(out ConsoleInputEventInfo[] events)
         {
-            // Wait until the console notifies us that at least one event has been received
-            WaitForSingleObject(this.inputHandle.DangerousGetHandle(), INFINITE);
+            bool @continue = true;
+            int unreadEventCount;
+            try
+            {
+                // Wait until the console notifies us that at least one event has been received
+                WaitForSingleObject(this.inputHandle, INFINITE);
 
-            // Find out the number of console events waiting for us
-            GetNumberOfConsoleInputEvents(this.inputHandle, out int unreadEventCount);
+                // Find out the number of console events waiting for us
+                GetNumberOfConsoleInputEvents(this.inputHandle, out unreadEventCount);
+            }
+            catch (ObjectDisposedException)
+            {
+                // This gets thrown if we were listening for events when the terminal was disposed. This is fine,
+                // because the event listener thread will exit after processing the last batch of events.
+                @continue = false;
+                unreadEventCount = 0;
+            }
 
-            // Allocate an array to read events into, and then read them
-            ConsoleInputEventInfo[] values = new ConsoleInputEventInfo[unreadEventCount];
-            ReadConsoleInput(
-                this.inputHandle,
-                values,
-                unreadEventCount,
-                out _);
+            if (unreadEventCount == 0)
+            {
+                events = Array.Empty<ConsoleInputEventInfo>();
+            }
+            else
+            {
+                // Allocate an array to read events into, and then read them
+                events = new ConsoleInputEventInfo[unreadEventCount];
+                ReadConsoleInput(
+                    this.inputHandle,
+                    events,
+                    unreadEventCount,
+                    out _);
+            }
 
-            return values;
+            return @continue;
         }
 
         private void DispatchEventProcessing(ConsoleInputEventInfo @event)
@@ -305,18 +330,21 @@ namespace Drexel.Terminal.Source.Win32
 
         private void ProcessKeyEvent(ConsoleKeyEventInfo keyEvent)
         {
+            TerminalKeyInfo keyInfo = new TerminalKeyInfo(
+                keyEvent.UnicodeChar,
+                (TerminalKey)keyEvent.VirtualKeyCode,
+                keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.ShiftPressed),
+                keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftAltPressed)
+                    || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightAltPressed),
+                keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftCtrlPressed)
+                    || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed));
             if (keyEvent.KeyDown)
             {
-                this.OnKeyPressed?.Invoke(
-                    this,
-                    new TerminalKeyInfo(
-                        keyEvent.UnicodeChar,
-                        (TerminalKey)keyEvent.VirtualKeyCode,
-                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.ShiftPressed),
-                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftAltPressed)
-                            || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightAltPressed),
-                        keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftCtrlPressed)
-                            || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed)));
+                this.OnKeyPressed?.Invoke(this, keyInfo);
+            }
+            else
+            {
+                this.OnKeyReleased?.Invoke(this, keyInfo);
             }
         }
 

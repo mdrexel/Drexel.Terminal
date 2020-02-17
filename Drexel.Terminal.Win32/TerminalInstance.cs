@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,9 +15,11 @@ namespace Drexel.Terminal.Win32
 {
     public sealed class TerminalInstance : ITerminal, IDisposable
     {
-        private static readonly SemaphoreSlim ActiveSemaphore = new SemaphoreSlim(1, 1);
+        private static readonly ConcurrentDictionary<int, SemaphoreSlim> ActiveSemaphores =
+            new ConcurrentDictionary<int, SemaphoreSlim>(1, 1);
 
         private readonly Action releaseCallback;
+        private readonly object isDisposedLock;
         private bool isDisposed;
 
         private TerminalInstance(Action releaseCallback)
@@ -25,6 +29,7 @@ namespace Drexel.Terminal.Win32
             this.Source = new TerminalSource();
             this.Sink = new TerminalSink();
 
+            this.isDisposedLock = new object();
             this.isDisposed = false;
         }
 
@@ -80,10 +85,14 @@ namespace Drexel.Terminal.Win32
 
         ushort IReadOnlyTerminal.Width => this.Width;
 
-        public static async Task<TerminalInstance> GetSingletonAsync(CancellationToken cancellationToken)
+        public static async Task<TerminalInstance> GetInstanceAsync(CancellationToken cancellationToken)
         {
-            await TerminalInstance.ActiveSemaphore.WaitAsync(cancellationToken);
-            return new TerminalInstance(() => TerminalInstance.ActiveSemaphore.Release());
+            SemaphoreSlim activeSemaphore = ActiveSemaphores.GetOrAdd(
+                Process.GetCurrentProcess().Id,
+                pid => new SemaphoreSlim(1, 1));
+            
+            await activeSemaphore.WaitAsync(cancellationToken);
+            return new TerminalInstance(() => activeSemaphore.Release());
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
@@ -101,10 +110,18 @@ namespace Drexel.Terminal.Win32
 
         public void Dispose()
         {
-            if (!this.isDisposed)
+            bool shouldDispose = false;
+            lock (this.isDisposedLock)
             {
-                this.isDisposed = true;
+                if (!this.isDisposed)
+                {
+                    this.isDisposed = true;
+                    shouldDispose = true;
+                }
+            }
 
+            if (shouldDispose)
+            {
                 this.Source.Dispose();
                 this.Sink.Dispose();
                 this.releaseCallback.Invoke();

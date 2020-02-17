@@ -5,7 +5,7 @@ using System.Linq;
 namespace Drexel.Terminal.Source
 {
     /// <summary>
-    /// Represents a terminal key that was pressed, including modifier keys.
+    /// Represents a terminal key that was pressed or released, including modifier keys.
     /// </summary>
     public readonly struct TerminalKeyInfo : IEquatable<TerminalKeyInfo>
     {

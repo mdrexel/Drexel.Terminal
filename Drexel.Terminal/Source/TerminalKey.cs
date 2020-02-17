@@ -26,9 +26,29 @@
         Enter = 13,
 
         /// <summary>
+        /// The "shift" key.
+        /// </summary>
+        Shift = 16,
+
+        /// <summary>
+        /// The "control" key.
+        /// </summary>
+        Ctrl = 17,
+
+        /// <summary>
+        /// The "alt" key.
+        /// </summary>
+        Alt = 18,
+
+        /// <summary>
         /// The "pause" key.
         /// </summary>
         Pause = 19,
+
+        /// <summary>
+        /// The "caps lock" key.
+        /// </summary>
+        CapsLock = 20,
 
         /// <summary>
         /// The "escape" key.

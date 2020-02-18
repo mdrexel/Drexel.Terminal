@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Drexel.Terminal.Sink.Win32
 {
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
-    public readonly struct ConsoleCharUnion : IEquatable<ConsoleCharUnion>
+    internal readonly struct ConsoleCharUnion : IEquatable<ConsoleCharUnion>
     {
         [FieldOffset(0)] public readonly char UnicodeChar;
         [FieldOffset(0)] public readonly byte AsciiChar;

@@ -224,7 +224,7 @@ namespace Drexel.Terminal.Sink.Win32
 
             return this.WriteAndAdvance(
                 output,
-                destination,
+                new Coord(0, destination.Y),
                 new Rectangle(Coord.Zero, output.ToCoord()),
                 advance,
                 new Coord((short)remainder, (short)(destination.Y + quotient)));

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Drexel.Terminal.Win32
+namespace Drexel.Terminal.Sink.Win32
 {
     [Flags]
     [DebuggerDisplay("{this.ToString(),nq}")]

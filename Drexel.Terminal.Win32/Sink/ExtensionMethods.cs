@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Drexel.Terminal.Sink;
 
-namespace Drexel.Terminal.Win32
+namespace Drexel.Terminal.Sink.Win32
 {
     internal static class ExtensionMethods
     {

@@ -147,70 +147,12 @@ namespace Drexel.Terminal.Sink.Win32
             topLeft,
             new Rectangle(Coord.Zero, buffer.ToCoord()));
 
-        public bool Write(CharInfo[,] buffer, Coord topLeft, Rectangle window)
-        {
-            (Coord windowTopLeft, Coord windowBottomRight) = window.Decompose();
-
-            bool containsDelay = false;
-            short height = buffer.GetHeight();
-            short width = buffer.GetWidth();
-            ConsoleCharInfo[,] output = new ConsoleCharInfo[height, width];
-            for (short yPos = 0; yPos < height; yPos++)
-            {
-                for (short xPos = 0; xPos < width; xPos++)
-                {
-                    CharInfo input = buffer[yPos, xPos];
-                    containsDelay |= input.Delay > 0;
-                    output[yPos, xPos] = new ConsoleCharInfo(input.Character, input.Colors.ToCharAttributes());
-                }
-            }
-
-            if (containsDelay)
-            {
-                short maxX = Math.Min(windowBottomRight.X, width);
-                short maxY = Math.Min(windowBottomRight.Y, height);
-
-                bool success = true;
-                for (short y = windowTopLeft.Y; y < maxY; y++)
-                {
-                    for (short x = windowTopLeft.X; x < maxX; x++)
-                    {
-                        ConsoleCharInfo @char = output[y, x];
-                        success &= this.Write(
-                            @char.Char,
-                            @char.Attributes,
-                            new Coord((short)(topLeft.X + x), (short)(topLeft.Y + y)));
-                        Thread.Sleep(buffer[y, x].Delay);
-                    }
-                }
-
-                return success;
-            }
-            else
-            {
-                Coord adjustedTopLeft = topLeft + windowTopLeft;
-                Coord adjustedBottomRight = topLeft + windowBottomRight;
-                Rectangle rect = new Rectangle(
-                    adjustedTopLeft.X,
-                    adjustedTopLeft.Y,
-                    adjustedBottomRight.X,
-                    adjustedBottomRight.Y);
-
-                unsafe
-                {
-                    fixed (ConsoleCharInfo* pinned = output)
-                    {
-                        IntPtr pointer = (IntPtr)pinned;
-                        return WriteConsoleOutputW(
-                            this.outputHandle,
-                            pointer,
-                            buffer.ToCoord(),
-                            windowTopLeft,
-                            in rect);
-                    }
-                }
-            }
-        }
+        public bool Write(CharInfo[,] buffer, Coord topLeft, Rectangle window) => this.WriteAndAdvance(
+            buffer,
+            topLeft,
+            window,
+            false,
+            Coord.Zero);
 
         public bool Write(Line line)
         {
@@ -258,7 +200,7 @@ namespace Drexel.Terminal.Sink.Win32
         {
             ConsoleScreenBufferInfo bufferInfo = this.ScreenBufferInfo;
             int quotient = Utilities.DivRem(
-                bufferInfo.CursorPosition.X + buffer.Length,
+                destination.X + buffer.Length,
                 bufferInfo.BufferWindow.HorizontalSpan,
                 out int remainder);
 
@@ -269,7 +211,7 @@ namespace Drexel.Terminal.Sink.Win32
             int height = output.GetHeight();
             int width = output.GetWidth();
             int index = 0;
-            int xPos = bufferInfo.CursorPosition.X;
+            int xPos = destination.X;
             for (int yPos = 0; yPos < height; yPos++)
             {
                 for (; xPos < width && index < buffer.Length; xPos++, index++)
@@ -280,14 +222,94 @@ namespace Drexel.Terminal.Sink.Win32
                 xPos = 0;
             }
 
-            if (advance)
+            return this.WriteAndAdvance(
+                output,
+                destination,
+                new Rectangle(Coord.Zero, output.ToCoord()),
+                advance,
+                new Coord((short)remainder, (short)(destination.Y + quotient)));
+        }
+
+        public bool WriteAndAdvance(
+            CharInfo[,] buffer,
+            Coord topLeft,
+            Rectangle window,
+            bool advance,
+            Coord advanceToUndelayed)
+        {
+            (Coord windowTopLeft, Coord windowBottomRight) = window.Decompose();
+
+            bool containsDelay = false;
+            short height = buffer.GetHeight();
+            short width = buffer.GetWidth();
+            ConsoleCharInfo[,] output = new ConsoleCharInfo[height, width];
+            for (short yPos = 0; yPos < height; yPos++)
             {
-                Coord newPosition = new Coord((short)remainder, (short)(bufferInfo.CursorPosition.Y + quotient));
-                return this.Write(output, destination) && SetConsoleCursorPosition(this.outputHandle, newPosition);
+                for (short xPos = 0; xPos < width; xPos++)
+                {
+                    CharInfo input = buffer[yPos, xPos];
+                    containsDelay |= input.Delay > 0;
+                    output[yPos, xPos] = new ConsoleCharInfo(input.Character, input.Colors.ToCharAttributes());
+                }
+            }
+
+            if (containsDelay)
+            {
+                short maxX = Math.Min(windowBottomRight.X, width);
+                short maxY = Math.Min(windowBottomRight.Y, height);
+
+                bool success = true;
+                for (short y = windowTopLeft.Y; y < maxY; y++)
+                {
+                    for (short x = windowTopLeft.X; x < maxX; x++)
+                    {
+                        ConsoleCharInfo @char = output[y, x];
+                        success &= this.Write(
+                            @char.Char,
+                            @char.Attributes,
+                            new Coord((short)(topLeft.X + x), (short)(topLeft.Y + y)));
+                        if (advance && @char != default)
+                        {
+                            success &= this.AdvanceCursor();
+                        }
+
+                        Thread.Sleep(buffer[y, x].Delay);
+                    }
+                }
+
+                return success;
             }
             else
             {
-                return this.Write(output, destination);
+                Coord adjustedTopLeft = topLeft + windowTopLeft;
+                Coord adjustedBottomRight = topLeft + windowBottomRight;
+                Rectangle rect = new Rectangle(
+                    adjustedTopLeft.X,
+                    adjustedTopLeft.Y,
+                    adjustedBottomRight.X,
+                    adjustedBottomRight.Y);
+
+                bool success = true;
+                unsafe
+                {
+                    fixed (ConsoleCharInfo* pinned = output)
+                    {
+                        IntPtr pointer = (IntPtr)pinned;
+                        success &= WriteConsoleOutputW(
+                            this.outputHandle,
+                            pointer,
+                            buffer.ToCoord(),
+                            windowTopLeft,
+                            in rect);
+                    }
+                }
+
+                if (advance)
+                {
+                    success &= SetConsoleCursorPosition(this.outputHandle, advanceToUndelayed);
+                }
+
+                return success;
             }
         }
 

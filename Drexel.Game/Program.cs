@@ -21,20 +21,65 @@ namespace Drexel.Game
                 terminal.Width = 40;
 
                 terminal.SetCodePage(ConsoleCodePage.Utf8);
-                terminal.Sink.CursorPosition = new Coord(19, 3);
-                ////terminal.Sink.Write("漢字");
-                terminal.Sink.Write(
-                    new Catena(
-                        "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.",
-                        TerminalColors.Default,
-                        75));
-                ////terminal.Sink.Write(new string('a', 41));
+
+                terminal.Source.MouseEnabled = true;
+
+                terminal.Source.OnMouseMove +=
+                    (obj, e) =>
+                    {
+                        if (terminal.Source.LeftMouseDown && terminal.Source.RightMouseDown)
+                        {
+                            terminal.Sink.Write(
+                                new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Magenta)),
+                                e.CurrentPosition);
+                        }
+                        else if (terminal.Source.LeftMouseDown)
+                        {
+                            terminal.Sink.Write(
+                                new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Red)),
+                                e.CurrentPosition);
+                        }
+                        else if (terminal.Source.RightMouseDown)
+                        {
+                            terminal.Sink.Write(
+                                new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Blue)),
+                                e.CurrentPosition);
+                        }
+                    };
 
                 terminal.Source.OnKeyPressed +=
                     (obj, e) =>
                     {
+                        if (char.IsLetterOrDigit(e.KeyChar) || char.IsPunctuation(e.KeyChar))
+                        {
+                            terminal.Sink.Write(new CharInfo(e.KeyChar, TerminalColors.Default));
+                        }
+                        else if (e.Key == TerminalKey.Spacebar)
+                        {
+                            terminal.Sink.Write();
+                        }
+                        else if (e.Key == TerminalKey.Enter)
+                        {
+                            terminal.Sink.WriteLine();
+                        }
+                        else if (e.Key == TerminalKey.UpArrow)
+                        {
+                            terminal.Sink.CursorPosition -= Coord.OneYOffset;
+                        }
+                        else if (e.Key == TerminalKey.DownArrow)
+                        {
+                            terminal.Sink.CursorPosition += Coord.OneYOffset;
+                        }
+                        else if (e.Key == TerminalKey.LeftArrow)
+                        {
+                            terminal.Sink.CursorPosition -= Coord.OneXOffset;
+                        }
+                        else if (e.Key == TerminalKey.RightArrow)
+                        {
+                            terminal.Sink.CursorPosition += Coord.OneXOffset;
+                        }
+
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
-                        terminal.Sink.Write(new CharInfo(e.KeyChar, TerminalColors.Default));
                     };
 
                 await terminal.Source.DelayUntilExitAccepted(default);

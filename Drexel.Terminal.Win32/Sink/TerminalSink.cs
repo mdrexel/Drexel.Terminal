@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Drexel.Terminal.Primitives;
 using Drexel.Terminal.Win32;
 using Microsoft.Win32.SafeHandles;
@@ -10,16 +11,19 @@ namespace Drexel.Terminal.Sink.Win32
 {
     public sealed class TerminalSink : ITerminalSink
     {
+        private const int STD_OUTPUT_HANDLE = -11;
+
         private const int MF_BYCOMMAND = 0x00000000;
         private const int SC_CLOSE = 0xF060;
         private const int SC_MAXIMIZE = 0xF030;
         private const int SC_SIZE = 0xF000;
 
-        private readonly SafeFileHandle handle;
+        private readonly SafeFileHandle outputHandle;
+        private readonly SafeFileHandle outputStreamHandle;
 
         internal TerminalSink()
         {
-            this.handle = TerminalInstance.CreateFileW(
+            this.outputHandle = TerminalInstance.CreateFileW(
                 "CONOUT$",
                 0x40000000,
                 2,
@@ -28,7 +32,13 @@ namespace Drexel.Terminal.Sink.Win32
                 0,
                 IntPtr.Zero);
 
-            if (this.handle.IsInvalid)
+            if (this.outputHandle.IsInvalid)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+
+            this.outputStreamHandle = TerminalInstance.GetStdHandle(STD_OUTPUT_HANDLE);
+            if (this.outputStreamHandle.IsInvalid)
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
             }
@@ -36,18 +46,10 @@ namespace Drexel.Terminal.Sink.Win32
 
         public Coord CursorPosition
         {
-            get
-            {
-                if (!GetConsoleScreenBufferInfo(this.handle, out ConsoleScreenBufferInfo info))
-                {
-                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-                }
-
-                return info.CursorPosition;
-            }
+            get =>this.ScreenBufferInfo.CursorPosition;
             set
             {
-                if (!SetConsoleCursorPosition(this.handle, value))
+                if (!SetConsoleCursorPosition(this.outputStreamHandle, value))
                 {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                 }
@@ -60,17 +62,16 @@ namespace Drexel.Terminal.Sink.Win32
             set => SetConsoleOutputCP((uint)value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write()
+        private ConsoleScreenBufferInfo ScreenBufferInfo
         {
-            Coord currentPosition = this.CursorPosition;
-            if (!SetConsoleCursorPosition(
-                this.handle,
-                currentPosition + Coord.OneXOffset))
+            get
             {
-                SetConsoleCursorPosition(
-                    this.handle,
-                    new Coord(0, (short)(currentPosition.Y + 1)));
+                if (!GetConsoleScreenBufferInfo(this.outputStreamHandle, out ConsoleScreenBufferInfo info))
+                {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
+
+                return info;
             }
         }
 
@@ -103,7 +104,7 @@ namespace Drexel.Terminal.Sink.Win32
             IntPtr lpReserved);
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool WriteConsoleOutputCharacter(
+        private static extern bool WriteConsoleOutputCharacterW(
             SafeFileHandle hConsoleOutput,
             IntPtr lpCharacter,
             int nLength,
@@ -128,24 +129,87 @@ namespace Drexel.Terminal.Sink.Win32
             SafeFileHandle hConsoleOutput,
             out ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
 
-        public void Write(CharInfo charInfo)
-        {
-            throw new NotImplementedException();
-        }
+        public bool Write() => this.AdvanceCursor();
 
-        public bool Write(CharInfo charInfo, Coord destination)
-        {
-            throw new NotImplementedException();
-        }
+        public bool Write(CharInfo charInfo) => this.Write(charInfo, this.CursorPosition) && this.AdvanceCursor();
 
-        public bool Write(CharInfo[,] buffer, Coord topLeft)
-        {
-            throw new NotImplementedException();
-        }
+        public bool Write(CharInfo[] buffer) => this.WriteAndAdvance(buffer, this.CursorPosition, true);
+
+        public bool Write(CharInfo charInfo, Coord destination) => this.Write(
+            charInfo.Character,
+            charInfo.Colors.ToCharAttributes(),
+            destination);
+
+        public bool Write(CharInfo[] buffer, Coord destination) => this.WriteAndAdvance(buffer, destination, false);
+
+        public bool Write(CharInfo[,] buffer, Coord topLeft) => this.Write(
+            buffer,
+            topLeft,
+            new Rectangle(Coord.Zero, buffer.ToCoord()));
 
         public bool Write(CharInfo[,] buffer, Coord topLeft, Rectangle window)
         {
-            throw new NotImplementedException();
+            (Coord windowTopLeft, Coord windowBottomRight) = window.Decompose();
+
+            bool containsDelay = false;
+            short height = buffer.GetHeight();
+            short width = buffer.GetWidth();
+            ConsoleCharInfo[,] output = new ConsoleCharInfo[height, width];
+            for (short yPos = 0; yPos < height; yPos++)
+            {
+                for (short xPos = 0; xPos < width; xPos++)
+                {
+                    CharInfo input = buffer[yPos, xPos];
+                    containsDelay |= input.Delay > 0;
+                    output[yPos, xPos] = new ConsoleCharInfo(input.Character, input.Colors.ToCharAttributes());
+                }
+            }
+
+            if (containsDelay)
+            {
+                short maxX = Math.Min(windowBottomRight.X, width);
+                short maxY = Math.Min(windowBottomRight.Y, height);
+
+                bool success = true;
+                for (short y = windowTopLeft.Y; y < maxY; y++)
+                {
+                    for (short x = windowTopLeft.X; x < maxX; x++)
+                    {
+                        ConsoleCharInfo @char = output[y, x];
+                        success &= this.Write(
+                            @char.Char,
+                            @char.Attributes,
+                            new Coord((short)(topLeft.X + x), (short)(topLeft.Y + y)));
+                        Thread.Sleep(buffer[y, x].Delay);
+                    }
+                }
+
+                return success;
+            }
+            else
+            {
+                Coord adjustedTopLeft = topLeft + windowTopLeft;
+                Coord adjustedBottomRight = topLeft + windowBottomRight;
+                Rectangle rect = new Rectangle(
+                    adjustedTopLeft.X,
+                    adjustedTopLeft.Y,
+                    adjustedBottomRight.X,
+                    adjustedBottomRight.Y);
+
+                unsafe
+                {
+                    fixed (ConsoleCharInfo* pinned = output)
+                    {
+                        IntPtr pointer = (IntPtr)pinned;
+                        return WriteConsoleOutputW(
+                            this.outputHandle,
+                            pointer,
+                            buffer.ToCoord(),
+                            windowTopLeft,
+                            in rect);
+                    }
+                }
+            }
         }
 
         public bool Write(Line line)
@@ -165,7 +229,95 @@ namespace Drexel.Terminal.Sink.Win32
 
         internal void Dispose()
         {
-            this.handle.Dispose();
+            this.outputHandle.Dispose();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool Write(ConsoleCharUnion union, ConsoleCharAttributes attributes, Coord destination)
+        {
+            unsafe
+            {
+                return
+                    WriteConsoleOutputCharacterW(
+                        this.outputHandle,
+                        new IntPtr(&union),
+                        1,
+                        destination,
+                        out _)
+                    && WriteConsoleOutputAttribute(
+                        this.outputHandle,
+                        new IntPtr(&attributes),
+                        1,
+                        destination,
+                        out _);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool WriteAndAdvance(CharInfo[] buffer, Coord destination, bool advance)
+        {
+            ConsoleScreenBufferInfo bufferInfo = this.ScreenBufferInfo;
+            int quotient = Utilities.DivRem(
+                bufferInfo.CursorPosition.X + buffer.Length,
+                bufferInfo.BufferWindow.HorizontalSpan,
+                out int remainder);
+
+            CharInfo[,] output = new CharInfo[
+                remainder != 0 ? quotient + 1 : quotient,
+                bufferInfo.BufferWindow.HorizontalSpan];
+
+            int height = output.GetHeight();
+            int width = output.GetWidth();
+            int index = 0;
+            int xPos = bufferInfo.CursorPosition.X;
+            for (int yPos = 0; yPos < height; yPos++)
+            {
+                for (; xPos < width && index < buffer.Length; xPos++, index++)
+                {
+                    output[yPos, xPos] = buffer[index];
+                }
+
+                xPos = 0;
+            }
+
+            if (advance)
+            {
+                Coord newPosition = new Coord((short)remainder, (short)(bufferInfo.CursorPosition.Y + quotient));
+                return this.Write(output, destination) && SetConsoleCursorPosition(this.outputHandle, newPosition);
+            }
+            else
+            {
+                return this.Write(output, destination);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool AdvanceCursor()
+        {
+            Coord currentPosition = this.CursorPosition;
+            if (!SetConsoleCursorPosition(
+                this.outputHandle,
+                currentPosition + Coord.OneXOffset))
+            {
+                return SetConsoleCursorPosition(
+                    this.outputHandle,
+                    new Coord(0, (short)(currentPosition.Y + 1)));
+            }
+
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool AdvanceCursor(int delta)
+        {
+            ConsoleScreenBufferInfo bufferInfo = this.ScreenBufferInfo;
+            int quotient = Utilities.DivRem(
+                bufferInfo.CursorPosition.X + delta,
+                bufferInfo.BufferWindow.HorizontalSpan,
+                out int remainder);
+
+            Coord newPosition = new Coord((short)remainder, (short)(bufferInfo.CursorPosition.Y + quotient));
+            return SetConsoleCursorPosition(this.outputHandle, newPosition);
         }
     }
 }

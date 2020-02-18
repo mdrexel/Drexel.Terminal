@@ -9,13 +9,13 @@ namespace Drexel.Terminal.Text
         public readonly ushort StartIndexInclusive;
         public readonly ushort EndIndexExclusive;
         public readonly TerminalColors Colors;
-        public readonly int Delay;
+        public readonly ushort Delay;
 
         public Range(
             ushort startIndexInclusive,
             ushort endIndexExclusive,
             TerminalColors attributes,
-            int delay = 0)
+            ushort delay = 0)
         {
             this.StartIndexInclusive = startIndexInclusive;
             this.EndIndexExclusive = endIndexExclusive;

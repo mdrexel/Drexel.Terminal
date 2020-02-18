@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Drexel.Terminal.Win32
 {
-    public static class Utilities
+    internal static class Utilities
     {
         public static T[,] Fill<T>(this T[,] array, T value)
         {
@@ -27,6 +28,15 @@ namespace Drexel.Terminal.Win32
             result.Fill(defaultValue);
 
             return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int DivRem(int numerator, int divisor, out int remainder)
+        {
+            int quotient = numerator / divisor;
+            remainder = numerator - (quotient * divisor);
+
+            return quotient;
         }
     }
 }

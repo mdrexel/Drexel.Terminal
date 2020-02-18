@@ -90,6 +90,16 @@ namespace Drexel.Terminal
         public ushort Width => (ushort)(this.Right - this.Left);
 
         /// <summary>
+        /// Gets the horizontal span of the rectangle. This is the mathematical width plus one.
+        /// </summary>
+        public ushort HorizontalSpan => (ushort)(this.Width + 1);
+
+        /// <summary>
+        /// Gets the vertical span of the rectangle. This is the mathematical height plus one.
+        /// </summary>
+        public ushort VerticalSpan => (ushort)(this.Height + 1);
+
+        /// <summary>
         /// Returns <see langword="true"/> if <paramref name="left"/> and <paramref name="right"/> have the same
         /// bounds; otherwise, returns <see langword="false"/>.
         /// </summary>

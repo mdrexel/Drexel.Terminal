@@ -15,7 +15,7 @@ namespace Drexel.Terminal.Text
         public Catena(
             string value,
             TerminalColors defaultColors,
-            int defaultDelay = 0)
+            ushort defaultDelay = 0)
         {
             List<Range> ranges = new List<Range>();
             if (value.Length == 0)
@@ -166,7 +166,7 @@ namespace Drexel.Terminal.Text
             ushort startIndexInclusive,
             ushort endIndexExclusive,
             TerminalColors defaultColors,
-            int defaultDelay)
+            ushort defaultDelay)
         {
             token = token.Remove(token.Length - 1).Substring(SpanStart.Length);
 
@@ -199,7 +199,7 @@ namespace Drexel.Terminal.Text
 
             TerminalColor fg = defaultColors.Foreground;
             TerminalColor bg = defaultColors.Background;
-            int dtime = defaultDelay;
+            ushort dtime = defaultDelay;
             foreach (KeyValuePair<string, List<string>> kvp in result)
             {
                 switch (kvp.Key)
@@ -221,7 +221,7 @@ namespace Drexel.Terminal.Text
 
                         break;
                     case "dtime":
-                        dtime = int.Parse(kvp.Value[0]);
+                        dtime = ushort.Parse(kvp.Value[0]);
 
                         break;
                     default:

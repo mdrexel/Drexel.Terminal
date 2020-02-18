@@ -1,14 +1,14 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Game.Output
+namespace Drexel.Terminal.Win32
 {
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
-    public readonly struct CharUnion
+    public readonly struct ConsoleCharUnion
     {
         [FieldOffset(0)] public readonly char UnicodeChar;
         [FieldOffset(0)] public readonly byte AsciiChar;
 
-        public CharUnion(char unicodeChar)
+        public ConsoleCharUnion(char unicodeChar)
         {
             this.UnicodeChar = unicodeChar;
 
@@ -16,15 +16,15 @@ namespace Game.Output
             this.AsciiChar = (byte)unicodeChar;
         }
 
-        public CharUnion(byte asciiChar)
+        public ConsoleCharUnion(byte asciiChar)
         {
             this.AsciiChar = asciiChar;
             this.UnicodeChar = default;
         }
 
-        public static implicit operator CharUnion(char @char)
+        public static implicit operator ConsoleCharUnion(char @char)
         {
-            return new CharUnion(@char);
+            return new ConsoleCharUnion(@char);
         }
 
         public override string ToString()

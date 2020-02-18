@@ -23,6 +23,16 @@ namespace Drexel.Terminal.Sink
         bool Write();
 
         /// <summary>
+        /// Advances the cursor to the start of the next line.
+        /// </summary>
+        /// <returns>
+        /// <see langword="true"/> if the write operation completed; otherwise, <see langword="false"/>. The most
+        /// common reason for an incomplete write operation is if the cursor would be located outside the writeable
+        /// area of this sink.
+        /// </returns>
+        bool WriteLine();
+
+        /// <summary>
         /// Writes the specified <see cref="CharInfo"/> <paramref name="charInfo"/> and advances the cursor.
         /// </summary>
         /// <param name="charInfo">
@@ -47,6 +57,20 @@ namespace Drexel.Terminal.Sink
         /// the writeable area of this sink.
         /// </returns>
         bool Write(CharInfo[] buffer);
+
+        /// <summary>
+        /// Writes the specified <see cref="T:CharInfo[]"/> <paramref name="buffer"/> and advances the cursor to the
+        /// start of the next line.
+        /// </summary>
+        /// <param name="buffer">
+        /// The <see cref="T:CharInfo[]"/> to write.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the write operation completed; otherwise, <see langword="false"/>. The most
+        /// common reason for an incomplete write operation is if the specified <paramref name="buffer"/> extends past
+        /// the writeable area of this sink.
+        /// </returns>
+        bool WriteLine(CharInfo[] buffer);
 
         /// <summary>
         /// Writes the specified <see cref="CharInfo"/> <paramref name="charInfo"/> at the coordinate specified by the

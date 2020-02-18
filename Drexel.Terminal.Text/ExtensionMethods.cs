@@ -27,12 +27,35 @@ namespace Drexel.Terminal.Text
         }
 
         /// <summary>
+        /// Writes the specified <see cref="Catena"/> <paramref name="catena"/> and advances the cursor to the start of
+        /// the next line.
+        /// </summary>
+        /// <param name="sink">
+        /// The <see cref="ITerminalSink"/> to write to.
+        /// </param>
+        /// <param name="catena">
+        /// The <see cref="Catena"/> to write.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the write operation completed; otherwise, <see langword="false"/>. The most
+        /// common reason for an incomplete write operation is if the specified <paramref name="catena"/> extends past
+        /// the writeable area of this sink.
+        /// </returns>
+        public static bool WriteLine(this ITerminalSink sink, Catena catena)
+        {
+            return sink.WriteLine(catena.ToArray());
+        }
+
+        /// <summary>
         /// Writes the specified <see cref="Catena"/> <paramref name="catena"/> starting at the coordinate specified by
         /// the <see cref="Coord"/> <paramref name="destination"/>, if possible. If the write operation completed,
         /// returns <see langword="true"/>; otherwise, returns <see langword="false"/>. The most common reason for an
         /// incomplete write operation is if the specified <paramref name="catena"/> extends past the writeable area of
         /// this sink.
         /// </summary>
+        /// <param name="sink">
+        /// The <see cref="ITerminalSink"/> to write to.
+        /// </param>
         /// <param name="catena">
         /// The <see cref="Catena"/> to write.
         /// </param>

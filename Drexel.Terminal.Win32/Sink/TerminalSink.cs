@@ -131,9 +131,19 @@ namespace Drexel.Terminal.Sink.Win32
 
         public bool Write() => this.AdvanceCursor();
 
+        public bool WriteLine() => SetConsoleCursorPosition(
+            this.outputHandle,
+            new Coord(0, (short)(this.CursorPosition.Y + 1)));
+
         public bool Write(CharInfo charInfo) => this.Write(charInfo, this.CursorPosition) && this.AdvanceCursor();
 
         public bool Write(CharInfo[] buffer) => this.WriteAndAdvance(buffer, this.CursorPosition, true);
+
+        public bool WriteLine(CharInfo[] buffer)
+        {
+            bool result = this.Write(buffer);
+            return result && this.WriteLine();
+        }
 
         public bool Write(CharInfo charInfo, Coord destination) => this.Write(
             charInfo.Character,

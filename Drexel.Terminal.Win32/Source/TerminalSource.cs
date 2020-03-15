@@ -19,6 +19,12 @@ namespace Drexel.Terminal.Source.Win32
         private readonly SafeFileHandle inputStreamHandle;
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
 
+        private readonly Observable<ExitRequestedEventArgs> onExitRequested;
+        private readonly Observable<TerminalKeyInfo> onKeyPressed;
+        private readonly Observable<TerminalKeyInfo> onKeyReleased;
+        private readonly Observable<ExitAcceptedEventArgs> onExitAccepted;
+        private readonly Mouse mouse;
+
         private bool mouseEnabled;
         private ConsoleMouseEventInfo lastMouseEvent;
 
@@ -46,17 +52,25 @@ namespace Drexel.Terminal.Source.Win32
 
             lastMouseEvent = default;
 
+            this.onExitRequested = new Observable<ExitRequestedEventArgs>();
+            this.onExitAccepted = new Observable<ExitAcceptedEventArgs>();
+            this.onKeyPressed = new Observable<TerminalKeyInfo>();
+            this.onKeyReleased = new Observable<TerminalKeyInfo>();
+
+            this.mouse = new Mouse();
+
             this.consoleControlHandler =
                 (consoleControlEventType) =>
                 {
                     if (consoleControlEventType == ConsoleControlEventType.CtrlC
-                        || consoleControlEventType == ConsoleControlEventType.CtrlBreak)
+                        || consoleControlEventType == ConsoleControlEventType.CtrlBreak
+                        || consoleControlEventType == ConsoleControlEventType.CtrlClose)
                     {
                         ExitRequestedEventArgs args = new ExitRequestedEventArgs();
-                        this.OnExitRequested?.Invoke(this, args);
+                        this.onExitRequested.Next(args);
                         if (args.Allow)
                         {
-                            this.OnExitAccepted?.Invoke(this, new ExitAcceptedEventArgs());
+                            this.onExitAccepted.Next(new ExitAcceptedEventArgs());
                             return false;
                         }
                         else
@@ -74,9 +88,6 @@ namespace Drexel.Terminal.Source.Win32
                 this.consoleControlHandler,
                 true);
 
-            this.OnLeftMouse += (obj, e) => this.LeftMouseDown = e.ButtonDown;
-            this.OnRightMouse += (obj, e) => this.RightMouseDown = e.ButtonDown;
-
             this.eventThreadRunning = new Box<bool>(true);
             this.eventThread =
                 new Thread(
@@ -92,26 +103,12 @@ namespace Drexel.Terminal.Source.Win32
 
                         while (GetRunningState())
                         {
-                            try
+                            while (this.ListenForEvents(out ConsoleInputEventInfo[] events))
                             {
-                                while (this.ListenForEvents(out ConsoleInputEventInfo[] events))
+                                foreach (ConsoleInputEventInfo @event in events)
                                 {
-                                    foreach (ConsoleInputEventInfo @event in events)
-                                    {
-                                        try
-                                        {
-                                            this.DispatchEventProcessing(@event);
-                                        }
-                                        catch
-                                        {
-                                            // Processing an event shouldn't emit an exception, but just in case...
-                                        }
-                                    }
+                                    this.DispatchEventProcessing(@event);
                                 }
-                            }
-                            catch
-                            {
-                                // This shouldn't ever happen, but just in case, re-listen for events
                             }
                         }
                     });
@@ -144,25 +141,15 @@ namespace Drexel.Terminal.Source.Win32
             set => SetConsoleCP((uint)value);
         }
 
-        public bool LeftMouseDown { get; private set; }
+        public IObservable<ExitRequestedEventArgs> OnExitRequested => this.onExitRequested;
 
-        public bool RightMouseDown { get; private set; }
+        public IObservable<TerminalKeyInfo> OnKeyPressed => this.onKeyPressed;
 
-        public event EventHandler<ExitRequestedEventArgs>? OnExitRequested;
+        public IObservable<TerminalKeyInfo> OnKeyReleased => this.onKeyReleased;
 
-        public event EventHandler<MouseClickEventArgs>? OnLeftMouse;
+        public IObservable<ExitAcceptedEventArgs> OnExitAccepted => this.onExitAccepted;
 
-        public event EventHandler<MouseClickEventArgs>? OnRightMouse;
-
-        public event EventHandler<MouseMoveEventArgs>? OnMouseMove;
-
-        public event EventHandler<MouseWheelEventArgs>? OnMouseWheel;
-
-        public event EventHandler<TerminalKeyInfo>? OnKeyPressed;
-
-        public event EventHandler<TerminalKeyInfo>? OnKeyReleased;
-
-        public event EventHandler<ExitAcceptedEventArgs>? OnExitAccepted;
+        public IMouse Mouse => this.mouse;
 
         private delegate bool ConsoleCtrlHandlerDelegate(ConsoleControlEventType CtrlType);
 
@@ -178,11 +165,11 @@ namespace Drexel.Terminal.Source.Win32
                 else
                 {
                     cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    this.OnExitAccepted +=
-                        (obj, e) =>
-                        {
-                            cts.Cancel();
-                        };
+                    this.OnExitAccepted.Subscribe(
+                        new Observer<ExitAcceptedEventArgs>(
+                            x => cts.Cancel(),
+                            x => cts.Cancel(),
+                            () => cts.Cancel()));
                 }
             }
 
@@ -194,6 +181,11 @@ namespace Drexel.Terminal.Source.Win32
             {
                 // An exception being thrown is expected.
             }
+        }
+
+        public Task<bool> RequestExitAsync()
+        {
+            throw new NotImplementedException();
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -340,11 +332,11 @@ namespace Drexel.Terminal.Source.Win32
                     || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed));
             if (keyEvent.KeyDown)
             {
-                this.OnKeyPressed?.Invoke(this, keyInfo);
+                this.onKeyPressed.Next(keyInfo);
             }
             else
             {
-                this.OnKeyReleased?.Invoke(this, keyInfo);
+                this.onKeyReleased.Next(keyInfo);
             }
         }
 
@@ -356,24 +348,46 @@ namespace Drexel.Terminal.Source.Win32
                     new MouseMoveEventArgs(
                         this.lastMouseEvent.MousePosition,
                         mouseEvent.MousePosition);
-                this.OnMouseMove?.Invoke(this, args);
+                this.mouse.OnMouseMove.Next(args);
             }
 
             ConsoleMouseButtonState delta = mouseEvent.ButtonState ^ lastMouseEvent.ButtonState;
 
             if (delta.HasFlag(ConsoleMouseButtonState.FromLeft1stButtonPressed))
             {
-                this.OnLeftMouse?.Invoke(
-                    this,
+                this.mouse.LeftButton.OnButton.Next(
                     new MouseClickEventArgs(
                         mouseEvent.MousePosition,
                         mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.FromLeft1stButtonPressed)));
             }
 
+            if (delta.HasFlag(ConsoleMouseButtonState.FromLeft2ndMouseButtonPressed))
+            {
+                this.mouse.MiddleButton.OnButton.Next(
+                    new MouseClickEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.FromLeft2ndMouseButtonPressed)));
+            }
+
+            if (delta.HasFlag(ConsoleMouseButtonState.FromLeft3rdMouseButtonPressed))
+            {
+                this.mouse.Button4.OnButton.Next(
+                    new MouseClickEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.FromLeft3rdMouseButtonPressed)));
+            }
+
+            if (delta.HasFlag(ConsoleMouseButtonState.FromLeft4thMouseButtonPressed))
+            {
+                this.mouse.Button5.OnButton.Next(
+                    new MouseClickEventArgs(
+                        mouseEvent.MousePosition,
+                        mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.FromLeft4thMouseButtonPressed)));
+            }
+
             if (delta.HasFlag(ConsoleMouseButtonState.RightMostButtonPressed))
             {
-                this.OnRightMouse?.Invoke(
-                    this,
+                this.mouse.RightButton.OnButton.Next(
                     new MouseClickEventArgs(
                         mouseEvent.MousePosition,
                         mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.RightMostButtonPressed)));
@@ -381,8 +395,7 @@ namespace Drexel.Terminal.Source.Win32
 
             if (mouseEvent.EventFlags.HasFlag(ConsoleMouseEventType.MouseWheeled))
             {
-                this.OnMouseWheel?.Invoke(
-                    this,
+                this.mouse.OnMouseWheel.Next(
                     new MouseWheelEventArgs(
                         mouseEvent.MousePosition,
                         mouseEvent.ButtonState.HasFlag(ConsoleMouseButtonState.ScrollDown)

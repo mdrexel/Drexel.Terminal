@@ -12,17 +12,22 @@ namespace Drexel.Terminal.Source
         /// <summary>
         /// Gets an observable that occurs when a terminal key is pressed.
         /// </summary>
-        IObservable<TerminalKeyInfo>? OnKeyPressed { get; }
+        IObservable<TerminalKeyInfo> OnKeyPressed { get; }
 
         /// <summary>
         /// Gets an observable that occurs when a terminal key is released.
         /// </summary>
-        IObservable<TerminalKeyInfo>? OnKeyReleased { get; }
+        IObservable<TerminalKeyInfo> OnKeyReleased { get; }
 
         /// <summary>
         /// Gets an observable that occurs when an exit request has been accepted by this terminal.
         /// </summary>
-        IObservable<ExitAcceptedEventArgs>? OnExitAccepted { get; }
+        IObservable<ExitAcceptedEventArgs> OnExitAccepted { get; }
+
+        /// <summary>
+        /// Gets the mouse attached to this terminal source.
+        /// </summary>
+        IMouse Mouse { get; }
 
         /// <summary>
         /// Returns a task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/>

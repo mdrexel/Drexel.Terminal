@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Drexel.Terminal;
 using Drexel.Terminal.Sink;
+using Drexel.Terminal.Source;
 using Drexel.Terminal.Text;
 using Drexel.Terminal.Win32;
 
@@ -24,31 +25,33 @@ namespace Drexel.Game
 
                 terminal.Source.MouseEnabled = true;
 
-                terminal.Source.OnMouseMove +=
-                    (obj, e) =>
+                terminal.Source.Mouse.OnMouseMove.Subscribe(
+                    new Observer<MouseMoveEventArgs>(
+                    e =>
                     {
-                        if (terminal.Source.LeftMouseDown && terminal.Source.RightMouseDown)
+                        if (terminal.Source.Mouse.LeftButton.Down && terminal.Source.Mouse.RightButton.Down)
                         {
                             terminal.Sink.Write(
                                 new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Magenta)),
                                 e.CurrentPosition);
                         }
-                        else if (terminal.Source.LeftMouseDown)
+                        else if (terminal.Source.Mouse.LeftButton.Down)
                         {
                             terminal.Sink.Write(
                                 new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Red)),
                                 e.CurrentPosition);
                         }
-                        else if (terminal.Source.RightMouseDown)
+                        else if (terminal.Source.Mouse.RightButton.Down)
                         {
                             terminal.Sink.Write(
                                 new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Blue)),
                                 e.CurrentPosition);
                         }
-                    };
+                    }));
 
-                terminal.Source.OnKeyPressed +=
-                    (obj, e) =>
+                terminal.Source.OnKeyPressed.Subscribe(
+                    new Observer<TerminalKeyInfo>(
+                    e =>
                     {
                         if (char.IsLetterOrDigit(e.KeyChar) || char.IsPunctuation(e.KeyChar))
                         {
@@ -80,7 +83,7 @@ namespace Drexel.Game
                         }
 
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
-                    };
+                    }));
 
                 await terminal.Source.DelayUntilExitAccepted(default);
             }

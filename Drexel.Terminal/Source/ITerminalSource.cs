@@ -12,7 +12,7 @@ namespace Drexel.Terminal.Source
         /// Gets an observable that occurs when an exit has been requested by this terminal. The meaning of "exit" is
         /// left to the client.
         /// </summary>
-        IObservable<ExitRequestedEventArgs>? OnExitRequested { get; }
+        IObservable<ExitRequestedEventArgs> OnExitRequested { get; }
 
         /// <summary>
         /// Requests that an exit take place. The meaning of "exit" is left to the client. The returned task completes

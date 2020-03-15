@@ -15,6 +15,6 @@ namespace Drexel.Terminal.Source
         /// <summary>
         /// Gets an observable that occurs when the button is raised or lowered.
         /// </summary>
-        IObservable<MouseClickEventArgs>? OnButton { get; }
+        IObservable<MouseClickEventArgs> OnButton { get; }
     }
 }

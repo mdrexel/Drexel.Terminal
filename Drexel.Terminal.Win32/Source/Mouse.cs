@@ -34,9 +34,9 @@ namespace Drexel.Terminal.Source.Win32
 
         public MouseButton Button5 { get; }
 
-        IObservable<MouseMoveEventArgs> IMouse.OnMouseMove => this.OnMouseMove;
+        IObservable<MouseMoveEventArgs> IMouse.OnMove => this.OnMouseMove;
 
-        IObservable<MouseWheelEventArgs> IMouse.OnMouseWheel => this.OnMouseWheel;
+        IObservable<MouseWheelEventArgs> IMouse.OnScrollWheel => this.OnMouseWheel;
 
         IMouseButton IMouse.LeftButton => this.LeftButton;
 

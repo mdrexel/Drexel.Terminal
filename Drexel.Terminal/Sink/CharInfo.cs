@@ -1,8 +1,11 @@
-﻿namespace Drexel.Terminal.Sink
+﻿using System.Diagnostics;
+
+namespace Drexel.Terminal.Sink
 {
     /// <summary>
     /// Represents a character and its associated information.
     /// </summary>
+    [DebuggerDisplay("{Character,nq}")]
     public readonly struct CharInfo
     {
         /// <summary>

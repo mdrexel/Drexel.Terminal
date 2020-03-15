@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="4.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Drexel.Terminal.Text\Drexel.Terminal.Text.csproj" />
     <ProjectReference Include="..\Drexel.Terminal.Win32\Drexel.Terminal.Win32.csproj" />
     <ProjectReference Include="..\Drexel.Terminal\Drexel.Terminal.csproj" />

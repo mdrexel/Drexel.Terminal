@@ -8,6 +8,8 @@ using Drexel.Terminal.Sink;
 using Drexel.Terminal.Source;
 using Drexel.Terminal.Text;
 using Drexel.Terminal.Win32;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Drexel.Game
 {
@@ -25,8 +27,16 @@ namespace Drexel.Game
 
                 terminal.Source.MouseEnabled = true;
 
-                terminal.Source.Mouse.OnMouseMove.Subscribe(
-                    new Observer<MouseMoveEventArgs>(
+                terminal.Sink.Write("Foo", Coord.Zero);
+                terminal.Sink.Write(new string('a', 168), new Coord(12, 0));
+
+                terminal.Source.Mouse.OnMove.Subscribe(
+                    x =>
+                    {
+                        terminal.Sink.Write($"Pos: {x.CurrentPosition.X}, {x.CurrentPosition.Y}", Coord.Zero);
+                    });
+
+                terminal.Source.Mouse.OnMove.Subscribe(
                     e =>
                     {
                         if (terminal.Source.Mouse.LeftButton.Down && terminal.Source.Mouse.RightButton.Down)
@@ -47,10 +57,9 @@ namespace Drexel.Game
                                 new CharInfo(' ', new TerminalColors(TerminalColor.Black, TerminalColor.Blue)),
                                 e.CurrentPosition);
                         }
-                    }));
+                    });
 
                 terminal.Source.OnKeyPressed.Subscribe(
-                    new Observer<TerminalKeyInfo>(
                     e =>
                     {
                         if (char.IsLetterOrDigit(e.KeyChar) || char.IsPunctuation(e.KeyChar))
@@ -83,7 +92,7 @@ namespace Drexel.Game
                         }
 
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
-                    }));
+                    });
 
                 await terminal.Source.DelayUntilExitAccepted(default);
             }

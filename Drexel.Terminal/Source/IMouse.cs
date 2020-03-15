@@ -15,12 +15,12 @@ namespace Drexel.Terminal.Source
         /// <summary>
         /// Gets an observable that occurs when the mouse moves.
         /// </summary>
-        IObservable<MouseMoveEventArgs> OnMouseMove { get; }
+        IObservable<MouseMoveEventArgs> OnMove { get; }
 
         /// <summary>
         /// Gets an observable that occurs when the mouse wheel is scrolled.
         /// </summary>
-        IObservable<MouseWheelEventArgs> OnMouseWheel { get; }
+        IObservable<MouseWheelEventArgs> OnScrollWheel { get; }
 
         /// <summary>
         /// Gets the left mouse button.

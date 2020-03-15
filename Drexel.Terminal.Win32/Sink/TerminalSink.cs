@@ -209,41 +209,70 @@ namespace Drexel.Terminal.Sink.Win32
         private bool WriteAndAdvance(CharInfo[] buffer, Coord destination, bool advance)
         {
             ConsoleScreenBufferInfo bufferInfo = this.ScreenBufferInfo;
-            int quotient = Utilities.DivRem(
-                destination.X + buffer.Length,
-                bufferInfo.BufferWindow.HorizontalSpan,
-                out int remainder);
+            /*
+            TODO: This was a hack for buffers that fit on exactly 1 line. Replace this.
+            When writing a string, output is overwriting other text on the same line. Need to do up to 3 writes:
+            1. Starting from the specified destination, write line 0
+            2. If there's more than 1 line of overflow, write lines 1 to N-1; otherwise, go to write 3
+            3. If there's any overflow, write line N up to the final advanceTo coordinate
 
-            CharInfo[,] output = new CharInfo[
-                remainder != 0 ? quotient + 1 : quotient,
-                bufferInfo.BufferWindow.HorizontalSpan];
 
-            int height = output.GetHeight();
-            int width = output.GetWidth();
-            int index = 0;
-            int xPos = destination.X;
-            for (int yPos = 0; yPos < height; yPos++)
+            if (buffer.Length + destination.X < bufferInfo.BufferWindow.HorizontalSpan)
             {
-                for (; xPos < width && index < buffer.Length; xPos++, index++)
+                CharInfo[,] output = new CharInfo[1, buffer.Length];
+                for (int counter = 0; counter < buffer.Length; counter++)
                 {
-                    output[yPos, xPos] = buffer[index];
+                    output[0, counter] = buffer[counter];
                 }
 
-                xPos = 0;
+                Coord bufferSize = new Coord((short)buffer.Length, 0);
+                Coord advanceTo = destination + bufferSize;
+                return this.WriteAndAdvance(
+                    output,
+                    destination,
+                    new Rectangle(Coord.Zero, bufferSize),
+                    advance,
+                    advanceTo);
             }
+            else
+            {*/
+            int quotient = Utilities.DivRem(
+                    destination.X + buffer.Length,
+                    bufferInfo.BufferWindow.HorizontalSpan,
+                    out int remainder);
 
-            return this.WriteAndAdvance(
-                output,
-                new Coord(0, destination.Y),
-                new Rectangle(Coord.Zero, output.ToCoord()),
-                advance,
-                new Coord((short)remainder, (short)(destination.Y + quotient)));
+                CharInfo[,] output = new CharInfo[
+                    remainder != 0 ? quotient + 1 : quotient,
+                    bufferInfo.BufferWindow.HorizontalSpan];
+
+                int height = output.GetHeight();
+                int width = output.GetWidth();
+                int index = 0;
+                int xPos = destination.X;
+                for (int yPos = 0; yPos < height; yPos++)
+                {
+                    for (; xPos < width && index < buffer.Length; xPos++, index++)
+                    {
+                        output[yPos, xPos] = buffer[index];
+                    }
+
+                    xPos = 0;
+                }
+
+                return this.WriteAndAdvance(
+                    output,
+                    new Coord(0, destination.Y),
+                    new Rectangle(Coord.Zero, output.ToCoord()),
+                    advance,
+                    new Coord((short)remainder, (short)(destination.Y + quotient)));
+            ////}
         }
 
-        public bool WriteAndAdvance(
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool WriteAndAdvance(
             CharInfo[,] buffer,
             Coord topLeft,
-            Rectangle window,
+            Rectangle window, // Window is in buffer-space, not screen-space
             bool advance,
             Coord advanceToUndelayed)
         {

@@ -3,9 +3,8 @@
 namespace Drexel.Terminal.Source
 {
     /// <summary>
-    /// Represents an event which is associated with a request to "exit". The meaning of "exit" is left to the client.
-    /// The request can be denied by setting the <see cref="Allow"/> property to <see langword="false"/> on an instance
-    /// of this class.
+    /// Represents an event which is associated with a request to "exit". The request can be denied by setting the
+    /// <see cref="Allow"/> property to <see langword="false"/> on an instance of this class.
     /// </summary>
     public sealed class ExitRequestedEventArgs : EventArgs
     {

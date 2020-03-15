@@ -20,50 +20,50 @@ namespace Drexel.Terminal.Source
         bool RightMouseDown { get; }
 
         /// <summary>
-        /// Occurs when the left mouse button is raised or lowered.
+        /// Gets an observable that occurs when the left mouse button is raised or lowered.
         /// </summary>
-        event EventHandler<MouseClickEventArgs>? OnLeftMouse;
+        IObservable<MouseClickEventArgs>? OnLeftMouse { get; }
 
         /// <summary>
-        /// Occurs when the right mouse button is raised or lowered.
+        /// Gets an observable that occurs when the right mouse button is raised or lowered.
         /// </summary>
-        event EventHandler<MouseClickEventArgs>? OnRightMouse;
+        IObservable<MouseClickEventArgs>? OnRightMouse { get; }
 
         /// <summary>
-        /// Occurs when the mouse moves.
+        /// Gets an observable that occurs when the mouse moves.
         /// </summary>
-        event EventHandler<MouseMoveEventArgs>? OnMouseMove;
+        IObservable<MouseMoveEventArgs>? OnMouseMove { get; }
 
         /// <summary>
-        /// Occurs when the mouse wheel is scrolled.
+        /// Gets an observable that occurs when the mouse wheel is scrolled.
         /// </summary>
-        event EventHandler<MouseWheelEventArgs>? OnMouseWheel;
+        IObservable<MouseWheelEventArgs>? OnMouseWheel { get; }
 
         /// <summary>
-        /// Occurs when a terminal key is pressed.
+        /// Gets an observable that occurs when a terminal key is pressed.
         /// </summary>
-        event EventHandler<TerminalKeyInfo>? OnKeyPressed;
+        IObservable<TerminalKeyInfo>? OnKeyPressed { get; }
 
         /// <summary>
-        /// Occurs when a terminal key is released.
+        /// Gets an observable that occurs when a terminal key is released.
         /// </summary>
-        event EventHandler<TerminalKeyInfo>? OnKeyReleased;
+        IObservable<TerminalKeyInfo>? OnKeyReleased { get; }
 
         /// <summary>
-        /// Occurs when an exit request has been accepted by this terminal.
+        /// Gets an observable that occurs when an exit request has been accepted by this terminal.
         /// </summary>
-        event EventHandler<ExitAcceptedEventArgs>? OnExitAccepted;
+        IObservable<ExitAcceptedEventArgs>? OnExitAccepted { get; }
 
         /// <summary>
         /// Returns a task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/>
-        /// listeners listening on this instance have completed.
+        /// observers observing this instance have completed.
         /// </summary>
         /// <param name="cancellationToken">
         /// Allows the caller to cancel this task.
         /// </param>
         /// <returns>
-        /// A task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/> listeners
-        /// listening on this instance have completed.
+        /// A task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/> observers
+        /// observing this instance have completed.
         /// </returns>
         Task DelayUntilExitAccepted(CancellationToken cancellationToken);
     }

@@ -8,9 +8,9 @@ namespace Drexel.Terminal.Source
     public interface ITerminalSource : IReadOnlyTerminalSource
     {
         /// <summary>
-        /// Occurs when an exit has been requested by this terminal.
+        /// Gets an observable that occurs when an exit has been requested by this terminal.
         /// </summary>
 
-        event EventHandler<ExitRequestedEventArgs>? OnExitRequested;
+        IObservable<ExitRequestedEventArgs>? OnExitRequested { get; }
     }
 }

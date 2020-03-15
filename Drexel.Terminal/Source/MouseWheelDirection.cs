@@ -13,6 +13,16 @@
         /// <summary>
         /// Represents the downward direction.
         /// </summary>
-        Down
+        Down,
+
+        /// <summary>
+        /// Represents the left direction. This direction may not be available on all systems.
+        /// </summary>
+        Left,
+
+        /// <summary>
+        /// Represents the right direction. This direction may not be available on all systems.
+        /// </summary>
+        Right
     }
 }

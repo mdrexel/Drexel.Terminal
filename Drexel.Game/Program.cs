@@ -30,7 +30,7 @@ namespace Drexel.Game
                 terminal.Source.Mouse.OnMove.Subscribe(
                     x =>
                     {
-                        terminal.Sink.Write($"Pos: {x.CurrentPosition.X}, {x.CurrentPosition.Y}         ", Coord.Zero);
+                        terminal.Sink.Write($"Pos: {x.CurrentPosition.X}, {x.CurrentPosition.Y}  ", Coord.Zero);
                     });
 
                 terminal.Source.Mouse.OnMove.Subscribe(

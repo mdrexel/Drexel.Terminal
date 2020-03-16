@@ -27,7 +27,16 @@ namespace Drexel.Game
 
                 terminal.Source.MouseEnabled = true;
 
+                terminal.Sink.Write(
+                    new CharInfo[3, 3] { { 'c', 'c', 'c' }, { 'c', 'c', 'c' }, { 'c', 'c', 'c' } },
+                    new Coord(2, 2));
+
                 terminal.Sink.Write("Foo", Coord.Zero);
+
+                terminal.Sink.Write(
+                    new CharInfo[3, 3] { { default, default, default }, { 'b', 'b', 'b' } , { 'b', 'b', 'b' } },
+                    Coord.Zero);
+
                 terminal.Sink.Write(new string('a', 168), new Coord(12, 0));
 
                 terminal.Source.Mouse.OnMove.Subscribe(

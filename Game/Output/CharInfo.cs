@@ -24,6 +24,11 @@ namespace Game.Output
             this.Attributes = attributes;
         }
 
+        public static implicit operator CharInfo(char character)
+        {
+            return new CharInfo(character);
+        }
+
         public CharInfo GetInvertedColor()
         {
             return new CharInfo(this.Char, this.Attributes ^ CharAttributes.COMMON_LVB_REVERSE_VIDEO);

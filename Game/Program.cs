@@ -74,6 +74,12 @@ namespace Game
                 ////    0,
                 ////    0);
 
+                sink.Write("aaa");
+                sink.Write(default(CharInfo), Coord.Zero);
+                sink.WriteRegion(
+                    new CharInfo[3, 3],
+                    new Coord(0, 0));
+
                 CharColors borderColors = new CharColors(ConsoleColor.Blue, ConsoleColor.Black);
                 BorderBuilder builder = BorderBuilder.CreateExtraThickWindowStyle(borderColors);
 

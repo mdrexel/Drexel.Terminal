@@ -2,7 +2,7 @@
 A more powerful C# console API.
 
 ## Description
-Typically, C# code interacts with the console using the `System.Console` class. This class was designed for ease-of-use, and does not expose many commonly desired console features (ex. color, writing regions of text, mouse support, etc). `Drexel.Terminal` is intended for more advance console usage.
+Typically, C# code interacts with the console using the `System.Console` class. `System.Console` was designed for ease-of-use, and does not expose many commonly desired console features (ex. color, writing regions of text, mouse support, etc). `Drexel.Terminal` is intended for these more advances console uses.
 
 ## Features
 * Supports console mouse input _(if the target platform supports it)_

@@ -245,7 +245,7 @@ namespace Drexel.Terminal.Sink.Win32
 
             CharInfo[,] output = new CharInfo[
                 remainder != 0 ? quotient + 1 : quotient,
-                bufferInfo.BufferWindow.HorizontalSpan];
+                quotient == 0 ? remainder : bufferInfo.BufferWindow.HorizontalSpan];
 
             int height = output.GetHeight();
             int width = output.GetWidth();

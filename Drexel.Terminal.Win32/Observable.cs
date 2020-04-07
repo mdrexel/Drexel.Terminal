@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Drexel.Terminal.Win32
@@ -8,6 +9,7 @@ namespace Drexel.Terminal.Win32
     internal sealed class Observable<T> : IObservable<T>, IDisposable
     {
         private readonly LinkedList<Subscription> subscriptions;
+        private readonly List<LinkedListNode<Subscription>> deadSubscriptions;
 
         private object closedLock;
         private bool closed;
@@ -15,6 +17,7 @@ namespace Drexel.Terminal.Win32
         public Observable()
         {
             this.subscriptions = new LinkedList<Subscription>();
+            this.deadSubscriptions = new List<LinkedListNode<Subscription>>();
 
             this.closedLock = new object();
             this.closed = false;
@@ -32,7 +35,9 @@ namespace Drexel.Terminal.Win32
                 this.ThrowIfClosed();
                 lock (this.subscriptions)
                 {
-                    foreach (Subscription subscription in this.subscriptions)
+                    this.RemoveSubscriptions();
+
+                    foreach (Subscription subscription in this.subscriptions.ToArray())
                     {
                         try
                         {
@@ -55,7 +60,9 @@ namespace Drexel.Terminal.Win32
                 this.ThrowIfClosed();
                 lock (this.subscriptions)
                 {
-                    foreach (Subscription subscription in this.subscriptions)
+                    this.RemoveSubscriptions();
+
+                    foreach (Subscription subscription in this.subscriptions.ToArray())
                     {
                         try
                         {
@@ -79,8 +86,10 @@ namespace Drexel.Terminal.Win32
                 this.ThrowIfClosed();
                 lock (this.subscriptions)
                 {
+                    this.RemoveSubscriptions();
+
                     Exception? error = null;
-                    foreach (Subscription subscription in this.subscriptions)
+                    foreach (Subscription subscription in this.subscriptions.ToArray())
                     {
                         try
                         {
@@ -128,6 +137,18 @@ namespace Drexel.Terminal.Win32
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RemoveSubscriptions()
+        {
+            foreach (LinkedListNode<Subscription> subscription in this.deadSubscriptions)
+            {
+                this.subscriptions.Remove(subscription);
+            }
+
+            this.deadSubscriptions.Clear();
+        }
+
         private sealed class Subscription : IDisposable
         {
             private readonly Observable<T> parent;
@@ -152,7 +173,7 @@ namespace Drexel.Terminal.Win32
             {
                 lock (this.parent.subscriptions)
                 {
-                    this.parent.subscriptions.Remove(this.node);
+                    this.parent.deadSubscriptions.Add(this.node);
                 }
             }
         }

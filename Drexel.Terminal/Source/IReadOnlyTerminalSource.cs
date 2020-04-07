@@ -32,20 +32,26 @@ namespace Drexel.Terminal.Source
 
         /// <summary>
         /// Reads the next line of characters from this terminal source. If <paramref name="echo"/> is not
-        /// <see langword="null"/>, the characters read from this source will be written back to the supplied sink. If
-        /// <paramref name="exclusive"/> is <see langword="true"/>, any key-related observables on this terminal source
-        /// (ex. <see cref="IReadOnlyTerminalSource.OnKeyPressed"/>) will be suppressed.
+        /// <see langword="null"/>, it will be invoked as characters are read. If <paramref name="exclusive"/> is
+        /// <see langword="true"/>, any key-related observables on this terminal source (ex.
+        /// <see cref="OnKeyPressed"/>) will be suppressed.
         /// </summary>
         /// <param name="echo">
-        /// The terminal sink to echo characters to, and the width of the terminal sink.
+        /// If echo callback.
         /// </param>
         /// <param name="exclusive">
         /// Indicates whether key-related observables on this terminal source should be suppressed.
         /// </param>
+        /// <param name="cancellationToken">
+        /// Allows the caller to cancel this task.
+        /// </param>
         /// <returns>
         /// The next line of characters from this terminal source.
         /// </returns>
-        public Task<string> ReadLineAsync((ITerminalSink Sink, ushort Width)? echo = null, bool exclusive = true);
+        public Task<string> ReadLineAsync(
+            Action<TerminalKeyInfo>? echo = null,
+            bool exclusive = true,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Returns a task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/>

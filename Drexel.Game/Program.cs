@@ -92,7 +92,7 @@ namespace Drexel.Game
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
                     });
 
-                string test = await terminal.Source.ReadLineAsync((terminal.Sink, terminal.Width), true);
+                string test = await terminal.ReadLineAsync();
 
                 await terminal.Source.DelayUntilExitAccepted(default);
             }

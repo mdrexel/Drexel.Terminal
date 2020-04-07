@@ -223,8 +223,9 @@ namespace Drexel.Terminal.Source.Win32
         }
 
         public Task<string> ReadLineAsync(
-            (ITerminalSink Sink, ushort Width)? echo = null,
-            bool exclusive = true)
+            Action<TerminalKeyInfo>? echo = null,
+            bool exclusive = true,
+            CancellationToken cancellationToken = default)
         {
             if (!this.keyboardEnabled)
             {
@@ -235,14 +236,6 @@ namespace Drexel.Terminal.Source.Win32
             {
                 throw new InvalidOperationException(
                     "Can't perform reads if an exclusive read is already in progress.");
-            }
-
-            if (!(echo is null))
-            {
-                if (echo.Value.Sink is null)
-                {
-                    throw new ArgumentNullException(nameof(echo));
-                }
             }
 
             this.keyboardSuppressed = exclusive;
@@ -260,24 +253,14 @@ namespace Drexel.Terminal.Source.Win32
                         else if (x.Key == TerminalKey.Backspace)
                         {
                             characters.RemoveAt(characters.Count - 1);
-                            if (!(echo is null))
-                            {
-                                Coord destination = echo.Value.Sink.GetReverseCursorPosition(echo.Value.Width);
-                                echo.Value.Sink.CursorPosition = destination;
-                                echo.Value.Sink.Write(
-                                    new CharInfo(' ', TerminalColors.Default),
-                                    destination);
-                            }
+                            echo?.Invoke(x);
                         }
                         else if (char.IsLetterOrDigit(x.KeyChar)
                             || char.IsWhiteSpace(x.KeyChar)
                             || char.IsPunctuation(x.KeyChar))
                         {
                             characters.Add(x.KeyChar);
-                            if (!(echo is null))
-                            {
-                                echo.Value.Sink.Write(new CharInfo(x.KeyChar, TerminalColors.Default));
-                            }
+                            echo?.Invoke(x);
                         }
                     },
                     x => throw x,
@@ -286,10 +269,18 @@ namespace Drexel.Terminal.Source.Win32
                         result.SetResult(new string(characters.ToArray()));
                     }));
 
+            cancellationToken.Register(
+                () =>
+                {
+                    subscription.Dispose();
+                    result.SetCanceled();
+                });
+
             return result.Task.ContinueWith<string>(
                 (task) =>
                 {
                     subscription.Dispose();
+                    this.keyboardSuppressed = false;
                     return task.Result;
                 },
                 TaskContinuationOptions.ExecuteSynchronously);

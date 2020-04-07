@@ -66,17 +66,7 @@ namespace Drexel.Terminal.Source.Win32
                         || consoleControlEventType == ConsoleControlEventType.CtrlBreak
                         || consoleControlEventType == ConsoleControlEventType.CtrlClose)
                     {
-                        ExitRequestedEventArgs args = new ExitRequestedEventArgs();
-                        this.onExitRequested.Next(args);
-                        if (args.Allow)
-                        {
-                            this.onExitAccepted.Next(new ExitAcceptedEventArgs());
-                            return false;
-                        }
-                        else
-                        {
-                            return true;
-                        }
+                        return this.RequestExit();
                     }
                     else
                     {
@@ -183,9 +173,22 @@ namespace Drexel.Terminal.Source.Win32
             }
         }
 
-        public Task<bool> RequestExitAsync()
+        public bool RequestExit()
         {
-            throw new NotImplementedException();
+            ExitRequestedEventArgs requestedArgs = new ExitRequestedEventArgs();
+            this.onExitRequested.Next(requestedArgs);
+
+            if (requestedArgs.Allow)
+            {
+                ExitAcceptedEventArgs acceptedArgs = new ExitAcceptedEventArgs();
+                this.onExitAccepted.Next(acceptedArgs);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]

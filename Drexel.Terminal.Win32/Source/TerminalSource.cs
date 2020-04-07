@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Drexel.Terminal.Sink;
 using Drexel.Terminal.Win32;
 using Microsoft.Win32.SafeHandles;
 
@@ -20,12 +22,16 @@ namespace Drexel.Terminal.Source.Win32
         private readonly ConsoleCtrlHandlerDelegate consoleControlHandler;
 
         private readonly Observable<ExitRequestedEventArgs> onExitRequested;
+        private readonly Observable<ExitAcceptedEventArgs> onExitAccepted;
         private readonly Observable<TerminalKeyInfo> onKeyPressed;
         private readonly Observable<TerminalKeyInfo> onKeyReleased;
-        private readonly Observable<ExitAcceptedEventArgs> onExitAccepted;
+        private readonly Observable<TerminalKeyInfo> onKeyPressedInternal;
+        private readonly Observable<TerminalKeyInfo> onKeyReleasedInternal;
         private readonly Mouse mouse;
 
         private bool mouseEnabled;
+        private bool keyboardEnabled;
+        private bool keyboardSuppressed;
         private ConsoleMouseEventInfo lastMouseEvent;
 
         internal TerminalSource()
@@ -51,13 +57,38 @@ namespace Drexel.Terminal.Source.Win32
             }
 
             lastMouseEvent = default;
+            this.mouse = new Mouse();
 
             this.onExitRequested = new Observable<ExitRequestedEventArgs>();
             this.onExitAccepted = new Observable<ExitAcceptedEventArgs>();
             this.onKeyPressed = new Observable<TerminalKeyInfo>();
             this.onKeyReleased = new Observable<TerminalKeyInfo>();
 
-            this.mouse = new Mouse();
+            this.onKeyPressedInternal = new Observable<TerminalKeyInfo>();
+            this.onKeyReleasedInternal = new Observable<TerminalKeyInfo>();
+
+            this.onKeyPressedInternal.Subscribe(
+                new Observer<TerminalKeyInfo>(
+                    x =>
+                    {
+                        if (!this.keyboardSuppressed)
+                        {
+                            this.onKeyPressed.Next(x);
+                        }
+                    },
+                    x => this.onKeyPressed.Error(x),
+                    () => this.onKeyPressed.Complete()));
+            this.onKeyReleasedInternal.Subscribe(
+                new Observer<TerminalKeyInfo>(
+                    x =>
+                    {
+                        if (!this.keyboardSuppressed)
+                        {
+                            this.onKeyReleased.Next(x);
+                        }
+                    },
+                    x => this.onKeyReleased.Error(x),
+                    () => this.onKeyReleased.Complete()));
 
             this.consoleControlHandler =
                 (consoleControlEventType) =>
@@ -77,6 +108,10 @@ namespace Drexel.Terminal.Source.Win32
             SetConsoleCtrlHandler(
                 this.consoleControlHandler,
                 true);
+
+            this.mouseEnabled = false;
+            this.keyboardEnabled = false;
+            this.keyboardSuppressed = false;
 
             this.eventThreadRunning = new Box<bool>(true);
             this.eventThread =
@@ -103,6 +138,20 @@ namespace Drexel.Terminal.Source.Win32
                         }
                     });
             this.eventThread.Start();
+        }
+
+        public bool KeyboardEnabled
+        {
+            get => this.keyboardEnabled;
+            set
+            {
+                if (this.keyboardEnabled == value)
+                {
+                    return;
+                }
+
+                this.keyboardEnabled = value;
+            }
         }
 
         public bool MouseEnabled
@@ -171,6 +220,79 @@ namespace Drexel.Terminal.Source.Win32
             {
                 // An exception being thrown is expected.
             }
+        }
+
+        public Task<string> ReadLineAsync(
+            (ITerminalSink Sink, ushort Width)? echo = null,
+            bool exclusive = true)
+        {
+            if (!this.keyboardEnabled)
+            {
+                throw new InvalidOperationException(
+                    "Can't perform reads if the keyboard is disabled.");
+            }
+            else if (this.keyboardSuppressed)
+            {
+                throw new InvalidOperationException(
+                    "Can't perform reads if an exclusive read is already in progress.");
+            }
+
+            if (!(echo is null))
+            {
+                if (echo.Value.Sink is null)
+                {
+                    throw new ArgumentNullException(nameof(echo));
+                }
+            }
+
+            this.keyboardSuppressed = exclusive;
+
+            TaskCompletionSource<string> result = new TaskCompletionSource<string>();
+            List<char> characters = new List<char>();
+            IDisposable subscription = this.onKeyPressedInternal.Subscribe(
+                new Observer<TerminalKeyInfo>(
+                    x =>
+                    {
+                        if (x.Key == TerminalKey.Enter)
+                        {
+                            result.SetResult(new string(characters.ToArray()));
+                        }
+                        else if (x.Key == TerminalKey.Backspace)
+                        {
+                            characters.RemoveAt(characters.Count - 1);
+                            if (!(echo is null))
+                            {
+                                Coord destination = echo.Value.Sink.GetReverseCursorPosition(echo.Value.Width);
+                                echo.Value.Sink.CursorPosition = destination;
+                                echo.Value.Sink.Write(
+                                    new CharInfo(' ', TerminalColors.Default),
+                                    destination);
+                            }
+                        }
+                        else if (char.IsLetterOrDigit(x.KeyChar)
+                            || char.IsWhiteSpace(x.KeyChar)
+                            || char.IsPunctuation(x.KeyChar))
+                        {
+                            characters.Add(x.KeyChar);
+                            if (!(echo is null))
+                            {
+                                echo.Value.Sink.Write(new CharInfo(x.KeyChar, TerminalColors.Default));
+                            }
+                        }
+                    },
+                    x => throw x,
+                    () =>
+                    {
+                        result.SetResult(new string(characters.ToArray()));
+                    }));
+
+            return result.Task.ContinueWith<string>(
+                (task) =>
+                {
+                    subscription.Dispose();
+                    return task.Result;
+                },
+                TaskContinuationOptions.ExecuteSynchronously);
         }
 
         public bool RequestExit()
@@ -325,6 +447,11 @@ namespace Drexel.Terminal.Source.Win32
 
         private void ProcessKeyEvent(ConsoleKeyEventInfo keyEvent)
         {
+            if (!this.keyboardEnabled)
+            {
+                return;
+            }
+
             TerminalKeyInfo keyInfo = new TerminalKeyInfo(
                 keyEvent.UnicodeChar,
                 (TerminalKey)keyEvent.VirtualKeyCode,
@@ -333,13 +460,14 @@ namespace Drexel.Terminal.Source.Win32
                     || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightAltPressed),
                 keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.LeftCtrlPressed)
                     || keyEvent.ControlKeyState.HasFlag(ConsoleControlKeyState.RightCtrlPressed));
+
             if (keyEvent.KeyDown)
             {
-                this.onKeyPressed.Next(keyInfo);
+                this.onKeyPressedInternal.Next(keyInfo);
             }
             else
             {
-                this.onKeyReleased.Next(keyInfo);
+                this.onKeyReleasedInternal.Next(keyInfo);
             }
         }
 

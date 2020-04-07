@@ -240,18 +240,6 @@ namespace Drexel.Terminal
         }
 
         /// <summary>
-        /// Returns a <see cref="Coord"/> with the <see cref="X"/> and <see cref="Y"/> position of this
-        /// <see cref="Coord"/> flipped.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="Coord"/> with the X and Y position of this <see cref="Coord"/> flipped.
-        /// </returns>
-        public Coord Invert()
-        {
-            return new Coord(this.Y, this.X);
-        }
-
-        /// <summary>
         /// Returns the hash code for this <see cref="Coord"/>.
         /// </summary>
         /// <returns>

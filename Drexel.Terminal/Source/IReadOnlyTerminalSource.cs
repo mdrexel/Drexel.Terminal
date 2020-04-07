@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Drexel.Terminal.Sink;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,23 @@ namespace Drexel.Terminal.Source
         /// Gets the mouse attached to this terminal source.
         /// </summary>
         IMouse Mouse { get; }
+
+        /// <summary>
+        /// Reads the next line of characters from this terminal source. If <paramref name="echo"/> is not
+        /// <see langword="null"/>, the characters read from this source will be written back to the supplied sink. If
+        /// <paramref name="exclusive"/> is <see langword="true"/>, any key-related observables on this terminal source
+        /// (ex. <see cref="IReadOnlyTerminalSource.OnKeyPressed"/>) will be suppressed.
+        /// </summary>
+        /// <param name="echo">
+        /// The terminal sink to echo characters to, and the width of the terminal sink.
+        /// </param>
+        /// <param name="exclusive">
+        /// Indicates whether key-related observables on this terminal source should be suppressed.
+        /// </param>
+        /// <returns>
+        /// The next line of characters from this terminal source.
+        /// </returns>
+        public Task<string> ReadLineAsync((ITerminalSink Sink, ushort Width)? echo = null, bool exclusive = true);
 
         /// <summary>
         /// Returns a task that will complete when an exit has been accepted, and all <see cref="OnExitAccepted"/>

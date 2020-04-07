@@ -26,6 +26,7 @@ namespace Drexel.Game
                 terminal.SetCodePage(ConsoleCodePage.Utf8);
 
                 terminal.Source.MouseEnabled = true;
+                terminal.Source.KeyboardEnabled = true;
 
                 terminal.Source.Mouse.OnMove.Subscribe(
                     x =>
@@ -90,6 +91,8 @@ namespace Drexel.Game
 
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
                     });
+
+                string test = await terminal.Source.ReadLineAsync((terminal.Sink, terminal.Width), true);
 
                 await terminal.Source.DelayUntilExitAccepted(default);
             }

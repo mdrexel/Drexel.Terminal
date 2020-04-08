@@ -10,6 +10,7 @@ using Drexel.Terminal.Text;
 using Drexel.Terminal.Win32;
 using System.Reactive;
 using System.Reactive.Linq;
+using Drexel.Terminal.Primitives;
 
 namespace Drexel.Game
 {
@@ -91,6 +92,8 @@ namespace Drexel.Game
 
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
                     });
+
+                terminal.Sink.Write(new Line(0, 0, 10, 10, new CharInfo[,] { { '*', '*', '*' }, { '~', '~', '~' } }));
 
                 string test = await terminal.ReadLineAsync();
 

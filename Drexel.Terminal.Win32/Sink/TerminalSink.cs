@@ -195,7 +195,48 @@ namespace Drexel.Terminal.Sink.Win32
 
         public bool Write(Line line)
         {
-            throw new NotImplementedException();
+            int x0 = line.TopLeft.X;
+            int y0 = line.TopLeft.Y;
+            int x1 = line.BottomRight.X;
+            int y1 = line.BottomRight.Y;
+
+            int dx = Math.Abs(x1 - x0);
+            int sx = x0 < x1 ? 1 : -1;
+            int dy = Math.Abs(y1 - y0);
+            int sy = y0 < y1 ? 1 : -1;
+            int err = (dx > dy ? dx : -dy) / 2, e2;
+
+            CharInfo[][,] columns = new CharInfo[line.Pattern.GetWidth()][,];
+            for (int counter = 0; counter < columns.Length; counter++)
+            {
+                columns[counter] = new CharInfo[line.Pattern.GetHeight(), 1];
+                for (int position = 0; position < columns[counter].GetHeight(); position++)
+                {
+                    columns[counter][position, 0] = line.Pattern[position, counter];
+                }
+            }
+
+            bool success = true;
+            for (int column = 0; true; Utilities.DivRem(++column, columns.Length, out column))
+            {
+                success &= this.Write(columns[column], new Coord((short)x0, (short)y0));
+                if (x0 == x1 && y0 == y1)
+                {
+                    return success;
+                }
+
+                e2 = err;
+                if (e2 > -dx)
+                {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dy)
+                {
+                    err += dx;
+                    y0 += sy;
+                }
+            }
         }
 
         public bool Write(Fill fill)

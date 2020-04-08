@@ -13,21 +13,17 @@ namespace Drexel.Terminal.Layout
         IObservable<RegionChangeEventArgs> OnChangeRequested { get; }
 
         /// <summary>
-        /// Tries to translate this region by the specified <paramref name="offset"/>, and returns a value indicating
-        /// whether the translation was successful. If the translation was successful, <see langword="true"/> will be
-        /// returned, and <paramref name="beforeChange"/> will be set to a region equivalent to this region before the
-        /// translation was applied.
+        /// Returns a value indicating whether this region can be moved such that the top-left of this region is equal
+        /// to <paramref name="newTopLeft"/>.
         /// </summary>
-        /// <param name="offset">
-        /// The offset by which to translate this region.
-        /// </param>
-        /// <param name="beforeChange">
-        /// If the translation succeeds, a region equivalent to this region before the translation was applied.
+        /// <param name="newTopLeft">
+        /// The new top-left to check against.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the translation succeeded; otherwise, <see langword="false"/>.
+        /// <see langword="true"/> if this region can be moved such that its top-left is equal to
+        /// <paramref name="newTopLeft"/>; otherwise, <see langword="false"/>.
         /// </returns>
-        bool TryTranslate(Coord offset, out IReadOnlyRegion beforeChange);
+        bool CanMoveTo(Coord newTopLeft);
 
         /// <summary>
         /// Tries to move this region such that the top-left of this region is equal to <paramref name="newTopLeft"/>,

@@ -36,6 +36,22 @@
         new short ActualHeight { get; set; }
 
         /// <summary>
+        /// Returns a value indicating whether this region can have its top-left and bottom-right corners set to the
+        /// specified <paramref name="newTopLeft"/> and <paramref name="newBottomRight"/>.
+        /// </summary>
+        /// <param name="newTopLeft">
+        /// The top-left to check against.
+        /// </param>
+        /// <param name="newBottomRight">
+        /// The bottom-right to check against.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the corners can be set to the specified values; otherwise,
+        /// <see langword="false"/>.
+        /// </returns>
+        bool CanSetCorners(Coord newTopLeft, Coord newBottomRight);
+
+        /// <summary>
         /// Tries to set the top-left and bottom-right corners of this region to the specified
         /// <paramref name="newTopLeft"/> and <paramref name="newBottomRight"/>, and returns a value indicating whether
         /// setting the corners was successful. If setting the corners was successful, <see langword="true"/> will be

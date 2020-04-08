@@ -9,6 +9,7 @@ namespace Drexel.Terminal.Layout.Layouts
     public abstract class Symbol : IDisposable
     {
         private readonly Observable<SymbolRedrawEventArgs> onRedrawRequested;
+        private readonly List<IDisposable> subscriptions;
 
         private bool isDisposed;
 
@@ -18,6 +19,14 @@ namespace Drexel.Terminal.Layout.Layouts
             this.Name = name ?? throw new ArgumentNullException(nameof(name));
 
             this.onRedrawRequested = new Observable<SymbolRedrawEventArgs>();
+
+            this.subscriptions =
+                new List<IDisposable>()
+                {
+                    this.Region.OnChanged.Subscribe(
+                        new Observer<RegionChangedEventArgs>(
+                            x => this.RequestRedraw(new IReadOnlyRegion[] { x.BeforeChange, x.AfterChange })))
+                };
 
             this.isDisposed = false;
         }
@@ -35,6 +44,11 @@ namespace Drexel.Terminal.Layout.Layouts
             if (!this.isDisposed)
             {
                 this.DisposeInternal();
+
+                foreach (IDisposable disposable in this.subscriptions)
+                {
+                    disposable.Dispose();
+                }
 
                 this.onRedrawRequested.Complete();
                 this.isDisposed = true;
@@ -82,6 +96,11 @@ namespace Drexel.Terminal.Layout.Layouts
 
         protected virtual void DisposeInternal()
         {
+        }
+
+        protected void AddDisposable(IDisposable disposable)
+        {
+            this.subscriptions.Add(disposable);
         }
     }
 }

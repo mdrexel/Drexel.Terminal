@@ -242,97 +242,91 @@ namespace Drexel.Terminal.Layout
 
         public bool TryMoveTo(Coord newTopLeft, out IReadOnlyRegion beforeChange)
         {
-            if (this.topLeft == newTopLeft)
+            if (this.CanMoveToInternal(newTopLeft, out Coord newBottomRight))
+            {
+                Region oldRegion = this.Clone();
+                this.topLeft = newTopLeft;
+                this.bottomRight = newBottomRight;
+                this.onChanged.Next(
+                    new RegionChangedEventArgs(
+                        oldRegion,
+                        this,
+                        RegionChangeTypes.Move));
+
+                beforeChange = oldRegion;
+                return true;
+            }
+            else
             {
                 beforeChange = default!;
+                return false;
+            }
+        }
+
+        public bool TrySetCorners(Coord newTopLeft, Coord newBottomRight, out IReadOnlyRegion beforeChange)
+        {
+            if (this.CanSetCornersInternal(
+                newTopLeft,
+                newBottomRight,
+                out newTopLeft,
+                out newBottomRight,
+                out RegionChangeTypes changeType))
+            {
+                Region oldRegion = this.Clone();
+                this.topLeft = newTopLeft;
+                this.bottomRight = newBottomRight;
+                this.onChanged.Next(
+                    new RegionChangedEventArgs(
+                        oldRegion,
+                        this,
+                        changeType));
+
+                beforeChange = oldRegion;
+                return true;
+            }
+            else
+            {
+                beforeChange = default!;
+                return false;
+            }
+        }
+
+        public bool CanSetCorners(Coord newTopLeft, Coord newBottomRight) =>
+            this.CanSetCornersInternal(
+                newTopLeft,
+                newBottomRight,
+                out _,
+                out _,
+                out _);
+
+        public bool CanMoveTo(Coord newTopLeft) =>
+            this.CanMoveToInternal(newTopLeft, out _);
+
+        internal bool CanMoveToInternal(Coord newTopLeft, out Coord newBottomRight)
+        {
+            if (this.topLeft == newTopLeft)
+            {
+                newBottomRight = default;
                 return false;
             }
 
             Coord delta = this.topLeft - newTopLeft;
-            Coord newBottomRight = this.bottomRight - delta;
+            newBottomRight = this.bottomRight - delta;
 
             RegionChangeEventArgs args = new RegionChangeEventArgs(
                 this,
                 new Region(newTopLeft, newBottomRight),
                 RegionChangeTypes.Move);
-            this.onChangeRequested.Next(args);
-            if (args.Canceled)
-            {
-                beforeChange = default!;
-                return false;
-            }
-
-            Region oldRegion = this.Clone();
-            this.topLeft = newTopLeft;
-            this.bottomRight = newBottomRight;
-            this.onChanged.Next(
-                new RegionChangedEventArgs(
-                    oldRegion,
-                    this,
-                    RegionChangeTypes.Move));
-
-            beforeChange = oldRegion;
-            return true;
-        }
-
-        public bool TryTranslate(Coord offset, out IReadOnlyRegion beforeChange)
-        {
-            if (offset == Coord.Zero)
-            {
-                beforeChange = default!;
-                return false;
-            }
-
-            Coord newTopLeft = this.topLeft + offset;
-            Coord newBottomRight = this.bottomRight + offset;
-
-            RegionChangeEventArgs args = new RegionChangeEventArgs(
-                this,
-                new Region(newTopLeft, newBottomRight),
-                RegionChangeTypes.Move);
-            this.onChangeRequested.Next(args);
-            if (args.Canceled)
-            {
-                beforeChange = default!;
-                return false;
-            }
-
-            Region oldRegion = this.Clone();
-            this.topLeft = newTopLeft;
-            this.bottomRight = newBottomRight;
-            this.onChanged.Next(
-                new RegionChangedEventArgs(
-                    oldRegion,
-                    this,
-                    RegionChangeTypes.Move));
-
-            beforeChange = oldRegion;
-            return true;
-        }
-
-        public bool TrySetCorners(Coord newTopLeft, Coord newBottomRight, out IReadOnlyRegion beforeChange) =>
-            this.TrySetCorners(
-                newTopLeft,
-                newBottomRight,
-                true,
-                out beforeChange);
-
-        internal bool SimulateRequestChange(
-            Coord newTopLeft,
-            Coord newBottomRight)
-        {
-            RegionChangeEventArgs args = new RegionChangeEventArgs(
-                this,
-                new Region(newTopLeft, newBottomRight));
             this.onChangeRequested.Next(args);
             return args.Canceled;
         }
 
-        internal bool TrySetCorners(
+        internal bool CanSetCornersInternal(
             Coord newTopLeft,
             Coord newBottomRight,
-            bool allowCancel,
-            out IReadOnlyRegion beforeChange)
+            out Coord actualTopLeft,
+            out Coord actualBottomRight,
+            out RegionChangeTypes changeType)
         {
             short realNewTop = newTopLeft.Y;
             short realNewLeft = newTopLeft.X;
@@ -350,23 +344,22 @@ namespace Drexel.Terminal.Layout
                 realNewBottom = newTopLeft.Y;
             }
 
-            newTopLeft = new Coord(realNewLeft, realNewTop);
-            newBottomRight = new Coord(realNewRight, realNewBottom);
+            actualTopLeft = new Coord(realNewLeft, realNewTop);
+            actualBottomRight = new Coord(realNewRight, realNewBottom);
 
-            if (this.topLeft == newTopLeft && this.bottomRight == newBottomRight)
+            if (this.topLeft == actualTopLeft && this.bottomRight == actualBottomRight)
             {
-                beforeChange = default!;
+                changeType = default;
                 return false;
             }
 
-            RegionChangeTypes changeType;
             if (this.topLeft == newTopLeft)
             {
                 changeType = RegionChangeTypes.Resize;
             }
             else
             {
-                Coord size = newTopLeft - newBottomRight;
+                Coord size = actualTopLeft - actualBottomRight;
                 if (size.X == this.MathWidth && size.Y == this.MathHeight)
                 {
                     changeType = RegionChangeTypes.Move;
@@ -377,31 +370,12 @@ namespace Drexel.Terminal.Layout
                 }
             }
 
-            if (allowCancel)
-            {
-                RegionChangeEventArgs args = new RegionChangeEventArgs(
-                    this,
-                    new Region(newTopLeft, newBottomRight),
-                    changeType);
-                this.onChangeRequested.Next(args);
-                if (args.Canceled)
-                {
-                    beforeChange = default!;
-                    return false;
-                }
-            }
-
-            Region oldRegion = this.Clone();
-            this.topLeft = newTopLeft;
-            this.bottomRight = newBottomRight;
-            this.onChanged.Next(
-                new RegionChangedEventArgs(
-                    oldRegion,
-                    this,
-                    changeType));
-
-            beforeChange = oldRegion;
-            return true;
+            RegionChangeEventArgs args = new RegionChangeEventArgs(
+                this,
+                new Region(actualTopLeft, actualBottomRight),
+                changeType);
+            this.onChangeRequested.Next(args);
+            return args.Canceled;
         }
 
         private Region Clone()

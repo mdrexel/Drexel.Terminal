@@ -58,6 +58,11 @@ namespace Drexel.Terminal.Primitives
             short bottom,
             CharInfo[,] pattern)
         {
+            if (pattern is null)
+            {
+                throw new ArgumentNullException(nameof(pattern));
+            }
+
             if (left > right)
             {
                 (left, right) = (right, left);
@@ -71,7 +76,7 @@ namespace Drexel.Terminal.Primitives
             this.TopLeft = new Coord(left, top);
             this.BottomRight = new Coord(right, bottom);
 
-            this.Pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
+            this.Pattern = pattern;
         }
 
         /// <summary>

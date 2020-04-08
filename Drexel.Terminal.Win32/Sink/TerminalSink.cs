@@ -195,6 +195,11 @@ namespace Drexel.Terminal.Sink.Win32
 
         public bool Write(Line line)
         {
+            if (line is null)
+            {
+                throw new ArgumentNullException(nameof(line));
+            }
+
             int x0 = line.TopLeft.X;
             int y0 = line.TopLeft.Y;
             int x1 = line.BottomRight.X;
@@ -216,6 +221,8 @@ namespace Drexel.Terminal.Sink.Win32
                 }
             }
 
+            // TODO: Instead of calling this.Write directly, should this be filling a buffer, which we then write out
+            // with a single call?
             bool success = true;
             for (int column = 0; true; Utilities.DivRem(++column, columns.Length, out column))
             {
@@ -241,7 +248,12 @@ namespace Drexel.Terminal.Sink.Win32
 
         public bool Write(Fill fill)
         {
-            throw new NotImplementedException();
+            if (fill is null)
+            {
+                throw new ArgumentNullException(nameof(fill));
+            }
+
+            return this.Write(fill.GetFullSize(), fill.TopLeft);
         }
 
         public bool Write(Polygon polygon)

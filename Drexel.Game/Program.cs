@@ -93,6 +93,9 @@ namespace Drexel.Game
                         ////terminal.Source.MouseEnabled = !terminal.Source.MouseEnabled;
                     });
 
+                TerminalColors color = new TerminalColors(TerminalColor.Black, TerminalColor.Blue);
+                terminal.Sink.Write(
+                    new Fill(3, 3, 8, 8, new CharInfo[,] { { new CharInfo(' ', color) } }));
                 terminal.Sink.Write(new Line(0, 0, 10, 10, new CharInfo[,] { { '*', '*', '*' }, { '~', '~', '~' } }));
 
                 string test = await terminal.ReadLineAsync();

@@ -4,6 +4,7 @@ namespace Drexel.Terminal.Win32
 {
     internal static class Utilities
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T[,] Fill<T>(this T[,] array, T value)
         {
             for (int y = 0; y < array.GetHeight(); y++)
@@ -17,6 +18,7 @@ namespace Drexel.Terminal.Win32
             return array;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static U[,] CreateSameSizeArray<T, U>(this T[,] array, U defaultValue)
         {
             U[,] result = new U[array.GetHeight(), array.GetWidth()];

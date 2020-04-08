@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Drexel.Terminal" Version="0.0.1" />
+    <PackageReference Include="Drexel.Terminal.Text" Version="0.0.1" />
   </ItemGroup>
 
 </Project>

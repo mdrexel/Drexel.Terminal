@@ -27,6 +27,8 @@ namespace Drexel.Game
                 terminal.Source.KeyboardEnabled = true;
                 terminal.Source.MouseEnabled = true;
 
+                terminal.DisableResize();
+
                 terminal.Sink.WriteLine("foo bar baz bazinga");
 
                 LayoutManager manager = new LayoutManager(terminal, true);

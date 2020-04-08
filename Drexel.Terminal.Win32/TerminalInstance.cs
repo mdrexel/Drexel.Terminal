@@ -133,5 +133,10 @@ namespace Drexel.Terminal.Win32
             this.Source.CodePage = codePage;
             this.Sink.CodePage = codePage;
         }
+
+        public void DisableResize()
+        {
+            this.Sink.DisableResize();
+        }
     }
 }

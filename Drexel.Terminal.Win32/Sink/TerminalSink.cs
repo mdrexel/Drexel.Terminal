@@ -86,6 +86,9 @@ namespace Drexel.Terminal.Sink.Win32
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern uint GetConsoleOutputCP();
 
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        private static extern IntPtr GetConsoleWindow();
+
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleOutputCP(uint wCodePageID);
 
@@ -265,6 +268,19 @@ namespace Drexel.Terminal.Sink.Win32
         internal void Dispose()
         {
             this.outputHandle.Dispose();
+        }
+
+        internal void DisableResize()
+        {
+            IntPtr handle = GetConsoleWindow();
+            IntPtr sysMenu = GetSystemMenu(handle, false);
+
+            if (handle != IntPtr.Zero)
+            {
+                ////DeleteMenu(sysMenu, SC_CLOSE, MF_BYCOMMAND);
+                DeleteMenu(sysMenu, SC_MAXIMIZE, MF_BYCOMMAND);
+                DeleteMenu(sysMenu, SC_SIZE, MF_BYCOMMAND);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

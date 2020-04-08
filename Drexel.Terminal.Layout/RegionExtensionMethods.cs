@@ -31,6 +31,46 @@ namespace Drexel.Terminal.Layout
             return region.CanMoveTo(region.TopLeft + offset);
         }
 
+        public static bool Contains(this IReadOnlyRegion region1, IReadOnlyRegion region2)
+        {
+            if (region1 is null)
+            {
+                throw new ArgumentNullException(nameof(region1));
+            }
+
+            if (region2 is null)
+            {
+                throw new ArgumentNullException(nameof(region2));
+            }
+
+            return region1.Contains(region2.ToRectangle());
+        }
+
+        public static bool Overlaps(this IReadOnlyRegion region1, IReadOnlyRegion region2)
+        {
+            if (region1 is null)
+            {
+                throw new ArgumentNullException(nameof(region1));
+            }
+
+            if (region2 is null)
+            {
+                throw new ArgumentNullException(nameof(region2));
+            }
+
+            return region1.Overlaps(region2.ToRectangle());
+        }
+
+        public static Rectangle ToRectangle(this IReadOnlyRegion region)
+        {
+            if (region is null)
+            {
+                throw new ArgumentNullException(nameof(region));
+            }
+
+            return new Rectangle(region.TopLeft, region.BottomRight);
+        }
+
         /// <summary>
         /// Tries to translate <paramref name="region"/> by the specified <paramref name="offset"/>, and returns a
         /// value indicating whether the translation was successful. If the translation was successful,

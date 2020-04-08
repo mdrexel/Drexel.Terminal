@@ -43,17 +43,17 @@ namespace Drexel.Terminal.Layout
         IObservable<RegionChangedEventArgs> OnChanged { get; }
 
         /// <summary>
-        /// Returns a value indicating whether the specified <see cref="IReadOnlyRegion"/> <paramref name="region"/>
+        /// Returns a value indicating whether the specified <see cref="Rectangle"/> <paramref name="window"/>
         /// overlaps with this region.
         /// </summary>
-        /// <param name="region">
-        /// The region to check for an overlap with.
+        /// <param name="window">
+        /// The window to check for an overlap with.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if this region overlaps with the specified region; otherwise,
+        /// <see langword="true"/> if this region overlaps with the specified window; otherwise,
         /// <see langword="false"/>.
         /// </returns>
-        bool Overlaps(IReadOnlyRegion region);
+        bool Overlaps(Rectangle window);
 
         /// <summary>
         /// Returns a value indicating whether the specified <see cref="Coord"/> <paramref name="coord"/> overlaps with
@@ -69,16 +69,16 @@ namespace Drexel.Terminal.Layout
         bool Overlaps(Coord coord);
 
         /// <summary>
-        /// Returns a value indicating whether the specified <see cref="IReadOnlyRegion"/> <paramref name="region"/> is
+        /// Returns a value indicating whether the specified <see cref="Rectangle"/> <paramref name="window"/> is
         /// entirely contained within this region.
         /// </summary>
-        /// <param name="region">
-        /// The region to check against this region.
+        /// <param name="window">
+        /// The window to check against this region.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the specified region is entirely contained within this region; otherwise,
+        /// <see langword="true"/> if the specified window is entirely contained within this region; otherwise,
         /// <see langword="false"/>.
         /// </returns>
-        bool Contains(IReadOnlyRegion region);
+        bool Contains(Rectangle window);
     }
 }

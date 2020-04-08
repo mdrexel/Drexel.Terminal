@@ -89,13 +89,18 @@ namespace Drexel.Terminal.Layout.Layouts
         {
         }
 
+        protected virtual void DisposeInternal()
+        {
+        }
+
+        protected void RequestRedraw()
+        {
+            this.onRedrawRequested.Next(new SymbolRedrawEventArgs(this.Region));
+        }
+
         protected void RequestRedraw(IReadOnlyList<IReadOnlyRegion> impactedRegions)
         {
             this.onRedrawRequested.Next(new SymbolRedrawEventArgs(impactedRegions));
-        }
-
-        protected virtual void DisposeInternal()
-        {
         }
 
         protected void AddDisposable(IDisposable disposable)

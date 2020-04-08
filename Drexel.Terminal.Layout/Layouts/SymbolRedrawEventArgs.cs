@@ -10,6 +10,11 @@ namespace Drexel.Terminal.Layout.Layouts
             this.ImpactedRegions = impactedRegions ?? throw new ArgumentNullException(nameof(impactedRegions));
         }
 
+        public SymbolRedrawEventArgs(params IReadOnlyRegion[] impectedRegionParams)
+            : this(impactedRegions: impectedRegionParams)
+        {
+        }
+
         public IReadOnlyList<IReadOnlyRegion> ImpactedRegions { get; }
     }
 }

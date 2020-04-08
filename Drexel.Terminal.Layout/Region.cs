@@ -183,12 +183,12 @@ namespace Drexel.Terminal.Layout
             return !(left == right);
         }
 
-        public bool Overlaps(IReadOnlyRegion region)
+        public bool Overlaps(Rectangle window)
         {
-            return this.topLeft.X < region.BottomRight.X
-                && this.bottomRight.X > region.TopLeft.X
-                && this.topLeft.Y < region.BottomRight.Y
-                && this.bottomRight.Y > region.TopLeft.Y;
+            return this.topLeft.X < window.Left
+                && this.bottomRight.X > window.Right
+                && this.topLeft.Y < window.Top
+                && this.bottomRight.Y > window.Bottom;
         }
 
         public bool Overlaps(Coord coord)
@@ -199,12 +199,12 @@ namespace Drexel.Terminal.Layout
                 && coord.Y <= this.bottomRight.Y;
         }
 
-        public bool Contains(IReadOnlyRegion region)
+        public bool Contains(Rectangle window)
         {
-            return region.TopLeft.X >= this.topLeft.X
-                && region.TopLeft.Y >= this.topLeft.Y
-                && region.BottomRight.X <= this.bottomRight.X
-                && region.BottomRight.Y <= this.bottomRight.Y;
+            return window.Left >= this.topLeft.X
+                && window.Top >= this.topLeft.Y
+                && window.Right <= this.bottomRight.X
+                && window.Bottom <= this.bottomRight.Y;
         }
 
         public override bool Equals(object obj)

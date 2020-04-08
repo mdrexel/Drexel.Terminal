@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Drexel.Terminal.Layout.Controls
+namespace Drexel.Terminal.Layout.Layouts
 {
-    class Panel
+    class LayoutManager
     {
     }
 }

@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
+using Drexel.Terminal.Internals;
 
 namespace Drexel.Terminal.Layout
 {
     [DebuggerDisplay("{this.TopLeft,nq}, {this.BottomRight,nq}")]
     public sealed class Region : IResizeableRegion, IEquatable<Region>
     {
+        private readonly Observable<RegionChangeEventArgs> onChangeRequested;
+        private readonly Observable<RegionChangedEventArgs> onChanged;
+
         private Coord topLeft;
         private Coord bottomRight;
 
@@ -13,68 +17,9 @@ namespace Drexel.Terminal.Layout
         {
             this.topLeft = topLeft;
             this.bottomRight = bottomRight;
-        }
 
-        public Region(IReadOnlyRegion region)
-        {
-            this.topLeft = region.TopLeft;
-            this.bottomRight = region.BottomRight;
-
-            region.OnChanged +=
-                (obj, e) =>
-                {
-                    RegionChangeTypes changeType;
-                    if (e.AfterChange.TopLeft == this.topLeft)
-                    {
-                        if (e.AfterChange.BottomRight == this.bottomRight)
-                        {
-                            return;
-                        }
-                        else
-                        {
-                            changeType = RegionChangeTypes.Resize;
-                        }
-                    }
-                    else
-                    {
-                        Coord newSize = new Coord(e.AfterChange.Width, e.AfterChange.Height);
-                        Coord currentSize = new Coord(this.Width, this.Height);
-
-                        Coord delta = currentSize - newSize;
-                        if (delta.X == 0 && delta.Y == 0)
-                        {
-                            changeType = RegionChangeTypes.Move;
-                        }
-                        else
-                        {
-                            changeType = RegionChangeTypes.Move | RegionChangeTypes.Resize;
-                        }
-                    }
-
-                    RegionChangeEventArgs args = new RegionChangeEventArgs(
-                        this,
-                        e.AfterChange,
-                        changeType);
-                    this.OnChangeRequested?.Invoke(obj, args);
-                    if (args.Canceled)
-                    {
-                        return;
-                    }
-
-                    Region oldRegion = this.Clone();
-                    this.topLeft = e.AfterChange.TopLeft;
-                    this.bottomRight = e.AfterChange.BottomRight;
-
-                    if (this != oldRegion)
-                    {
-                        this.OnChanged?.Invoke(
-                            this,
-                            new RegionChangedEventArgs(
-                                oldRegion,
-                                this,
-                                changeType));
-                    }
-                };
+            this.onChangeRequested = new Observable<RegionChangeEventArgs>();
+            this.onChanged = new Observable<RegionChangedEventArgs>();
         }
 
         public Coord TopLeft
@@ -95,7 +40,7 @@ namespace Drexel.Terminal.Layout
             set
             {
                 RegionChangeTypes changeType;
-                if (this.Width == value)
+                if (this.MathWidth == value)
                 {
                     return;
                 }
@@ -106,7 +51,7 @@ namespace Drexel.Terminal.Layout
                 {
                     newTopLeft = new Coord((short)(this.topLeft.X + value), this.topLeft.Y);
                     Coord newSize = newBottomRight - newTopLeft;
-                    if (newSize.X == this.Width)
+                    if (newSize.X == this.MathWidth)
                     {
                         // If our width is unchanged after the operation, it means they flipped us - we haven't
                         // resized, just translated to the left by our width.
@@ -127,7 +72,7 @@ namespace Drexel.Terminal.Layout
                     this,
                     new Region(newTopLeft, newBottomRight),
                     changeType);
-                this.OnChangeRequested?.Invoke(this, args);
+                this.onChangeRequested.Next(args);
                 if (args.Canceled)
                 {
                     return;
@@ -139,8 +84,7 @@ namespace Drexel.Terminal.Layout
 
                 if (this != oldRegion)
                 {
-                    this.OnChanged?.Invoke(
-                        this,
+                    this.onChanged.Next(
                         new RegionChangedEventArgs(
                             oldRegion,
                             this,
@@ -155,7 +99,7 @@ namespace Drexel.Terminal.Layout
             set
             {
                 RegionChangeTypes changeType;
-                if (this.Height == value)
+                if (this.MathHeight == value)
                 {
                     return;
                 }
@@ -166,7 +110,7 @@ namespace Drexel.Terminal.Layout
                 {
                     newTopLeft = new Coord(this.topLeft.X, (short)(this.topLeft.Y + value));
                     Coord newSize = newBottomRight - newTopLeft;
-                    if (newSize.Y == this.Height)
+                    if (newSize.Y == this.MathHeight)
                     {
                         // If our height is unchanged after the operation, it means they flipped us - we haven't
                         // resized, just translated upwards by our height.
@@ -187,7 +131,7 @@ namespace Drexel.Terminal.Layout
                     this,
                     new Region(newTopLeft, newBottomRight),
                     changeType);
-                this.OnChangeRequested?.Invoke(this, args);
+                this.onChangeRequested.Next(args);
                 if (args.Canceled)
                 {
                     return;
@@ -199,8 +143,7 @@ namespace Drexel.Terminal.Layout
 
                 if (this != oldRegion)
                 {
-                    this.OnChanged?.Invoke(
-                        this,
+                    this.onChanged.Next(
                         new RegionChangedEventArgs(
                             oldRegion,
                             this,
@@ -209,9 +152,21 @@ namespace Drexel.Terminal.Layout
             }
         }
 
-        public event EventHandler<RegionChangeEventArgs>? OnChangeRequested;
+        public short ActualWidth
+        {
+            get => (short)(this.MathWidth + 1);
+            set => this.MathWidth = (short)(value + 1);
+        }
 
-        public event EventHandler<RegionChangedEventArgs>? OnChanged;
+        public short ActualHeight
+        {
+            get => (short)(this.MathHeight + 1);
+            set => this.MathHeight = (short)(value + 1);
+        }
+
+        public IObservable<RegionChangeEventArgs> OnChangeRequested => this.onChangeRequested;
+
+        public IObservable<RegionChangedEventArgs> OnChanged => this.onChanged;
 
         public static bool operator ==(Region left, Region right)
         {
@@ -300,7 +255,7 @@ namespace Drexel.Terminal.Layout
                 this,
                 new Region(newTopLeft, newBottomRight),
                 RegionChangeTypes.Move);
-            this.OnChangeRequested?.Invoke(this, args);
+            this.onChangeRequested.Next(args);
             if (args.Canceled)
             {
                 beforeChange = default!;
@@ -310,8 +265,7 @@ namespace Drexel.Terminal.Layout
             Region oldRegion = this.Clone();
             this.topLeft = newTopLeft;
             this.bottomRight = newBottomRight;
-            this.OnChanged?.Invoke(
-                this,
+            this.onChanged.Next(
                 new RegionChangedEventArgs(
                     oldRegion,
                     this,
@@ -336,7 +290,7 @@ namespace Drexel.Terminal.Layout
                 this,
                 new Region(newTopLeft, newBottomRight),
                 RegionChangeTypes.Move);
-            this.OnChangeRequested?.Invoke(this, args);
+            this.onChangeRequested.Next(args);
             if (args.Canceled)
             {
                 beforeChange = default!;
@@ -346,8 +300,7 @@ namespace Drexel.Terminal.Layout
             Region oldRegion = this.Clone();
             this.topLeft = newTopLeft;
             this.bottomRight = newBottomRight;
-            this.OnChanged?.Invoke(
-                this,
+            this.onChanged.Next(
                 new RegionChangedEventArgs(
                     oldRegion,
                     this,
@@ -371,7 +324,7 @@ namespace Drexel.Terminal.Layout
             RegionChangeEventArgs args = new RegionChangeEventArgs(
                 this,
                 new Region(newTopLeft, newBottomRight));
-            this.OnChangeRequested?.Invoke(this, args);
+            this.onChangeRequested.Next(args);
             return args.Canceled;
         }
 
@@ -414,7 +367,7 @@ namespace Drexel.Terminal.Layout
             else
             {
                 Coord size = newTopLeft - newBottomRight;
-                if (size.X == this.Width && size.Y == this.Height)
+                if (size.X == this.MathWidth && size.Y == this.MathHeight)
                 {
                     changeType = RegionChangeTypes.Move;
                 }
@@ -430,7 +383,7 @@ namespace Drexel.Terminal.Layout
                     this,
                     new Region(newTopLeft, newBottomRight),
                     changeType);
-                this.OnChangeRequested?.Invoke(this, args);
+                this.onChangeRequested.Next(args);
                 if (args.Canceled)
                 {
                     beforeChange = default!;
@@ -441,8 +394,7 @@ namespace Drexel.Terminal.Layout
             Region oldRegion = this.Clone();
             this.topLeft = newTopLeft;
             this.bottomRight = newBottomRight;
-            this.OnChanged?.Invoke(
-                this,
+            this.onChanged.Next(
                 new RegionChangedEventArgs(
                     oldRegion,
                     this,

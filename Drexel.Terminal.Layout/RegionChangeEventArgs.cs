@@ -35,8 +35,8 @@ namespace Drexel.Terminal.Layout
                 changeTypes |= RegionChangeTypes.Move;
             }
 
-            if (beforeChange.Height != afterChange.Height
-                || beforeChange.Width != afterChange.Width)
+            if (beforeChange.MathHeight != afterChange.MathHeight
+                || beforeChange.MathWidth != afterChange.MathWidth)
             {
                 changeTypes |= RegionChangeTypes.Resize;
             }
@@ -102,17 +102,6 @@ namespace Drexel.Terminal.Layout
         public void Cancel()
         {
             this.Canceled = true;
-        }
-
-        /// <summary>
-        /// If <paramref name="condition"/> is <see langword="true"/>, cancels this change. Otherwise, has no effect.
-        /// </summary>
-        /// <param name="condition">
-        /// The condition.
-        /// </param>
-        public void Cancel(bool condition)
-        {
-            this.Canceled |= condition;
         }
     }
 }

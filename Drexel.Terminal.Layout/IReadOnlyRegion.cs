@@ -37,7 +37,10 @@ namespace Drexel.Terminal.Layout
         /// </summary>
         short ActualHeight { get; }
 
-        event EventHandler<RegionChangedEventArgs>? OnChanged;
+        /// <summary>
+        /// Gets an observable that occurs when a change to this region occurs.
+        /// </summary>
+        IObservable<RegionChangedEventArgs> OnChanged { get; }
 
         /// <summary>
         /// Returns a value indicating whether the specified <see cref="IReadOnlyRegion"/> <paramref name="region"/>

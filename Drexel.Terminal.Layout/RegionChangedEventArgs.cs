@@ -32,8 +32,8 @@ namespace Drexel.Terminal.Layout
                 changeTypes |= RegionChangeTypes.Move;
             }
 
-            if (beforeChange.Height != afterChange.Height
-                || beforeChange.Width != afterChange.Width)
+            if (beforeChange.MathHeight != afterChange.MathHeight
+                || beforeChange.MathWidth != afterChange.MathWidth)
             {
                 changeTypes |= RegionChangeTypes.Resize;
             }

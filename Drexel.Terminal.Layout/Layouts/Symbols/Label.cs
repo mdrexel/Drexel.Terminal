@@ -92,7 +92,9 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             lock (this.cacheLock)
             {
                 Coord destination = new Coord(window.Left, window.Top);
-                sink.Write(this.cached!, destination, window - destination);
+                window = window - destination;
+                window = new Rectangle(window.Left, window.Top, (short)(window.Right + 1), (short)(window.Bottom + 1));
+                sink.Write(this.cached!, destination, window);
             }
         }
 
@@ -224,6 +226,15 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                                 }
                             }
                         }
+                    }
+                }
+
+                if (calculated.Any())
+                {
+                    int indexOfLastLine = calculated.Count - 1;
+                    if (string.IsNullOrEmpty(calculated[indexOfLastLine].Content))
+                    {
+                        calculated.RemoveAt(indexOfLastLine);
                     }
                 }
 

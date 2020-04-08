@@ -465,8 +465,8 @@ namespace Drexel.Terminal.Sink.Win32
                             {
                                 IntPtr pointer = (IntPtr)pinned;
                                 Rectangle rect = new Rectangle(
-                                    windowTopLeft + subBuffer.Item2,
-                                    windowBottomRight + subBuffer.Item2);
+                                    windowTopLeft + subBuffer.Item2 + topLeft,
+                                    windowBottomRight + subBuffer.Item2 + topLeft);
 
                                 success &= WriteConsoleOutputW(
                                     this.outputHandle,

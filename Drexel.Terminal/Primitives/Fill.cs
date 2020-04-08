@@ -111,9 +111,7 @@ namespace Drexel.Terminal.Primitives
                 this.cached = this.Pattern.Repeat(this.BottomRight - this.TopLeft + Coord.OneOffset);
             }
 
-#pragma warning disable CS8603 // Possible null reference return.
-            return this.cached;
-#pragma warning restore CS8603 // Possible null reference return.
+            return this.cached!;
         }
     }
 }

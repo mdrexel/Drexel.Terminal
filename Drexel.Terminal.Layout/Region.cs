@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Drexel.Terminal.Layout
 {
     [DebuggerDisplay("{this.TopLeft,nq}, {this.BottomRight,nq}")]
-    public sealed class Region : IRegion, IEquatable<Region>
+    public sealed class Region : IResizeableRegion, IEquatable<Region>
     {
         private Coord topLeft;
         private Coord bottomRight;
@@ -89,7 +89,7 @@ namespace Drexel.Terminal.Layout
             set => this.TrySetCorners(this.topLeft, value, out _);
         }
 
-        public short Width
+        public short MathWidth
         {
             get => (this.bottomRight - this.topLeft).X;
             set
@@ -149,7 +149,7 @@ namespace Drexel.Terminal.Layout
             }
         }
 
-        public short Height
+        public short MathHeight
         {
             get => (this.bottomRight - this.topLeft).Y;
             set

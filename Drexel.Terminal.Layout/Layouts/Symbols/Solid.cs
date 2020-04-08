@@ -43,10 +43,16 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 return;
             }
 
+            Coord destination = new Coord(window.Left, window.Top);
+            window -= this.Region.TopLeft;
             sink.Write(
                 this.backingFill.GetFullSize(),
-                new Coord(window.Left, window.Top),
-                window - this.Region.TopLeft);
+                destination,
+                new Rectangle(
+                    window.Left,
+                    window.Top,
+                    (short)(window.Right + 1),
+                    (short)(window.Bottom + 1)));
         }
     }
 }

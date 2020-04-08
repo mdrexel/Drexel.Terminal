@@ -44,22 +44,28 @@ namespace Drexel.Game
                     new Region(new Coord(7, 21), new Coord(72, 21)),
                     "TextField",
                     new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
-                var test = new Catena(
-                    Short,
-                    new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan),
-                    5);
-                Label displayText = new Label(
-                    new Region(new Coord(5, 4), new Coord(74, 15)),
+
+                Region challengeTextRegion = new Region(new Coord(5, 4), new Coord(74, 15));
+                TerminalColors challengeTextFill = new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan);
+                Solid challengeTextBackground = new Solid(
+                    challengeTextRegion,
+                    "ChallengeTextBackground",
+                    new CharInfo[,] { { new CharInfo(' ', challengeTextFill) } });
+                Label challengeText = new Label(
+                    challengeTextRegion,
                     "ChallengeText",
-                    test,
+                    new Catena(
+                        Short,
+                        challengeTextFill,
+                        20),
                     new Alignments(HorizontalAlignment.Left, VerticalAlignment.Top),
-                    new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan),
-                    false);
+                    synchronousDraw: false);
 
                 manager.Add(solid);
                 DrawBorders(terminal);
                 manager.Add(textField);
-                manager.Add(displayText);
+                manager.Add(challengeTextBackground);
+                manager.Add(challengeText);
                 manager.Focused = textField;
                 ////manager.Active = true;
 

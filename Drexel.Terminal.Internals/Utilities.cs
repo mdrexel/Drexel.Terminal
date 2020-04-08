@@ -1,32 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Drexel.Terminal
+namespace Drexel.Terminal.Internals
 {
-    internal static class InternalExtensionMethods
+    internal static class Utilities
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T[,] Repeat<T>(this T[,] pattern, Coord size)
-        {
-            if (pattern.Length == 0)
-            {
-                return pattern;
-            }
-
-            short originalHeight = pattern.GetHeight();
-            short originalWidth = pattern.GetWidth();
-
-            T[,] result = new T[size.Y, size.X];
-            for (short y = 0; y < size.Y; y++)
-            {
-                for (short x = 0; x < size.X; x++)
-                {
-                    result[y, x] = pattern[y % originalHeight, x % originalWidth];
-                }
-            }
-
-            return result;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T[,] RepeatHorizontally<T>(this T[,] pattern, short width)
         {
@@ -71,6 +48,38 @@ namespace Drexel.Terminal
             }
 
             return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T[,] Fill<T>(this T[,] array, T value)
+        {
+            for (int y = 0; y < array.GetHeight(); y++)
+            {
+                for (int x = 0; x < array.GetWidth(); x++)
+                {
+                    array[y, x] = value;
+                }
+            }
+
+            return array;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static U[,] CreateSameSizeArray<T, U>(this T[,] array, U defaultValue)
+        {
+            U[,] result = new U[array.GetHeight(), array.GetWidth()];
+            result.Fill(defaultValue);
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int DivRem(int numerator, int divisor, out int remainder)
+        {
+            int quotient = numerator / divisor;
+            remainder = numerator - (quotient * divisor);
+
+            return quotient;
         }
     }
 }

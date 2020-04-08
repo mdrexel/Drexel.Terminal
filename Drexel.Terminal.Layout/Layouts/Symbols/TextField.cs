@@ -12,16 +12,23 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
         private readonly List<char> characters;
 
         private TerminalColors colors;
+        private char background;
+        private int scroll;
 
         public TextField(
             IResizeableRegion region,
             string name,
             TerminalColors colors,
-            char background)
+            char background = '▒')
             : base(region, name)
         {
             this.onComplete = new Observable<string>();
+            this.colors = colors;
+            this.background = background;
+
             this.characters = new List<char>();
+
+            this.scroll = 0;
         }
 
         public IObservable<string> OnComplete => this.onComplete;
@@ -34,6 +41,16 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             set
             {
                 this.colors = value;
+                this.RequestRedraw();
+            }
+        }
+
+        public char Background
+        {
+            get => this.Background;
+            set
+            {
+                this.background = value;
                 this.RequestRedraw();
             }
         }
@@ -54,6 +71,38 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             {
                 this.characters.Add(keyInfo.KeyChar);
             }
+            else if (keyInfo.Key == TerminalKey.LeftArrow)
+            {
+                this.scroll++;
+                if (scroll > this.characters.Count)
+                {
+                    this.scroll = Math.Max(0, this.characters.Count - 1);
+                }
+            }
+            else if (keyInfo.Key == TerminalKey.RightArrow)
+            {
+                this.scroll -= this.Region.ActualWidth;
+                if (scroll < 0)
+                {
+                    this.scroll = 0;
+                }
+            }
+            else if (keyInfo.Key == TerminalKey.UpArrow)
+            {
+                this.scroll -= this.Region.ActualWidth;
+                if (scroll < 0)
+                {
+                    this.scroll = 0;
+                }
+            }
+            else if (keyInfo.Key == TerminalKey.DownArrow)
+            {
+                this.scroll += this.Region.ActualWidth;
+                if (scroll > this.characters.Count)
+                {
+                    this.scroll = Math.Max(0, this.characters.Count - 1);
+                }
+            }
         }
 
         public void Clear()
@@ -70,10 +119,12 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             }
 
             CharInfo[,] array = new CharInfo[this.Region.ActualHeight, this.Region.ActualWidth];
-            int index = 0;
-            for (int y = 0; y < this.Region.ActualHeight; y++)
+
+            int index = scroll;
+            Coord? inflection = null;
+            for (short y = 0; y < this.Region.ActualHeight; y++)
             {
-                for (int x = 0; x < this.Region.ActualWidth; x++, index++)
+                for (short x = 0; x < this.Region.ActualWidth; x++, index++)
                 {
                     if (index < this.characters.Count)
                     {
@@ -81,11 +132,22 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                     }
                     else
                     {
-                        array[y, x] = new CharInfo('▒', this.Colors);
+                        if (!inflection.HasValue)
+                        {
+                            inflection = new Coord(x, y);
+                        }
+
+                        array[y, x] = new CharInfo(this.background, this.Colors);
                     }
                 }
             }
 
+            if (!inflection.HasValue)
+            {
+                inflection = this.Region.BottomRight;
+            }
+
+            sink.CursorPosition = this.Region.TopLeft + inflection.Value;
             sink.Write(array, this.Region.TopLeft, window);
         }
     }

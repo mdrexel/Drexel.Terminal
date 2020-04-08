@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Drexel.Terminal.Internals;
 using Drexel.Terminal.Primitives;
 using Drexel.Terminal.Win32;
 using Microsoft.Win32.SafeHandles;

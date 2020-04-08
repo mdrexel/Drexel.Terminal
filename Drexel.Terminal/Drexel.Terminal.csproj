@@ -11,4 +11,8 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Drexel.Terminal.Internals\Drexel.Terminal.Internals.csproj" />
+  </ItemGroup>
+
 </Project>

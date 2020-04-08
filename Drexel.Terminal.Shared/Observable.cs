@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Drexel.Terminal.Win32
+namespace Drexel.Terminal.Internals
 {
     internal sealed class Observable<T> : IObservable<T>, IDisposable
     {

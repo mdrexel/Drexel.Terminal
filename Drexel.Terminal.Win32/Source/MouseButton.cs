@@ -1,5 +1,5 @@
 ﻿using System;
-using Drexel.Terminal.Win32;
+using Drexel.Terminal.Internals;
 
 namespace Drexel.Terminal.Source.Win32
 {

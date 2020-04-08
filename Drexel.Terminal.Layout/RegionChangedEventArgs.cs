@@ -16,9 +16,6 @@ namespace Drexel.Terminal.Layout
         /// <param name="afterChange">
         /// A region with properties equivalent to those with the change.
         /// </param>
-        /// <param name="changeTypes">
-        /// The types of changes encapsulated by this change event.
-        /// </param>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="beforeChange"/> or <paramref name="afterChange"/> is <see langword="null"/>.
         /// </exception>

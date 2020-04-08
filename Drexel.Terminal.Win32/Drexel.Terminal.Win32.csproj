@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Drexel.Terminal.Shared\Drexel.Terminal.Internals.csproj" />
     <ProjectReference Include="..\Drexel.Terminal\Drexel.Terminal.csproj" />
   </ItemGroup>
 

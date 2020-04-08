@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Drexel.Terminal.Win32
+namespace Drexel.Terminal.Internals
 {
     internal sealed class Observer<T> : IObserver<T>
     {

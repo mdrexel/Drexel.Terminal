@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Drexel.Terminal.Win32", "Dr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Drexel.Game", "Drexel.Game\Drexel.Game.csproj", "{0D0C5371-2A0F-4DA1-A2DF-E4B272C61BBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drexel.Terminal.Layout", "Drexel.Terminal.Layout\Drexel.Terminal.Layout.csproj", "{107EA903-EEE3-48BD-98AB-2172896FDB72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Drexel.Terminal.Layout", "Drexel.Terminal.Layout\Drexel.Terminal.Layout.csproj", "{107EA903-EEE3-48BD-98AB-2172896FDB72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drexel.Terminal.Internals", "Drexel.Terminal.Shared\Drexel.Terminal.Internals.csproj", "{173EF2C1-75BF-4ECA-9098-B94292378413}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{107EA903-EEE3-48BD-98AB-2172896FDB72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{107EA903-EEE3-48BD-98AB-2172896FDB72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{107EA903-EEE3-48BD-98AB-2172896FDB72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{173EF2C1-75BF-4ECA-9098-B94292378413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{173EF2C1-75BF-4ECA-9098-B94292378413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{173EF2C1-75BF-4ECA-9098-B94292378413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{173EF2C1-75BF-4ECA-9098-B94292378413}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

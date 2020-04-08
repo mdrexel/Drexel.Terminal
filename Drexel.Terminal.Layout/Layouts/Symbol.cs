@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Drexel.Terminal.Internals;
 using Drexel.Terminal.Sink;
 using Drexel.Terminal.Source;
@@ -7,7 +8,7 @@ namespace Drexel.Terminal.Layout.Layouts
 {
     public abstract class Symbol : IDisposable
     {
-        private readonly Observable<Symbol> onRedrawRequested;
+        private readonly Observable<SymbolRedrawEventArgs> onRedrawRequested;
 
         private bool isDisposed;
 
@@ -16,7 +17,7 @@ namespace Drexel.Terminal.Layout.Layouts
             this.Region = region ?? throw new ArgumentNullException(nameof(region));
             this.Name = name ?? throw new ArgumentNullException(nameof(name));
 
-            this.onRedrawRequested = new Observable<Symbol>();
+            this.onRedrawRequested = new Observable<SymbolRedrawEventArgs>();
 
             this.isDisposed = false;
         }
@@ -27,7 +28,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
         public abstract bool CanBeFocused { get; }
 
-        public IObservable<Symbol> OnRedrawRequested { get; }
+        public IObservable<SymbolRedrawEventArgs> OnRedrawRequested { get; }
 
         public void Dispose()
         {
@@ -74,9 +75,9 @@ namespace Drexel.Terminal.Layout.Layouts
         {
         }
 
-        protected void RequestRedraw()
+        protected void RequestRedraw(IReadOnlyList<IReadOnlyRegion> impactedRegions)
         {
-            this.onRedrawRequested.Next(this);
+            this.onRedrawRequested.Next(new SymbolRedrawEventArgs(impactedRegions));
         }
 
         protected virtual void DisposeInternal()

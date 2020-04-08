@@ -45,7 +45,7 @@ namespace Drexel.Game
                     "TextField",
                     new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
                 var test = new Catena(
-                    LoremIpsum,
+                    Short,
                     new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan),
                     5);
                 Label displayText = new Label(
@@ -186,6 +186,8 @@ namespace Drexel.Game
 
             return 0;
         }
+
+        private const string Short = "The inventory discovered by Managed PI on a machine is not available on that machine. It is transmitted to the NOC where it is analyzed, but other applications that may need to look at the local inventory do not have access to this information.";
 
         private const string LoremIpsum = @"Moby-Dick; or, The Whale is an 1851 novel by American writer <span fg=Red>Herman Melville</span>. The book is sailor Ishmael's narrative of the obsessive quest of Ahab, captain of the whaling ship Pequod, for revenge on Moby Dick, the giant white sperm whale that on the ship's previous voyage bit off Ahab's leg at the knee. A contribution to the literature of the <span fg=Green>American Renaissance</span>, the work's genre classifications range from late Romantic to early Symbolist. Moby-Dick was published to mixed reviews, was a commercial failure, and was out of print at the time of the author's death in 1891. Its reputation as a 'Great American Novel' was established only in the 20th century, after the centennial of its author's birth. William Faulkner said he wished he had written the book himself,[1] and D. H. Lawrence called it 'one of the strangest and most wonderful books in the world' and 'the greatest book of the sea ever written'.[2] Its opening sentence, 'Call me Ishmael', is among world literature's most famous.[3]
 

@@ -80,11 +80,14 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             get => this.preceedingLinesSkipped;
             private set
             {
-                lock (this.cacheLock)
+                int buffer = this.TotalLines - this.MaximumVisibleLines;
+                if (buffer < 0)
                 {
-                    this.preceedingLinesSkipped = (ushort)Math.Min(value, this.TotalLines - this.MaximumVisibleLines);
-                    this.cached = this.Generate(false);
-                    this.RequestRedraw();
+                    this.preceedingLinesSkipped = 0;
+                }
+                else
+                {
+                    this.preceedingLinesSkipped = (ushort)buffer;
                 }
             }
         }

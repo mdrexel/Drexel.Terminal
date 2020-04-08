@@ -395,7 +395,11 @@ namespace Drexel.Terminal.Sink.Win32
                             success &= this.AdvanceCursor();
                         }
 
-                        Thread.Sleep(buffer[y, x].Delay);
+                        ushort delay = buffer[y, x].Delay;
+                        if (delay > 0)
+                        {
+                            Thread.Sleep(delay);
+                        }
                     }
                 }
 

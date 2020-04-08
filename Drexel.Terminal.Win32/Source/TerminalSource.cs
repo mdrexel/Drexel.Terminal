@@ -366,7 +366,8 @@ namespace Drexel.Terminal.Source.Win32
             this.inputHandle.Dispose();
             this.inputStreamHandle.Dispose();
 
-            this.eventThread.Join();
+            // TODO: For some reason, this .Join() call is hanging even though the thread is exiting.
+            ////this.eventThread.Join();
         }
 
         private bool ListenForEvents(out ConsoleInputEventInfo[] events)

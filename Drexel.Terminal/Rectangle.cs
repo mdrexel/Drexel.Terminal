@@ -137,6 +137,30 @@ namespace Drexel.Terminal
             return !(left == right);
         }
 
+        public static Rectangle operator +(Rectangle left, Coord right)
+        {
+            return new Rectangle(
+                (short)(left.Left + right.X),
+                (short)(left.Top + right.Y),
+                (short)(left.Right + right.X),
+                (short)(left.Bottom + right.Y));
+        }
+
+        public static Rectangle operator +(Coord left, Rectangle right)
+        {
+            return right + left;
+        }
+
+        public static Rectangle operator -(Rectangle left, Coord right)
+        {
+            return left + (-right);
+        }
+
+        public static Rectangle operator -(Coord left, Rectangle right)
+        {
+            return right - left;
+        }
+
         /// <summary>
         /// Decomposes this <see cref="Rectangle"/> into the <see cref="Coord"/>s representing its bounds.
         /// </summary>

@@ -13,6 +13,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
         private readonly LinkedList<Symbol> symbols;
         private readonly Dictionary<Symbol, LinkedListNode<Symbol>> symbolMapping;
+        private readonly Dictionary<Symbol, List<IDisposable>> symbolSubscriptions;
 
         private bool active;
         private Symbol? lastMouseMove;
@@ -45,6 +46,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
             this.symbols = new LinkedList<Symbol>();
             this.symbolMapping = new Dictionary<Symbol, LinkedListNode<Symbol>>();
+            this.symbolSubscriptions = new Dictionary<Symbol, List<IDisposable>>();
 
             this.lastMouseMove = null;
             this.active = active;
@@ -90,6 +92,8 @@ namespace Drexel.Terminal.Layout.Layouts
         {
             LinkedListNode<Symbol> node = this.symbols.AddLast(symbol);
             this.symbolMapping.Add(symbol, node);
+
+            this.Subscribe(symbol);
 
             if (this.Active)
             {
@@ -351,6 +355,36 @@ namespace Drexel.Terminal.Layout.Layouts
             else if (exceptions.Count > 1)
             {
                 throw new AggregateException(exceptions);
+            }
+        }
+
+        private void Subscribe(Symbol symbol)
+        {
+            List<IDisposable> subscriptions =
+                new List<IDisposable>()
+                {
+                    symbol.OnRedrawRequested.Subscribe(
+                        new Observer<SymbolRedrawEventArgs>(
+                            x =>
+                            {
+                                foreach (IReadOnlyRegion region in x.ImpactedRegions)
+                                {
+                                this.Draw(region);
+                                }
+                            }))
+                };
+
+            this.symbolSubscriptions.Add(symbol, subscriptions);
+        }
+
+        private void Unsubscribe(Symbol symbol)
+        {
+            List<IDisposable> subscriptions = this.symbolSubscriptions[symbol];
+            this.symbolSubscriptions.Remove(symbol);
+
+            foreach (IDisposable subscription in subscriptions)
+            {
+                subscription.Dispose();
             }
         }
     }

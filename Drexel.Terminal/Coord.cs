@@ -99,6 +99,11 @@ namespace Drexel.Terminal
             }
         }
 
+        public static Coord operator -(Coord coord)
+        {
+            return new Coord((short)(-coord.X), (short)(-coord.Y));
+        }
+
         /// <summary>
         /// Multiplies the specified <see cref="Coord"/>s <paramref name="left"/> and <paramref name="right"/> as if
         /// they were vectors.

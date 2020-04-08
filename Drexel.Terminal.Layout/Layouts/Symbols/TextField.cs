@@ -8,6 +8,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
 {
     public class TextField : Symbol
     {
+        private readonly object lockObject;
         private readonly Observable<string> onComplete;
         private readonly List<char> characters;
 
@@ -19,9 +20,10 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             IResizeableRegion region,
             string name,
             TerminalColors colors,
-            char background = '▒')
+            char background = '░')
             : base(region, name)
         {
+            this.lockObject = new object();
             this.onComplete = new Observable<string>();
             this.colors = colors;
             this.background = background;
@@ -40,7 +42,11 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             get => this.colors;
             set
             {
-                this.colors = value;
+                lock (this.lockObject)
+                {
+                    this.colors = value;
+                }
+
                 this.RequestRedraw();
             }
         }
@@ -50,65 +56,92 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             get => this.Background;
             set
             {
-                this.background = value;
-                this.RequestRedraw();
+                lock (this.lockObject)
+                {
+                    this.background = value;
+                    this.RequestRedraw();
+                }
             }
         }
 
         public override void KeyPressed(TerminalKeyInfo keyInfo)
         {
-            if (keyInfo.Key == TerminalKey.Enter)
+            lock (this.lockObject)
             {
-                this.onComplete.Next(new string(this.characters.ToArray()));
-            }
-            else if (keyInfo.Key == TerminalKey.Backspace && this.characters.Count > 0)
-            {
-                this.characters.RemoveAt(this.characters.Count - 1);
-            }
-            else if (char.IsWhiteSpace(keyInfo.KeyChar)
-                || char.IsLetterOrDigit(keyInfo.KeyChar)
-                || char.IsPunctuation(keyInfo.KeyChar))
-            {
-                this.characters.Add(keyInfo.KeyChar);
-            }
-            else if (keyInfo.Key == TerminalKey.LeftArrow)
-            {
-                this.scroll++;
-                if (scroll > this.characters.Count)
+                if (keyInfo.Key == TerminalKey.Enter)
                 {
-                    this.scroll = Math.Max(0, this.characters.Count - 1);
+                    this.onComplete.Next(new string(this.characters.ToArray()));
                 }
-            }
-            else if (keyInfo.Key == TerminalKey.RightArrow)
-            {
-                this.scroll -= this.Region.ActualWidth;
-                if (scroll < 0)
+                else if (keyInfo.Key == TerminalKey.Backspace && this.characters.Count > 0)
                 {
-                    this.scroll = 0;
+                    this.characters.RemoveAt(this.characters.Count - 1);
+                    if (this.characters.Count > this.Region.ActualWidth)
+                    {
+                        this.scroll--;
+                    }
+                    else
+                    {
+                        this.scroll = 0;
+                    }
                 }
-            }
-            else if (keyInfo.Key == TerminalKey.UpArrow)
-            {
-                this.scroll -= this.Region.ActualWidth;
-                if (scroll < 0)
+                else if (char.IsWhiteSpace(keyInfo.KeyChar)
+                    || char.IsLetterOrDigit(keyInfo.KeyChar)
+                    || char.IsPunctuation(keyInfo.KeyChar))
                 {
-                    this.scroll = 0;
+                    this.characters.Add(keyInfo.KeyChar);
+                    if (this.characters.Count > this.Region.ActualWidth)
+                    {
+                        this.scroll++;
+                    }
+                    else
+                    {
+                        this.scroll = 0;
+                    }
                 }
-            }
-            else if (keyInfo.Key == TerminalKey.DownArrow)
-            {
-                this.scroll += this.Region.ActualWidth;
-                if (scroll > this.characters.Count)
+                else if (keyInfo.Key == TerminalKey.LeftArrow)
                 {
-                    this.scroll = Math.Max(0, this.characters.Count - 1);
+                    this.scroll -= this.Region.ActualWidth;
+                    if (scroll < 0)
+                    {
+                        this.scroll = 0;
+                    }
                 }
+                else if (keyInfo.Key == TerminalKey.RightArrow)
+                {
+                    this.scroll++;
+                    if (scroll >= this.characters.Count)
+                    {
+                        this.scroll = Math.Max(0, this.characters.Count - 1);
+                    }
+                }
+                else if (keyInfo.Key == TerminalKey.UpArrow)
+                {
+                    this.scroll -= this.Region.ActualWidth;
+                    if (scroll < 0)
+                    {
+                        this.scroll = 0;
+                    }
+                }
+                else if (keyInfo.Key == TerminalKey.DownArrow)
+                {
+                    this.scroll += this.Region.ActualWidth;
+                    if (scroll >= this.characters.Count)
+                    {
+                        this.scroll = Math.Max(0, this.characters.Count - 1);
+                    }
+                }
+
+                this.RequestRedraw();
             }
         }
 
         public void Clear()
         {
-            this.characters.Clear();
-            this.RequestRedraw();
+            lock (this.lockObject)
+            {
+                this.characters.Clear();
+                this.RequestRedraw();
+            }
         }
 
         public override void Draw(ITerminalSink sink, Rectangle window)
@@ -118,37 +151,47 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 return;
             }
 
-            CharInfo[,] array = new CharInfo[this.Region.ActualHeight, this.Region.ActualWidth];
-
-            int index = scroll;
-            Coord? inflection = null;
-            for (short y = 0; y < this.Region.ActualHeight; y++)
+            lock (this.lockObject)
             {
-                for (short x = 0; x < this.Region.ActualWidth; x++, index++)
-                {
-                    if (index < this.characters.Count)
-                    {
-                        array[y, x] = new CharInfo(this.characters[index], this.Colors);
-                    }
-                    else
-                    {
-                        if (!inflection.HasValue)
-                        {
-                            inflection = new Coord(x, y);
-                        }
+                CharInfo[,] array = new CharInfo[this.Region.ActualHeight, this.Region.ActualWidth];
 
-                        array[y, x] = new CharInfo(this.background, this.Colors);
+                int index = scroll;
+                Coord? inflection = null;
+                for (short y = 0; y < this.Region.ActualHeight; y++)
+                {
+                    for (short x = 0; x < this.Region.ActualWidth; x++, index++)
+                    {
+                        if (index < this.characters.Count)
+                        {
+                            array[y, x] = new CharInfo(this.characters[index], this.Colors);
+                        }
+                        else
+                        {
+                            if (!inflection.HasValue)
+                            {
+                                inflection = new Coord(x, y);
+                            }
+
+                            array[y, x] = new CharInfo(this.background, this.Colors);
+                        }
                     }
                 }
-            }
 
-            if (!inflection.HasValue)
-            {
-                inflection = this.Region.BottomRight;
-            }
+                if (!inflection.HasValue)
+                {
+                    inflection = this.Region.BottomRight;
+                }
+                else
+                {
+                    inflection = inflection.Value + this.Region.TopLeft;
+                }
 
-            sink.CursorPosition = this.Region.TopLeft + inflection.Value;
-            sink.Write(array, this.Region.TopLeft, window);
+                sink.CursorPosition = inflection.Value;
+                window = window - this.Region.TopLeft;
+                window = new Rectangle(window.Left, window.Top, (short)(window.Right + 1), (short)(window.Bottom + 1));
+
+                sink.Write(array, this.Region.TopLeft, window);
+            }
         }
     }
 }

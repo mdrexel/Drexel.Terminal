@@ -11,12 +11,42 @@ using Drexel.Terminal.Win32;
 using System.Reactive;
 using System.Reactive.Linq;
 using Drexel.Terminal.Primitives;
+using Drexel.Terminal.Layout.Layouts;
+using Drexel.Terminal.Layout.Layouts.Symbols;
+using Drexel.Terminal.Internals;
+using Drexel.Terminal.Layout;
 
 namespace Drexel.Game
 {
     public class Program
     {
-        public static async Task<int> Main(string[] args)
+        public static async Task Main(string[] args)
+        {
+            using (TerminalInstance terminal = await TerminalInstance.GetInstanceAsync(default))
+            {
+                terminal.Source.KeyboardEnabled = true;
+                terminal.Source.MouseEnabled = true;
+
+                terminal.Sink.WriteLine("foo bar baz bazinga");
+
+                LayoutManager manager = new LayoutManager(terminal, true);
+
+                TextField textField = new TextField(
+                        new Region(new Coord(5, 5), new Coord(20, 5)),
+                        "Foo",
+                        new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
+
+                manager.Add(textField);
+
+                textField.OnComplete.Subscribe(
+                    new Observer<string>(
+                        x => terminal.Sink.Write(x, new Coord(7, 5))));
+
+                await terminal.Source.DelayUntilExitAccepted(default);
+            }
+        }
+
+        public static async Task<int> Foo(string[] args)
         {
             using (TerminalInstance terminal = await TerminalInstance.GetInstanceAsync(default))
             {

@@ -37,7 +37,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
         public abstract bool CanBeFocused { get; }
 
-        public IObservable<SymbolRedrawEventArgs> OnRedrawRequested { get; }
+        public IObservable<SymbolRedrawEventArgs> OnRedrawRequested => this.onRedrawRequested;
 
         public void Dispose()
         {

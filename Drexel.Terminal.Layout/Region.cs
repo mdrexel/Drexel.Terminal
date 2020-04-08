@@ -185,10 +185,10 @@ namespace Drexel.Terminal.Layout
 
         public bool Overlaps(Rectangle window)
         {
-            return this.topLeft.X < window.Left
-                && this.bottomRight.X > window.Right
-                && this.topLeft.Y < window.Top
-                && this.bottomRight.Y > window.Bottom;
+            return this.topLeft.X <= window.Left
+                && this.bottomRight.X >= window.Right
+                && this.topLeft.Y <= window.Top
+                && this.bottomRight.Y >= window.Bottom;
         }
 
         public bool Overlaps(Coord coord)

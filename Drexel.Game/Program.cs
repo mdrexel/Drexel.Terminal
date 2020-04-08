@@ -20,7 +20,6 @@ namespace Drexel.Game
 {
     public class Program
     {
-
         public static async Task Main(string[] args)
         {
             using (TerminalInstance terminal = await TerminalInstance.GetInstanceAsync(default))
@@ -34,25 +33,38 @@ namespace Drexel.Game
                 terminal.Source.KeyboardEnabled = true;
                 terminal.Source.MouseEnabled = true;
 
-                LayoutManager manager = new LayoutManager(terminal, true);
+                LayoutManager manager = new LayoutManager(terminal, false);
 
                 Solid solid = new Solid(
-                    new Region(new Coord(2, 1), new Coord(77, 24)),
+                    new Region(new Coord(2, 1), new Coord(76, 23)),
                     "Background",
                     new CharInfo[,] { { new CharInfo(' ', new TerminalColors(TerminalColor.White, TerminalColor.DarkBlue)) } });
                 TextField textField = new TextField(
-                    new Region(new Coord(7, 21), new Coord(72, 21)),
+                    new Region(new Coord(7, 20), new Coord(72, 20)),
                     "TextField",
                     new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
+                Solid textFieldShadow = new Solid(
+                    new Region(
+                        textField.Region.TopLeft + Coord.OneOffset,
+                        textField.Region.BottomRight + Coord.OneOffset),
+                    "TextFieldShadow",
+                    new CharInfo[,] { { new CharInfo(' ', TerminalColors.Default) } });
 
-                Region challengeTextRegion = new Region(new Coord(5, 4), new Coord(74, 15));
                 TerminalColors challengeTextFill = new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan);
                 Solid challengeTextBackground = new Solid(
-                    challengeTextRegion,
+                    new Region(new Coord(5, 4), new Coord(73, 13)),
                     "ChallengeTextBackground",
                     new CharInfo[,] { { new CharInfo(' ', challengeTextFill) } });
+                Solid challengeShadow = new Solid(
+                    new Region(
+                    challengeTextBackground.Region.TopLeft + Coord.OneOffset,
+                    challengeTextBackground.Region.BottomRight + Coord.OneOffset),
+                    "ChallengeShadow",
+                    new CharInfo[,] { { new CharInfo(' ', TerminalColors.Default) } });
                 Label challengeText = new Label(
-                    challengeTextRegion,
+                    new Region(
+                        challengeTextBackground.Region.TopLeft + Coord.OneOffset,
+                        challengeTextBackground.Region.BottomRight - Coord.OneOffset),
                     "ChallengeText",
                     new Catena(
                         Short,
@@ -62,19 +74,21 @@ namespace Drexel.Game
                     synchronousDraw: false);
 
                 manager.Add(solid);
-                DrawBorders(terminal);
+                manager.Add(textFieldShadow);
                 manager.Add(textField);
+                manager.Add(challengeShadow);
                 manager.Add(challengeTextBackground);
                 manager.Add(challengeText);
                 manager.Focused = textField;
-                ////manager.Active = true;
+                manager.Active = true;
+                DrawBorders(terminal);
 
                 textField.OnComplete.Subscribe(
                     new Observer<string>(
                         x =>
                         {
-                            terminal.Sink.Write(x, new Coord(7, 5));
                             textField.Clear();
+                            challengeText.Content = LoremIpsum;
                         }));
 
                 await terminal.Source.DelayUntilExitAccepted(default);
@@ -101,6 +115,12 @@ namespace Drexel.Game
             terminal.Sink.Write(new CharInfo('╗', borderColors), topRight);
             terminal.Sink.Write(new CharInfo('╚', borderColors), bottomLeft);
             terminal.Sink.Write(new CharInfo('╝', borderColors), bottomRight);
+
+            terminal.Sink.Write(
+                new Catena(
+                    "╣ (C) Oil Systems, Inc. 1980-2020 ╠",
+                    borderColors),
+                topLeft + new Coord(3, 0));
         }
 
         public static async Task<int> Foo(string[] args)

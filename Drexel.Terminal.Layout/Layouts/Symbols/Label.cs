@@ -13,15 +13,15 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
     {
         private static readonly short NewLineLength = (short)Environment.NewLine.Length;
         private static readonly string[] NewLine = new string[] { Environment.NewLine };
-
-        private readonly Catena content;
-        private readonly Alignments alignments;
-        private readonly TerminalColors? backgroundFill;
         private readonly bool synchronousDraw;
 
         private readonly object cacheLock;
         private CharInfo[,] cached;
         private IReadOnlyList<TextLine> lines;
+
+        private Catena content;
+        private Alignments alignments;
+        private TerminalColors? backgroundFill;
 
         private ushort preceedingLinesSkipped;
 
@@ -69,6 +69,54 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             this.cached = this.Generate(true);
         }
 
+        public Catena Content
+        {
+            get => this.content;
+            set
+            {
+                lock (this.cacheLock)
+                {
+                    this.content = value ?? throw new ArgumentNullException(nameof(value));
+
+                    this.cached = this.Generate(true);
+
+                    this.RequestRedraw();
+                }
+            }
+        }
+
+        public Alignments Alignments
+        {
+            get => this.alignments;
+            set
+            {
+                lock (this.cacheLock)
+                {
+                    this.alignments = value;
+
+                    this.Generate(false);
+
+                    this.RequestRedraw();
+                }
+            }
+        }
+
+        public TerminalColors? BackgroundFill
+        {
+            get => this.backgroundFill;
+            set
+            {
+                lock (this.cacheLock)
+                {
+                    this.backgroundFill = value;
+
+                    this.cached = this.Generate(false);
+
+                    this.RequestRedraw();
+                }
+            }
+        }
+
         public override bool CanBeFocused => false;
 
         public override bool CapturesTabKey => false;
@@ -81,13 +129,13 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             private set
             {
                 int buffer = this.TotalLines - this.MaximumVisibleLines;
-                if (buffer < 0)
+                if (buffer < 0 || this.TotalLines == 0)
                 {
                     this.preceedingLinesSkipped = 0;
                 }
                 else
                 {
-                    this.preceedingLinesSkipped = (ushort)buffer;
+                    this.preceedingLinesSkipped = (ushort)Math.Min(value, buffer);
                 }
             }
         }
@@ -180,11 +228,11 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             public ushort StartOffset { get; }
         }
 
-        private CharInfo[,] Generate(bool widthChanged)
+        private CharInfo[,] Generate(bool widthOrContentChanged)
         {
             this.MaximumVisibleLines = (ushort)this.Region.ActualHeight;
 
-            if (widthChanged)
+            if (widthOrContentChanged)
             {
                 string[] rawLines = this.content.Value.Split(NewLine, StringSplitOptions.None);
                 TextLine[] buffer = new TextLine[rawLines.Length];

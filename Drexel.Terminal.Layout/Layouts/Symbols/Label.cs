@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Drexel.Terminal.Internals;
 using Drexel.Terminal.Sink;
 using Drexel.Terminal.Text;
@@ -16,6 +17,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
         private readonly Catena content;
         private readonly Alignments alignments;
         private readonly TerminalColors? backgroundFill;
+        private readonly bool synchronousDraw;
 
         private readonly object cacheLock;
         private CharInfo[,] cached;
@@ -28,7 +30,8 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             string name,
             Catena content,
             Alignments alignments,
-            TerminalColors? backgroundFill = null)
+            TerminalColors? backgroundFill = null,
+            bool synchronousDraw = true)
             : base(region, name)
         {
             if (content is null)
@@ -39,6 +42,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             this.content = content;
             this.alignments = alignments;
             this.backgroundFill = backgroundFill;
+            this.synchronousDraw = synchronousDraw;
             this.preceedingLinesSkipped = 0;
 
             this.cacheLock = new object();
@@ -89,15 +93,41 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
 
         public override void Draw(ITerminalSink sink, Rectangle window)
         {
+            if (!this.Region.Overlaps(window))
+            {
+                return;
+            }
+
             lock (this.cacheLock)
             {
-                Coord destination = new Coord(window.Left, window.Top);
-                window = window - destination;
-                window = new Rectangle(window.Left, window.Top, (short)(window.Right + 1), (short)(window.Bottom + 1));
-                sink.Write(this.cached!, destination, window);
+                Coord destination = this.Region.TopLeft;
+                window = new Rectangle(
+                    (short)(window.Left - destination.X),
+                    (short)(window.Top - destination.Y),
+                    (short)(window.Right + 1 - destination.X),
+                    (short)(window.Bottom + 1 - destination.Y));
+
+                if (this.synchronousDraw)
+                {
+                    sink.Write(this.cached!, destination, window);
+                }
+                else
+                {
+                    CharInfo[,] buffer = this.cached.CreateSameSizeArray<CharInfo, CharInfo>(default);
+                    Array.Copy(this.cached, buffer, this.cached.Length);
+
+                    Thread thread = new Thread(
+                        x =>
+                        {
+                            var tuple =
+                                ((ITerminalSink Sink, CharInfo[,] Buffer, Coord Destination, Rectangle Window))x;
+
+                            tuple.Sink.Write(tuple.Buffer, tuple.Destination, tuple.Window);
+                        });
+                    thread.Start((sink, buffer, destination, window));
+                }
             }
         }
-
 
         public void AdjustLinesSkipped(int delta)
         {

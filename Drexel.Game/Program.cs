@@ -20,43 +20,81 @@ namespace Drexel.Game
 {
     public class Program
     {
+
         public static async Task Main(string[] args)
         {
             using (TerminalInstance terminal = await TerminalInstance.GetInstanceAsync(default))
             {
+                terminal.Title = "Retro PI - Chill Team";
                 terminal.Width = 80;
                 terminal.Height = 25;
+                terminal.SetCodePage(ConsoleCodePage.Utf8);
+                terminal.DisableResize();
 
                 terminal.Source.KeyboardEnabled = true;
                 terminal.Source.MouseEnabled = true;
 
-                terminal.DisableResize();
-
-                terminal.Sink.WriteLine("foo bar baz bazinga");
-
                 LayoutManager manager = new LayoutManager(terminal, true);
 
+                Solid solid = new Solid(
+                    new Region(new Coord(2, 1), new Coord(77, 24)),
+                    "Background",
+                    new CharInfo[,] { { new CharInfo(' ', new TerminalColors(TerminalColor.White, TerminalColor.DarkBlue)) } });
                 TextField textField = new TextField(
-                    new Region(new Coord(5, 5), new Coord(20, 5)),
-                    "Foo",
+                    new Region(new Coord(7, 21), new Coord(72, 21)),
+                    "TextField",
                     new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
+                var test = new Catena(
+                    LoremIpsum,
+                    new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan),
+                    5);
+                Label displayText = new Label(
+                    new Region(new Coord(5, 4), new Coord(74, 15)),
+                    "ChallengeText",
+                    test,
+                    new Alignments(HorizontalAlignment.Left, VerticalAlignment.Top),
+                    new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan),
+                    false);
 
+                manager.Add(solid);
+                DrawBorders(terminal);
                 manager.Add(textField);
+                manager.Add(displayText);
+                manager.Focused = textField;
+                ////manager.Active = true;
 
                 textField.OnComplete.Subscribe(
                     new Observer<string>(
-                        x => terminal.Sink.Write(x, new Coord(7, 5))));
-
-                Label label = new Label(
-                    new Region(new Coord(3, 3), new Coord(76, 21)),
-                    "Label",
-                    LoremIpsum,
-                    new Alignments(HorizontalAlignment.Left, VerticalAlignment.Top));
-
-                manager.Add(label);
+                        x =>
+                        {
+                            terminal.Sink.Write(x, new Coord(7, 5));
+                            textField.Clear();
+                        }));
 
                 await terminal.Source.DelayUntilExitAccepted(default);
             }
+        }
+
+        private static void DrawBorders(ITerminal terminal)
+        {
+            // TODO: don't have borders yet
+            TerminalColors borderColors = new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan);
+            CharInfo[,] horizontalLinePattern =
+                new CharInfo[,] { { new CharInfo('═', borderColors) } };
+            CharInfo[,] verticalLinePattern =
+                new CharInfo[,] { { new CharInfo('║', borderColors) } };
+            Coord topLeft = new Coord(2, 1);
+            Coord topRight = new Coord(77, 1);
+            Coord bottomLeft = new Coord(2, 23);
+            Coord bottomRight = new Coord(77, 23);
+            terminal.Sink.Write(new Line(topLeft, topRight, horizontalLinePattern));
+            terminal.Sink.Write(new Line(bottomLeft, bottomRight, horizontalLinePattern));
+            terminal.Sink.Write(new Line(topLeft, bottomLeft, verticalLinePattern));
+            terminal.Sink.Write(new Line(topRight, bottomRight, verticalLinePattern));
+            terminal.Sink.Write(new CharInfo('╔', borderColors), topLeft);
+            terminal.Sink.Write(new CharInfo('╗', borderColors), topRight);
+            terminal.Sink.Write(new CharInfo('╚', borderColors), bottomLeft);
+            terminal.Sink.Write(new CharInfo('╝', borderColors), bottomRight);
         }
 
         public static async Task<int> Foo(string[] args)

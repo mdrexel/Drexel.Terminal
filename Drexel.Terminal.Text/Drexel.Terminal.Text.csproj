@@ -7,8 +7,20 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <Authors>Max Drexel</Authors>
+    <Description>Text tools for terminals.</Description>
+    <Copyright>Copyright 2019-2020</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mdrexel/Drexel.Terminal</PackageProjectUrl>
+    <PackageTags>console terminal terminals consoles text TUI drexel</PackageTags>
+    <PackageReleaseNotes>0.0.1: Initial release
+    </PackageReleaseNotes>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Drexel.Terminal\Drexel.Terminal.csproj" />
+    <PackageReference Include="Drexel.Terminal" Version="0.0.1" />
   </ItemGroup>
 
 </Project>

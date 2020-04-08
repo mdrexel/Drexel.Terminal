@@ -37,6 +37,8 @@ namespace Drexel.Terminal.Layout.Layouts
 
         public abstract bool CanBeFocused { get; }
 
+        public abstract bool CapturesTabKey { get; }
+
         public IObservable<SymbolRedrawEventArgs> OnRedrawRequested => this.onRedrawRequested;
 
         public void Dispose()
@@ -96,6 +98,11 @@ namespace Drexel.Terminal.Layout.Layouts
         protected void RequestRedraw()
         {
             this.onRedrawRequested.Next(new SymbolRedrawEventArgs(this.Region));
+        }
+
+        protected void RequestRedraw(params IReadOnlyRegion[] impactedRegionParams)
+        {
+            this.onRedrawRequested.Next(new SymbolRedrawEventArgs(impactedRegionParams));
         }
 
         protected void RequestRedraw(IReadOnlyList<IReadOnlyRegion> impactedRegions)

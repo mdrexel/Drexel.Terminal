@@ -17,6 +17,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
         private bool active;
         private Symbol? lastMouseMove;
+        private Symbol? focused;
 
         public LayoutManager(
             ITerminal terminal,
@@ -50,6 +51,7 @@ namespace Drexel.Terminal.Layout.Layouts
 
             this.lastMouseMove = null;
             this.active = active;
+            this.focused = null;
         }
 
         /// <summary>
@@ -60,9 +62,30 @@ namespace Drexel.Terminal.Layout.Layouts
         public IReadOnlyCollection<Symbol> Symbols => this.symbols;
 
         /// <summary>
-        /// Gets the currently-focused symbol, if one exists; otherwise, returns <see langword="null"/>.
+        /// Gets or sets the currently-focused symbol, if one exists; otherwise, returns <see langword="null"/>.
         /// </summary>
-        public Symbol? Focused { get; private set; }
+        public Symbol? Focused
+        {
+            get => this.focused;
+            set
+            {
+                if (value is null)
+                {
+                    this.focused?.FocusChanged(false);
+                    this.focused = null;
+                    return;
+                }
+
+                if (!this.symbolMapping.TryGetValue(value, out _))
+                {
+                    throw new KeyNotFoundException("Specified symbol is not contained by this layout manager.");
+                }
+
+                this.focused?.FocusChanged(false);
+                this.focused = value;
+                value.FocusChanged(true);
+            }
+        }
 
         /// <summary>
         /// Gets or sets whether this layout manager is active. An active layout manager will draw symbols and process
@@ -180,8 +203,14 @@ namespace Drexel.Terminal.Layout.Layouts
                 return;
             }
 
-            // TODO: What if the symbol wants control of pressing tab (ex. text editor)?
-            if (keyInfo.Key == TerminalKey.Tab)
+            bool shouldCycleFocus = keyInfo.Key == TerminalKey.Tab;
+            if (!(this.focused is null))
+            {
+                shouldCycleFocus &=
+                    keyInfo.Modifiers.HasFlag(TerminalModifiers.Control) || !this.focused!.CapturesTabKey;
+            }
+
+            if (shouldCycleFocus)
             {
                 if (this.Focused is null)
                 {

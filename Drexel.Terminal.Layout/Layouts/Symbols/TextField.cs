@@ -31,11 +31,24 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             this.characters = new List<char>();
 
             this.scroll = 0;
+
+            this.AddDisposable(
+                this.Region.OnChanged.Subscribe(
+                    new Observer<RegionChangedEventArgs>(
+                        x =>
+                        {
+                            lock (this.lockObject)
+                            {
+                                this.RequestRedraw(x.BeforeChange, x.AfterChange);
+                            }
+                        })));
         }
 
         public IObservable<string> OnComplete => this.onComplete;
 
         public override bool CanBeFocused => true;
+
+        public override bool CapturesTabKey => true;
 
         public TerminalColors Colors
         {
@@ -64,6 +77,14 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             }
         }
 
+        public override void FocusChanged(bool focused)
+        {
+            if (focused)
+            {
+                this.RequestRedraw();
+            }
+        }
+
         public override void KeyPressed(TerminalKeyInfo keyInfo)
         {
             lock (this.lockObject)
@@ -84,14 +105,30 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                         this.scroll = 0;
                     }
                 }
+                else if (keyInfo.Key == TerminalKey.Tab)
+                {
+                    this.characters.Add(' ');
+                    this.characters.Add(' ');
+                    this.characters.Add(' ');
+                    this.characters.Add(' ');
+
+                    if (this.characters.Count > this.Region.ActualWidth - 1)
+                    {
+                        this.scroll = this.characters.Count - this.Region.ActualWidth + 1;
+                    }
+                    else
+                    {
+                        this.scroll = 0;
+                    }
+                }
                 else if (char.IsWhiteSpace(keyInfo.KeyChar)
                     || char.IsLetterOrDigit(keyInfo.KeyChar)
                     || char.IsPunctuation(keyInfo.KeyChar))
                 {
                     this.characters.Add(keyInfo.KeyChar);
-                    if (this.characters.Count > this.Region.ActualWidth)
+                    if (this.characters.Count > this.Region.ActualWidth - 1)
                     {
-                        this.scroll++;
+                        this.scroll = this.characters.Count - this.Region.ActualWidth + 1;
                     }
                     else
                     {
@@ -100,7 +137,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 }
                 else if (keyInfo.Key == TerminalKey.LeftArrow)
                 {
-                    this.scroll -= this.Region.ActualWidth;
+                    this.scroll--;
                     if (scroll < 0)
                     {
                         this.scroll = 0;

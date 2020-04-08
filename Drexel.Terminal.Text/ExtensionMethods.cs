@@ -1,4 +1,5 @@
-﻿using Drexel.Terminal.Sink;
+﻿using System;
+using Drexel.Terminal.Sink;
 
 namespace Drexel.Terminal.Text
 {
@@ -70,6 +71,22 @@ namespace Drexel.Terminal.Text
         public static bool Write(this ITerminalSink sink, Catena catena, Coord destination)
         {
             return sink.Write(catena.ToArray(), destination);
+        }
+
+        public static bool Write(this ITerminalSink sink, Catena catena, Rectangle destination)
+        {
+            CharInfo[,] result = new CharInfo[destination.Height, destination.Width];
+            CharInfo[] buffer = catena.ToArray();
+            int index = 0;
+            for (int y = 0; y < destination.Height; y++)
+            {
+                for (int x = 0; x < destination.Width && index < buffer.Length; x++, index++)
+                {
+                    result[y, x] = buffer[index];
+                }
+            }
+
+            return sink.Write(result, new Coord(destination.Left, destination.Top));
         }
 
         internal static CharInfo[] ToArray(this Catena catena)

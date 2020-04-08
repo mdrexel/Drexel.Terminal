@@ -8,14 +8,22 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-  </ItemGroup>
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <Authors>Max Drexel</Authors>
+    <Description>Win32 API bindings for terminals.</Description>
+    <Copyright>Copyright 2019-2020</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mdrexel/Drexel.Terminal</PackageProjectUrl>
+    <PackageTags>console terminal terminals consoles win32 TUI drexel</PackageTags>
+    <PackageReleaseNotes>0.0.1: Initial release
+    </PackageReleaseNotes>
+  </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Drexel.Terminal.Internals\Drexel.Terminal.Internals.csproj" />
-    <ProjectReference Include="..\Drexel.Terminal\Drexel.Terminal.csproj" />
+    <PackageReference Include="Drexel.Terminal" Version="0.0.1" />
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

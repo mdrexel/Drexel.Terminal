@@ -123,7 +123,8 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 }
                 else if (char.IsWhiteSpace(keyInfo.KeyChar)
                     || char.IsLetterOrDigit(keyInfo.KeyChar)
-                    || char.IsPunctuation(keyInfo.KeyChar))
+                    || char.IsPunctuation(keyInfo.KeyChar)
+                    || char.IsSymbol(keyInfo.KeyChar))
                 {
                     this.characters.Add(keyInfo.KeyChar);
                     if (this.characters.Count > this.Region.ActualWidth - 1)

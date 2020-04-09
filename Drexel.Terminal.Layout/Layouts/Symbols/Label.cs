@@ -420,12 +420,80 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
 
         private CharInfo[,] GenerateTopCenter()
         {
-            throw new NotImplementedException();
+            CharInfo[,] output = new CharInfo[this.Region.ActualHeight, this.Region.ActualWidth];
+            if (this.backgroundFill.HasValue)
+            {
+                for (int y = 0; y < this.Region.ActualHeight; y++)
+                {
+                    for (int x = 0; x < this.Region.ActualWidth; x++)
+                    {
+                        output[y, x] = new CharInfo(' ', this.backgroundFill.Value);
+                    }
+                }
+            }
+
+            IEnumerator<TextLine> line = lines.Skip(this.PreceedingLinesSkipped).GetEnumerator();
+            for (int y = 0; y < this.Region.ActualHeight && line.MoveNext(); y++)
+            {
+                int xOffset = (this.Region.ActualWidth - line.Current.Content.Length) / 2;
+                Range range = this.content.Ranges.GetRangeByIndex(line.Current.StartOffset);
+                for (int x = 0; x < line.Current.Content.Length; x++)
+                {
+                    int index = x + line.Current.StartOffset;
+                    if (index == range.EndIndexExclusive)
+                    {
+                        range = this.content.Ranges.GetNextRange(range);
+                    }
+
+                    output[y, x + xOffset] = new CharInfo(line.Current.Content[x], range.Colors, range.Delay);
+                }
+            }
+
+            return output;
         }
 
         private CharInfo[,] GenerateCenterCenter()
         {
-            throw new NotImplementedException();
+            CharInfo[,] output = new CharInfo[this.Region.ActualHeight, this.Region.ActualWidth];
+            if (this.backgroundFill.HasValue)
+            {
+                for (int y = 0; y < this.Region.ActualHeight; y++)
+                {
+                    for (int x = 0; x < this.Region.ActualWidth; x++)
+                    {
+                        output[y, x] = new CharInfo(' ', this.backgroundFill.Value);
+                    }
+                }
+            }
+
+            IEnumerator<TextLine> line = lines.Skip(this.PreceedingLinesSkipped).GetEnumerator();
+            int yOffset;
+            if (lines.Count >= this.MaximumVisibleLines)
+            {
+                yOffset = 0;
+            }
+            else
+            {
+                yOffset = (this.MaximumVisibleLines - lines.Count) / 2;
+            }
+
+            for (int y = 0; y < this.Region.ActualHeight && line.MoveNext(); y++)
+            {
+                int xOffset = (this.Region.ActualWidth - line.Current.Content.Length) / 2;
+                Range range = this.content.Ranges.GetRangeByIndex(line.Current.StartOffset);
+                for (int x = 0; x < line.Current.Content.Length; x++)
+                {
+                    int index = x + line.Current.StartOffset;
+                    if (index == range.EndIndexExclusive)
+                    {
+                        range = this.content.Ranges.GetNextRange(range);
+                    }
+
+                    output[y + yOffset, x + xOffset] = new CharInfo(line.Current.Content[x], range.Colors, range.Delay);
+                }
+            }
+
+            return output;
         }
 
         private CharInfo[,] GenerateBottomCenter()

@@ -15,7 +15,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mdrexel/Drexel.Terminal</PackageProjectUrl>
     <PackageTags>console terminal terminals consoles TUI drexel</PackageTags>
-    <PackageReleaseNotes>0.0.9: Fix symbols not always gaining focus when clicked on
+    <PackageReleaseNotes>0.0.10: Expose TextField content before it completes
+0.0.9: Fix symbols not always gaining focus when clicked on
 0.0.8: Add Button, improve Label and TextField
 0.0.7: Let LayoutManager buffer write operations
 0.0.6: Labels can have their text, alignment, or background color changed after instantiation

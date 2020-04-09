@@ -55,6 +55,17 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
 
         public override bool CapturesTabKey => true;
 
+        public string Content
+        {
+            get
+            {
+                lock (this.lockObject)
+                {
+                    return new string(this.characters.Select(x => x.Character).ToArray());
+                }
+            }
+        }
+
         public TerminalColors Colors
         {
             get => this.colors;
@@ -96,7 +107,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             {
                 if (keyInfo.Key == TerminalKey.Enter)
                 {
-                    this.onComplete.Next(new string(this.characters.Select(x => x.Character).ToArray()));
+                    this.onComplete.Next(this.Content);
                 }
                 else if (keyInfo.Key == TerminalKey.Backspace && this.characters.Count > 0)
                 {

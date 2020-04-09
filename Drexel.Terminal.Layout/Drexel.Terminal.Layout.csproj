@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.0.9</Version>
+    <Version>0.0.10</Version>
     <Authors>Max Drexel</Authors>
     <Description>TUI tools for terminals.</Description>
     <Copyright>Copyright 2019-2020</Copyright>

@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="Drexel.Terminal" Version="0.0.2" />
+    <PackageReference Include="Drexel.Terminal.Internals" Version="0.0.2" />
     <PackageReference Include="Drexel.Terminal.Text" Version="0.0.2" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>

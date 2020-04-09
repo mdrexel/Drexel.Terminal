@@ -30,98 +30,47 @@ namespace Drexel.Game
                 terminal.Source.KeyboardEnabled = true;
                 terminal.Source.MouseEnabled = true;
 
-                LayoutManager manager = new LayoutManager(terminal, false);
+                LayoutManager manager = new LayoutManager(terminal, true);
 
-                Solid solid = new Solid(
-                    new Region(new Coord(2, 1), new Coord(76, 23)),
-                    "Background",
-                    new CharInfo[,] { { new CharInfo(' ', new TerminalColors(TerminalColor.White, TerminalColor.DarkBlue)) } });
-                TextField textField = new TextField(
-                    new Region(new Coord(7, 20), new Coord(72, 20)),
-                    "TextField",
-                    new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen));
-                Solid textFieldShadow = new Solid(
-                    new Region(
-                        textField.Region.TopLeft + Coord.OneOffset,
-                        textField.Region.BottomRight + Coord.OneOffset),
-                    "TextFieldShadow",
-                    new CharInfo[,] { { new CharInfo(' ', TerminalColors.Default) } });
+                TerminalColors normalFill = new TerminalColors(TerminalColor.White, TerminalColor.DarkRed);
+                TerminalColors pressedFill = new TerminalColors(TerminalColor.White, TerminalColor.DarkBlue);
+                Button button = new Button(
+                    new Region(new Coord(3, 3), new Coord(18, 5)),
+                    "Button",
+                    new Catena("Foo bar baz", normalFill),
+                    new Alignments(HorizontalAlignment.Center, VerticalAlignment.Center),
+                    normalFill);
 
-                TerminalColors challengeTextFill = new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan);
-                Solid challengeTextBackground = new Solid(
-                    new Region(new Coord(5, 4), new Coord(73, 13)),
-                    "ChallengeTextBackground",
-                    new CharInfo[,] { { new CharInfo(' ', challengeTextFill) } });
-                Solid challengeShadow = new Solid(
-                    new Region(
-                    challengeTextBackground.Region.TopLeft + Coord.OneOffset,
-                    challengeTextBackground.Region.BottomRight + Coord.OneOffset),
-                    "ChallengeShadow",
-                    new CharInfo[,] { { new CharInfo(' ', TerminalColors.Default) } });
-                Label challengeText = new Label(
-                    new Region(
-                        challengeTextBackground.Region.TopLeft + Coord.OneOffset,
-                        challengeTextBackground.Region.BottomRight - Coord.OneOffset),
-                    "ChallengeText",
-                    new Catena(
-                        Short,
-                        challengeTextFill,
-                        20),
-                    new Alignments(HorizontalAlignment.Left, VerticalAlignment.Top),
-                    synchronousDraw: false);
-
-                manager.Add(solid);
-                manager.Add(textFieldShadow);
-                manager.Add(textField);
-                manager.Add(challengeShadow);
-                manager.Add(challengeTextBackground);
-                manager.Add(challengeText);
-                manager.Focused = textField;
-                manager.Active = true;
-                DrawBorders(terminal);
-
-                textField.OnComplete.Subscribe(
-                    new Observer<string>(
+                button.OnFired.Subscribe(
+                    new Observer<bool>(
                         x =>
                         {
-                            using (manager.BufferOperation())
+                            if (x)
                             {
-                                textField.Clear();
-                                manager.Draw(challengeTextBackground.Region);
-                                challengeText.Content = LoremIpsum;
+                                using (manager.BufferOperation())
+                                {
+                                    button.BackgroundFill = pressedFill;
+                                    button.Content = new Catena(button.Content.Value, pressedFill);
+                                    manager.Draw();
+                                }
+                            }
+                            else
+                            {
+                                using (manager.BufferOperation())
+                                {
+                                    button.BackgroundFill = normalFill;
+                                    button.Content = new Catena(button.Content.Value, normalFill);
+                                    manager.Draw();
+                                }
                             }
                         }));
 
+                manager.Add(button);
+
+                manager.Active = true;
+
                 await terminal.Source.DelayUntilExitAccepted(default);
             }
-        }
-
-        private static void DrawBorders(ITerminal terminal)
-        {
-            // TODO: don't have borders yet
-            TerminalColors borderColors = new TerminalColors(TerminalColor.White, TerminalColor.DarkCyan);
-            CharInfo[,] horizontalLinePattern =
-                new CharInfo[,] { { new CharInfo('═', borderColors) } };
-            CharInfo[,] verticalLinePattern =
-                new CharInfo[,] { { new CharInfo('║', borderColors) } };
-            Coord topLeft = new Coord(2, 1);
-            Coord topRight = new Coord(77, 1);
-            Coord bottomLeft = new Coord(2, 23);
-            Coord bottomRight = new Coord(77, 23);
-            terminal.Sink.Write(new Line(topLeft, topRight, horizontalLinePattern));
-            terminal.Sink.Write(new Line(bottomLeft, bottomRight, horizontalLinePattern));
-            terminal.Sink.Write(new Line(topLeft, bottomLeft, verticalLinePattern));
-            terminal.Sink.Write(new Line(topRight, bottomRight, verticalLinePattern));
-            terminal.Sink.Write(new CharInfo('╔', borderColors), topLeft);
-            terminal.Sink.Write(new CharInfo('╗', borderColors), topRight);
-            terminal.Sink.Write(new CharInfo('╚', borderColors), bottomLeft);
-            terminal.Sink.Write(new CharInfo('╝', borderColors), bottomRight);
-
-            terminal.Sink.Write(
-                new Catena(
-                    "╣ (C) Oil Systems, Inc. 1980-2020 ╠",
-                    borderColors),
-                topLeft + new Coord(3, 0));
         }
 
         private const string Short = "The inventory discovered by Managed PI on a machine is not available on that machine. It is transmitted to the NOC where it is analyzed, but other applications that may need to look at the local inventory do not have access to this information.";

@@ -361,8 +361,8 @@ namespace Drexel.Terminal.Layout.Layouts
                     {
                         // Only notify of a move event AFTER we've entered the symbol.
                         symbol.MouseMoveEvent(
-                            oldPosition - symbol.Region.TopLeft,
-                            newPosition - symbol.Region.TopLeft);
+                            oldPosition,
+                            newPosition);
                     }
 
                     break;
@@ -386,7 +386,7 @@ namespace Drexel.Terminal.Layout.Layouts
                 if (symbol.Region.Overlaps(coord))
                 {
                     symbol.LeftMouseEvent(
-                        coord - symbol.Region.TopLeft,
+                        coord,
                         down);
 
                     break;
@@ -410,7 +410,7 @@ namespace Drexel.Terminal.Layout.Layouts
                 if (symbol.Region.Overlaps(coord))
                 {
                     symbol.RightMouseEvent(
-                        coord - symbol.Region.TopLeft,
+                        coord,
                         down);
 
                     break;
@@ -434,7 +434,7 @@ namespace Drexel.Terminal.Layout.Layouts
                 if (symbol.Region.Overlaps(coord))
                 {
                     symbol.ScrollEvent(
-                        coord - symbol.Region.TopLeft,
+                        coord,
                         down);
 
                     break;

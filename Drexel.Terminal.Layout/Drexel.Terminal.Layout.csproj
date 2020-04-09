@@ -8,14 +8,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.0.6</Version>
+    <Version>0.0.7</Version>
     <Authors>Max Drexel</Authors>
     <Description>TUI tools for terminals.</Description>
     <Copyright>Copyright 2019-2020</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mdrexel/Drexel.Terminal</PackageProjectUrl>
     <PackageTags>console terminal terminals consoles TUI drexel</PackageTags>
-    <PackageReleaseNotes>0.0.6: Labels can have their text, alignment, or background color changed after instantiation
+    <PackageReleaseNotes>0.0.7: Let LayoutManager buffer write operations
+0.0.6: Labels can have their text, alignment, or background color changed after instantiation
 0.0.5: Fix off-by-one when drawing Solids
 0.0.4: Fix text overflow when drawing labels smaller than the constraining region
 0.0.3: Add asynchronous draw to label
@@ -25,8 +26,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Drexel.Terminal" Version="0.0.1" />
-    <PackageReference Include="Drexel.Terminal.Text" Version="0.0.1" />
+    <PackageReference Include="Drexel.Terminal" Version="0.0.2" />
+    <PackageReference Include="Drexel.Terminal.Text" Version="0.0.2" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
 

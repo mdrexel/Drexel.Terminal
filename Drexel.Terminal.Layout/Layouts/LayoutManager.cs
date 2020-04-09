@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Drexel.Terminal.Internals;
 using Drexel.Terminal.Source;
 
@@ -18,6 +19,10 @@ namespace Drexel.Terminal.Layout.Layouts
         private bool active;
         private Symbol? lastMouseMove;
         private Symbol? focused;
+
+        private List<IReadOnlyRegion?>? buffered;
+        private readonly SemaphoreSlim bufferedReaderLock;
+        private readonly SemaphoreSlim bufferedWriterLock;
 
         public LayoutManager(
             ITerminal terminal,
@@ -48,6 +53,10 @@ namespace Drexel.Terminal.Layout.Layouts
             this.symbols = new LinkedList<Symbol>();
             this.symbolMapping = new Dictionary<Symbol, LinkedListNode<Symbol>>();
             this.symbolSubscriptions = new Dictionary<Symbol, List<IDisposable>>();
+
+            this.buffered = null;
+            this.bufferedReaderLock = new SemaphoreSlim(1, 1);
+            this.bufferedWriterLock = new SemaphoreSlim(1, 1);
 
             this.lastMouseMove = null;
             this.active = active;
@@ -111,6 +120,52 @@ namespace Drexel.Terminal.Layout.Layouts
             }
         }
 
+        public IDisposable BufferOperation()
+        {
+            this.bufferedReaderLock.Wait();
+            if (this.buffered is null)
+            {
+                this.buffered = new List<IReadOnlyRegion?>();
+            }
+
+            return new Disposable(
+                () =>
+                {
+                    this.bufferedWriterLock.Wait();
+                    try
+                    {
+                        if (this.buffered.Any(x => x is null))
+                        {
+                            foreach (Symbol symbol in this.symbols)
+                            {
+                                symbol.Draw(this.terminal.Sink);
+                            }
+                        }
+                        else
+                        {
+                            foreach (IReadOnlyRegion region in this.buffered)
+                            {
+                                Symbol? containedBy = this.symbols.Reverse().FirstOrDefault(x => x.Region.Contains(region));
+
+                                foreach (Symbol symbol in
+                                    object.ReferenceEquals(containedBy, null)
+                                        ? this.symbols
+                                        : this.symbols.SkipWhile(x => !object.ReferenceEquals(x, containedBy)))
+                                {
+                                    symbol.Draw(this.terminal.Sink, region);
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        this.buffered = null;
+                        this.bufferedWriterLock.Release();
+                        this.bufferedReaderLock.Release();
+                    }
+                });
+        }
+
         public void Add(Symbol symbol)
         {
             LinkedListNode<Symbol> node = this.symbols.AddLast(symbol);
@@ -129,6 +184,8 @@ namespace Drexel.Terminal.Layout.Layouts
             LinkedListNode<Symbol> node = this.symbols.AddAfter(this.symbolMapping[oldSymbol], newSymbol);
             this.symbolMapping.Add(newSymbol, node);
 
+            this.Subscribe(newSymbol);
+
             if (this.Active)
             {
                 while (!(node is null))
@@ -143,6 +200,8 @@ namespace Drexel.Terminal.Layout.Layouts
         {
             LinkedListNode<Symbol> node = this.symbols.AddBefore(this.symbolMapping[oldSymbol], newSymbol);
             this.symbolMapping.Add(newSymbol, node);
+
+            this.Subscribe(newSymbol);
 
             if (this.Active)
             {
@@ -159,6 +218,7 @@ namespace Drexel.Terminal.Layout.Layouts
             LinkedListNode<Symbol> node = this.symbolMapping[symbol];
             this.symbols.Remove(node);
             this.symbolMapping.Remove(symbol);
+            this.Unsubscribe(symbol);
 
             if (this.Active)
             {
@@ -173,9 +233,19 @@ namespace Drexel.Terminal.Layout.Layouts
         {
             if (this.Active)
             {
-                foreach (Symbol symbol in this.symbols)
+                this.bufferedWriterLock.Wait();
+                if (!(this.buffered is null))
                 {
-                    symbol.Draw(this.terminal.Sink);
+                    this.buffered.Add(null);
+                    this.bufferedWriterLock.Release();
+                }
+                else
+                {
+                    this.bufferedWriterLock.Release();
+                    foreach (Symbol symbol in this.symbols)
+                    {
+                        symbol.Draw(this.terminal.Sink);
+                    }
                 }
             }
         }
@@ -184,14 +254,24 @@ namespace Drexel.Terminal.Layout.Layouts
         {
             if (this.Active)
             {
-                Symbol? containedBy = this.symbols.Reverse().FirstOrDefault(x => x.Region.Contains(region));
-
-                foreach (Symbol symbol in
-                    object.ReferenceEquals(containedBy, null)
-                        ? this.symbols
-                        : this.symbols.SkipWhile(x => !object.ReferenceEquals(x, containedBy)))
+                this.bufferedWriterLock.Wait();
+                if (!(this.buffered is null))
                 {
-                    symbol.Draw(this.terminal.Sink, region);
+                    this.buffered.Add(region);
+                    this.bufferedWriterLock.Release();
+                }
+                else
+                {
+                    this.bufferedWriterLock.Release();
+                    Symbol? containedBy = this.symbols.Reverse().FirstOrDefault(x => x.Region.Contains(region));
+
+                    foreach (Symbol symbol in
+                        object.ReferenceEquals(containedBy, null)
+                            ? this.symbols
+                            : this.symbols.SkipWhile(x => !object.ReferenceEquals(x, containedBy)))
+                    {
+                        symbol.Draw(this.terminal.Sink, region);
+                    }
                 }
             }
         }
@@ -398,7 +478,7 @@ namespace Drexel.Terminal.Layout.Layouts
                             {
                                 foreach (IReadOnlyRegion region in x.ImpactedRegions)
                                 {
-                                this.Draw(region);
+                                    this.Draw(region);
                                 }
                             }))
                 };

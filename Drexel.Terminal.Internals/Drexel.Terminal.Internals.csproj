@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.0</TargetFramework>
@@ -9,14 +9,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Authors>Max Drexel</Authors>
     <Description>Internal terminal utilities.</Description>
     <Copyright>Copyright 2019-2020</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mdrexel/Drexel.Terminal</PackageProjectUrl>
     <PackageTags>console terminal terminals consoles TUI drexel</PackageTags>
-    <PackageReleaseNotes>0.0.1: Initial release
+    <PackageReleaseNotes>0.0.2: Add more internal tools
+0.0.1: Initial release
     </PackageReleaseNotes>
   </PropertyGroup>
   

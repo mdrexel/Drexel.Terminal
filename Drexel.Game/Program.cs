@@ -65,7 +65,27 @@ namespace Drexel.Game
                             }
                         }));
 
+                TerminalColors fieldNormalColors = new TerminalColors(TerminalColor.White, TerminalColor.DarkGreen);
+                TerminalColors fieldBadColors = new TerminalColors(TerminalColor.White, TerminalColor.DarkRed);
+                TextField field = new TextField(
+                    new Region(new Coord(8, 8), new Coord(20, 8)),
+                    "FooBar",
+                    fieldNormalColors);
+
+                field.OnKeyAccepted.Subscribe(
+                    new Observer<TextFieldKeyAcceptedEventArgs>(
+                        x =>
+                        {
+                            if (x.AcceptedKey.Key == TerminalKey.B)
+                            {
+                                x.Colors = fieldBadColors;
+                            }
+                        }));
+
                 manager.Add(button);
+                manager.Add(field);
+
+                manager.Focused = field;
 
                 manager.Active = true;
 

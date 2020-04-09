@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Drexel.Terminal.Internals;
 using Drexel.Terminal.Sink;
 using Drexel.Terminal.Source;
@@ -9,8 +10,9 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
     public class TextField : Symbol
     {
         private readonly object lockObject;
+        private readonly Observable<TextFieldKeyAcceptedEventArgs> onKeyAccepted;
         private readonly Observable<string> onComplete;
-        private readonly List<char> characters;
+        private readonly List<CharInfo> characters;
 
         private TerminalColors colors;
         private char background;
@@ -24,11 +26,12 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             : base(region, name)
         {
             this.lockObject = new object();
+            this.onKeyAccepted = new Observable<TextFieldKeyAcceptedEventArgs>();
             this.onComplete = new Observable<string>();
             this.colors = colors;
             this.background = background;
 
-            this.characters = new List<char>();
+            this.characters = new List<CharInfo>();
 
             this.scroll = 0;
 
@@ -43,6 +46,8 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                             }
                         })));
         }
+
+        public IObservable<TextFieldKeyAcceptedEventArgs> OnKeyAccepted => this.onKeyAccepted;
 
         public IObservable<string> OnComplete => this.onComplete;
 
@@ -91,7 +96,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
             {
                 if (keyInfo.Key == TerminalKey.Enter)
                 {
-                    this.onComplete.Next(new string(this.characters.ToArray()));
+                    this.onComplete.Next(new string(this.characters.Select(x => x.Character).ToArray()));
                 }
                 else if (keyInfo.Key == TerminalKey.Backspace && this.characters.Count > 0)
                 {
@@ -107,34 +112,24 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 }
                 else if (keyInfo.Key == TerminalKey.Tab)
                 {
-                    this.characters.Add(' ');
-                    this.characters.Add(' ');
-                    this.characters.Add(' ');
-                    this.characters.Add(' ');
-
-                    if (this.characters.Count > this.Region.ActualWidth - 1)
-                    {
-                        this.scroll = this.characters.Count - this.Region.ActualWidth + 1;
-                    }
-                    else
-                    {
-                        this.scroll = 0;
-                    }
+                    TerminalKeyInfo spaceInfo =
+                        new TerminalKeyInfo(
+                            ' ',
+                            TerminalKey.Spacebar,
+                            (keyInfo.Modifiers & TerminalModifiers.Shift) != 0,
+                            (keyInfo.Modifiers & TerminalModifiers.Alt) != 0,
+                            (keyInfo.Modifiers & TerminalModifiers.Control) != 0);
+                    this.AcceptKey(spaceInfo);
+                    this.AcceptKey(spaceInfo);
+                    this.AcceptKey(spaceInfo);
+                    this.AcceptKey(spaceInfo);
                 }
                 else if (char.IsWhiteSpace(keyInfo.KeyChar)
                     || char.IsLetterOrDigit(keyInfo.KeyChar)
                     || char.IsPunctuation(keyInfo.KeyChar)
                     || char.IsSymbol(keyInfo.KeyChar))
                 {
-                    this.characters.Add(keyInfo.KeyChar);
-                    if (this.characters.Count > this.Region.ActualWidth - 1)
-                    {
-                        this.scroll = this.characters.Count - this.Region.ActualWidth + 1;
-                    }
-                    else
-                    {
-                        this.scroll = 0;
-                    }
+                    this.AcceptKey(keyInfo);
                 }
                 else if (keyInfo.Key == TerminalKey.LeftArrow)
                 {
@@ -201,7 +196,7 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                     {
                         if (index < this.characters.Count)
                         {
-                            array[y, x] = new CharInfo(this.characters[index], this.Colors);
+                            array[y, x] = this.characters[index];
                         }
                         else
                         {
@@ -229,6 +224,29 @@ namespace Drexel.Terminal.Layout.Layouts.Symbols
                 window = new Rectangle(window.Left, window.Top, (short)(window.Right + 1), (short)(window.Bottom + 1));
 
                 sink.Write(array, this.Region.TopLeft, window);
+            }
+        }
+
+        private void AcceptKey(TerminalKeyInfo keyInfo)
+        {
+            TextFieldKeyAcceptedEventArgs args = new TextFieldKeyAcceptedEventArgs(
+                keyInfo,
+                this.characters.Count,
+                this.colors);
+
+            this.onKeyAccepted.Next(args);
+
+            if (!args.Reject)
+            {
+                this.characters.Add(new CharInfo(args.AcceptedKey.KeyChar, args.Colors));
+                if (this.characters.Count > this.Region.ActualWidth - 1)
+                {
+                    this.scroll = this.characters.Count - this.Region.ActualWidth + 1;
+                }
+                else
+                {
+                    this.scroll = 0;
+                }
             }
         }
     }

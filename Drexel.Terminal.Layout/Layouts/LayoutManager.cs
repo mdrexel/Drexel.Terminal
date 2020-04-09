@@ -377,21 +377,26 @@ namespace Drexel.Terminal.Layout.Layouts
                 return;
             }
 
-            // Focus is lost when a mouse event occurs
-            this.Focused?.FocusChanged(false);
-            this.Focused = null;
-
             foreach (Symbol symbol in this.symbols.Reverse())
             {
                 if (symbol.Region.Overlaps(coord))
                 {
+                    // Focus is gained when a mouse event 
+                    this.Focused?.FocusChanged(false);
+                    this.Focused = symbol;
+                    symbol.FocusChanged(true);
+
                     symbol.LeftMouseEvent(
                         coord,
                         down);
 
-                    break;
+                    return;
                 }
             }
+
+            // Focus is lost when a mouse event outside the symbol occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
         }
 
         public void RightMouseEvent(Coord coord, bool down)
@@ -401,21 +406,26 @@ namespace Drexel.Terminal.Layout.Layouts
                 return;
             }
 
-            // Focus is lost when a mouse event occurs
-            this.Focused?.FocusChanged(false);
-            this.Focused = null;
-
             foreach (Symbol symbol in this.symbols.Reverse())
             {
                 if (symbol.Region.Overlaps(coord))
                 {
+                    // Focus is gained when a mouse event 
+                    this.Focused?.FocusChanged(false);
+                    this.Focused = symbol;
+                    symbol.FocusChanged(true);
+
                     symbol.RightMouseEvent(
                         coord,
                         down);
 
-                    break;
+                    return;
                 }
             }
+
+            // Focus is lost when a mouse event outside the symbol occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
         }
 
         public void ScrollEvent(Coord coord, bool down)
@@ -425,21 +435,26 @@ namespace Drexel.Terminal.Layout.Layouts
                 return;
             }
 
-            // Focus is lost when a scroll event occurs
-            this.Focused?.FocusChanged(false);
-            this.Focused = null;
-
             foreach (Symbol symbol in this.symbols.Reverse())
             {
                 if (symbol.Region.Overlaps(coord))
                 {
-                    symbol.ScrollEvent(
+                    // Focus is gained when a mouse event 
+                    this.Focused?.FocusChanged(false);
+                    this.Focused = symbol;
+                    symbol.FocusChanged(true);
+
+                    symbol.LeftMouseEvent(
                         coord,
                         down);
 
-                    break;
+                    return;
                 }
             }
+
+            // Focus is lost when a mouse event outside the symbol occurs
+            this.Focused?.FocusChanged(false);
+            this.Focused = null;
         }
 
         public void Dispose()
